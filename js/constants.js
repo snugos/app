@@ -10,7 +10,7 @@
 
 // App Version
 
-export const APP_VERSION = '2.390.0';
+export const APP_VERSION = '2.391.0';
 
 export const LIMACON_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the curve
 export const LIMACON_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution limaçon)
@@ -35,6 +35,30 @@ export const LIMACON_NOTES_SHAPES = [
     LIMACON_NOTES_SHAPE_DIMPLED,
     LIMACON_NOTES_SHAPE_CUSPID,
     LIMACON_NOTES_SHAPE_LOOPED
+];
+
+// Day 741: Conchoid of Nicomedes Notes
+export const CONCHOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the curve
+export const CONCHOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution conchoid)
+export const CONCHOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the conchoid
+export const CONCHOID_NOTES_MIN_DISTANCE = 1; // Minimum 1 distance from pole to base line a
+export const CONCHOID_NOTES_MAX_DISTANCE = 8; // Maximum 8 distance from pole to base line a
+export const CONCHOID_NOTES_DEFAULT_DISTANCE = 3; // Default 3 distance from pole to base line a
+export const CONCHOID_NOTES_MIN_LENGTH_OFFSET = 1; // Minimum 1 conchoid arm length b (the offset distance from base line)
+export const CONCHOID_NOTES_MAX_LENGTH_OFFSET = 8; // Maximum 8 conchoid arm length b
+export const CONCHOID_NOTES_DEFAULT_LENGTH_OFFSET = 3; // Default 3 conchoid arm length b (the classical Nicomedes value)
+export const CONCHOID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const CONCHOID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const CONCHOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const CONCHOID_NOTES_SHAPE_STANDARD = 'standard'; // b < a: no inner loop, classic Nicomedes conchoid (~200 BC default)
+export const CONCHOID_NOTES_SHAPE_CUSPIDAL = 'cuspidal'; // b = a: cusp at the pole, the boundary case
+export const CONCHOID_NOTES_SHAPE_LOOPED = 'looped'; // b > a: inner loop, the most distinctive conchoid shape
+export const CONCHOID_NOTES_SHAPE_ASYMPTOTIC = 'asymptotic'; // b near 0: tight near the base line, near-asymptotic behavior
+export const CONCHOID_NOTES_SHAPES = [
+    CONCHOID_NOTES_SHAPE_STANDARD,
+    CONCHOID_NOTES_SHAPE_CUSPIDAL,
+    CONCHOID_NOTES_SHAPE_LOOPED,
+    CONCHOID_NOTES_SHAPE_ASYMPTOTIC
 ];
 
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests

@@ -4044,7 +4044,7 @@ export class Track {
             const data = audioBuffer.getChannelData(0);
             let peakAmplitude = 0;
             for (let i = 0; i < data.length; i++) {
-                const abs = Math.abs(data[i]);
+                const abs = Math.abs(data[i];
                 if (abs > peakAmplitude) peakAmplitude = abs;
             }
 
@@ -9102,5 +9102,116 @@ export class Track {
         }
 
         return limaçonCount;
+    }
+
+    conchoidNotes(length = Constants.CONCHOID_NOTES_DEFAULT_LENGTH, distance = Constants.CONCHOID_NOTES_DEFAULT_DISTANCE, lengthOffset = Constants.CONCHOID_NOTES_DEFAULT_LENGTH_OFFSET, velocityDecay = Constants.CONCHOID_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.CONCHOID_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} conchoidNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.CONCHOID_NOTES_MIN_LENGTH, Math.min(Constants.CONCHOID_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.CONCHOID_NOTES_MIN_DISTANCE, Math.min(Constants.CONCHOID_NOTES_MAX_DISTANCE, Math.floor(distance)));
+        const clampedB = Math.max(Constants.CONCHOID_NOTES_MIN_LENGTH_OFFSET, Math.min(Constants.CONCHOID_NOTES_MAX_LENGTH_OFFSET, Math.floor(lengthOffset)));
+        const clampedDecay = Math.max(Constants.CONCHOID_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.CONCHOID_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.CONCHOID_NOTES_SHAPES.includes(shape) ? shape : Constants.CONCHOID_NOTES_SHAPE_STANDARD;
+
+        const shapeRatioMap = {
+            [Constants.CONCHOID_NOTES_SHAPE_STANDARD]: 0.5,
+            [Constants.CONCHOID_NOTES_SHAPE_CUSPIDAL]: 1.0,
+            [Constants.CONCHOID_NOTES_SHAPE_LOOPED]: 1.6,
+            [Constants.CONCHOID_NOTES_SHAPE_ASYMPTOTIC]: 0.2
+        };
+        let useRatio = shapeRatioMap[useShape] !== undefined ? shapeRatioMap[useShape] : clampedB / Math.max(1, clampedA);
+        const effectiveA = clampedA;
+        const effectiveB = clampedA * useRatio;
+
+        this._captureUndoState(`Conchoid Notes (${useShape}, a=${effectiveA}, b=${effectiveB.toFixed(2)}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let conchoidCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = effectiveA;
+        const b = effectiveB;
+        const thetaEpsilon = 0.001;
+        const thetaSpan = Math.PI / 2 - thetaEpsilon;
+        for (let i = 0; i < clampedLength; i++) {
+            const theta = -thetaSpan + (2 * thetaSpan * i) / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(theta);
+            const sinT = Math.sin(theta);
+            const tanT = Math.tan(theta);
+            if (!isFinite(tanT)) continue;
+            const x = a + b * cosT;
+            const yUpper = a * tanT + b * sinT;
+            const yLower = a * tanT - b * sinT;
+            samples.push({ x, y: yUpper });
+            samples.push({ x, y: yLower });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -0.5; xMax = 0.5; yMin = -0.5; yMax = 0.5; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            conchoidCount++;
+        }
+
+        return conchoidCount;
     }
 }

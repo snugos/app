@@ -28804,7 +28804,7 @@ TestRunner.test("Day 739 - cassiniNotes functional test: rSquared formula = a^2*
 
 // Day 740: Limaçon Notes Tests
 TestRunner.test("Day 740 - limaçonNotes is a function on Track.prototype", (t) => {
-    t.assertEquals(typeof Track.prototype.limaçonNotes, 'function', 'Track.prototype.limaçonNotes should be a function');
+    t.assertEqual(typeof Track.prototype.limaçonNotes, 'function', 'Track.prototype.limaçonNotes should be a function');
 });
 TestRunner.test("Day 740 - limaçonNotes accepts 6 parameters with defaults (length, radius, offset, velocityDecay, shape, skipOccupied)", (t) => {
     const src = Track.prototype.limaçonNotes.toString();
@@ -29008,6 +29008,215 @@ TestRunner.test("Day 740 - limaçonNotes functional test: xRange/yRange use Math
     t.assertTruthy(/xRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(src), 'xRange min 0.01');
     t.assertTruthy(/yRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(src), 'yRange min 0.01');
 });
+
+// Day 741: Conchoid of Nicomedes Notes Tests
+TestRunner.test("Day 741 - conchoidNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.conchoidNotes, 'function', 'Track.prototype.conchoidNotes should be a function');
+});
+
+TestRunner.test("Day 741 - conchoidNotes accepts 6 parameters with defaults (length, distance, lengthOffset, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/length\s*=\s*Constants\.CONCHOID_NOTES_DEFAULT_LENGTH/.test(src), 'has length param');
+    t.assertTruthy(/distance\s*=\s*Constants\.CONCHOID_NOTES_DEFAULT_DISTANCE/.test(src), 'has distance param');
+    t.assertTruthy(/lengthOffset\s*=\s*Constants\.CONCHOID_NOTES_DEFAULT_LENGTH_OFFSET/.test(src), 'has lengthOffset param');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.CONCHOID_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay param');
+    t.assertTruthy(/shape\s*=\s*Constants\.CONCHOID_NOTES_SHAPE_STANDARD/.test(src), 'has shape param');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(src), 'has skipOccupied param');
+});
+
+TestRunner.test("Day 741 - conchoidNotes returns 0 for Audio tracks", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/this\.type\s*===\s*['"]Audio['"]/.test(src), 'returns 0 for Audio tracks');
+});
+
+TestRunner.test("Day 741 - conchoidNotes gets active sequence via getActiveSequence", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/getActiveSequence\(\)/.test(src), 'calls getActiveSequence');
+});
+
+TestRunner.test("Day 741 - conchoidNotes captures undo BEFORE mutation with descriptive Conchoid Notes label", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/Conchoid Notes/.test(src), 'has Conchoid Notes in undo label');
+    t.assertTruthy(/_captureUndoState/.test(src), 'calls _captureUndoState');
+});
+
+TestRunner.test("Day 741 - conchoidNotes clamps all parameters to CONCHOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/Math\.min\(Constants\.CONCHOID_NOTES_MAX_LENGTH/.test(src), 'has MAX_LENGTH clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CONCHOID_NOTES_MAX_DISTANCE/.test(src), 'has MAX_DISTANCE clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CONCHOID_NOTES_MAX_LENGTH_OFFSET/.test(src), 'has MAX_LENGTH_OFFSET clamp');
+    t.assertTruthy(/Math\.min\(Constants\.CONCHOID_NOTES_MAX_VELOCITY_DECAY/.test(src), 'has MAX_VELOCITY_DECAY clamp');
+});
+
+TestRunner.test("Day 741 - conchoidNotes validates shape with CONCHOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/CONCHOID_NOTES_SHAPES\.includes/.test(src), 'validates shape with CONCHOID_NOTES_SHAPES');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_STANDARD/.test(src), 'uses STANDARD fallback');
+});
+
+TestRunner.test("Day 741 - conchoidNotes uses Math.sin and Math.cos for polar parametric equations", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/Math\.sin\(/.test(src), 'uses Math.sin');
+    t.assertTruthy(/Math\.cos\(/.test(src), 'uses Math.cos');
+    t.assertTruthy(/Math\.tan\(/.test(src), 'uses Math.tan for the (a*tan + b*sin) form');
+});
+
+TestRunner.test("Day 741 - conchoidNotes uses Math.pow for velocity decay", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/Math\.pow\(clampedDecay/.test(src), 'uses Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 741 - conchoidNotes supports skipOccupied option", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/skipOccupied/.test(src), 'uses skipOccupied');
+});
+
+TestRunner.test("Day 741 - conchoidNotes rounds velocity to 2 decimal places", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/Math\.round\([^)]*\*\s*100\)\s*\/\s*100/.test(src), 'rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 741 - conchoidNotes returns count of conchoid notes (conchoidCount)", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/conchoidCount\+\+/.test(src), 'increments conchoidCount');
+    t.assertTruthy(/return\s+conchoidCount/.test(src), 'returns conchoidCount');
+});
+
+TestRunner.test("Day 741 - conchoidNotes uses Math.floor for length, distance, lengthOffset", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'uses Math.floor for length');
+    t.assertTruthy(/Math\.floor\(distance\)/.test(src), 'uses Math.floor for distance');
+    t.assertTruthy(/Math\.floor\(lengthOffset\)/.test(src), 'uses Math.floor for lengthOffset');
+});
+
+TestRunner.test("Day 741 - all 19 CONCHOID_NOTES constants are defined in constants.js", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const CONCHOID_NOTES_MIN_LENGTH\s*=/.test(constantsSrc), 'CONCHOID_NOTES_MIN_LENGTH defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_MAX_LENGTH\s*=/.test(constantsSrc), 'CONCHOID_NOTES_MAX_LENGTH defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_DEFAULT_LENGTH\s*=/.test(constantsSrc), 'CONCHOID_NOTES_DEFAULT_LENGTH defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_MIN_DISTANCE\s*=/.test(constantsSrc), 'CONCHOID_NOTES_MIN_DISTANCE defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_MAX_DISTANCE\s*=/.test(constantsSrc), 'CONCHOID_NOTES_MAX_DISTANCE defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_DEFAULT_DISTANCE\s*=/.test(constantsSrc), 'CONCHOID_NOTES_DEFAULT_DISTANCE defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_MIN_LENGTH_OFFSET\s*=/.test(constantsSrc), 'CONCHOID_NOTES_MIN_LENGTH_OFFSET defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_MAX_LENGTH_OFFSET\s*=/.test(constantsSrc), 'CONCHOID_NOTES_MAX_LENGTH_OFFSET defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_DEFAULT_LENGTH_OFFSET\s*=/.test(constantsSrc), 'CONCHOID_NOTES_DEFAULT_LENGTH_OFFSET defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_MIN_VELOCITY_DECAY\s*=/.test(constantsSrc), 'CONCHOID_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_MAX_VELOCITY_DECAY\s*=/.test(constantsSrc), 'CONCHOID_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(constantsSrc), 'CONCHOID_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_SHAPE_STANDARD\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPE_STANDARD defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_SHAPE_CUSPIDAL\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPE_CUSPIDAL defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_SHAPE_LOOPED\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPE_LOOPED defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_SHAPE_ASYMPTOTIC\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPE_ASYMPTOTIC defined');
+    t.assertTruthy(/export const CONCHOID_NOTES_SHAPES\s*=/.test(constantsSrc), 'CONCHOID_NOTES_SHAPES defined');
+});
+
+TestRunner.test("Day 741 - CONCHOID_NOTES_SHAPES includes all 4 shape variants (standard, cuspidal, looped, asymptotic)", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_STANDARD/.test(src), 'uses CONCHOID_NOTES_SHAPE_STANDARD');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_CUSPIDAL/.test(src), 'uses CONCHOID_NOTES_SHAPE_CUSPIDAL');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_LOOPED/.test(src), 'uses CONCHOID_NOTES_SHAPE_LOOPED');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_ASYMPTOTIC/.test(src), 'uses CONCHOID_NOTES_SHAPE_ASYMPTOTIC');
+});
+
+TestRunner.test("Day 741 - ui.js has 4 Conchoid Notes menu items", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uiSrc.match(/Conchoid Notes\s*\(/g) || [];
+    t.assertEqual(matches.length >= 4, true, 'ui.js has at least 4 Conchoid Notes menu items, found ' + matches.length);
+});
+
+TestRunner.test("Day 741 - Conchoid Notes menu items call track.conchoidNotes", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/currentTrackForMenu\.conchoidNotes\(/.test(uiSrc), 'menu items call track.conchoidNotes');
+});
+
+TestRunner.test("Day 741 - Conchoid Notes menu items call recreateToneSequence after conchoidNotes", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/currentTrackForMenu\.recreateToneSequence\(true\)/.test(uiSrc), 'menu items call recreateToneSequence');
+});
+
+TestRunner.test("Day 741 - Conchoid Notes menu items show Conchoid-d N note(s) notification", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Conchoid'd/.test(uiSrc), "menu items show Conchoid'd notification");
+    t.assertTruthy(/No notes to conchoid\./.test(uiSrc), 'menu items show no-notes notification');
+});
+
+TestRunner.test("Day 741 - Conchoid Notes menu items capture undo with descriptive label", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/captureStateForUndo\(`Conchoid Notes on/.test(uiSrc), 'menu items capture undo with descriptive label');
+});
+
+TestRunner.test("Day 741 - Conchoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/updateTrackUI\(track\.id,\s*['"]sequencerContentChanged['"]\)/.test(uiSrc), 'menu items call updateTrackUI');
+});
+
+TestRunner.test("Day 741 - APP_VERSION validation (>= 2.391 for Day 741)", (t) => {
+    const constantsSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const match = constantsSrc.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    t.assertTruthy(match, 'APP_VERSION defined');
+    const version = match[1];
+    const parts = version.split('.').map(Number);
+    t.assertTrue(parts[0] > 2 || (parts[0] === 2 && parts[1] >= 391), 'APP_VERSION ' + version + ' should be >= 2.391');
+});
+
+TestRunner.test("Day 741 - conchoidNotes structural test: uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/const\s+newNotes\s*=\s*\[/.test(src), 'declares newNotes array');
+    t.assertTruthy(/newNotes\.push\(/.test(src), 'collects notes with push');
+    t.assertTruthy(/for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(src), 'applies notes after collection');
+});
+
+TestRunner.test("Day 741 - conchoidNotes structural test: preserves probability from source", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/probability:\s*stepData\.probability/.test(src), 'preserves probability from source');
+});
+
+TestRunner.test("Day 741 - conchoidNotes structural test: respects sequence length and row boundaries", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'checks row bounds');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'checks col bounds');
+});
+
+TestRunner.test("Day 741 - conchoidNotes structural test: handles empty source (no active notes)", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/!stepData\s*\|\|\s*!stepData\.active/.test(src), 'skips inactive stepData');
+});
+
+TestRunner.test("Day 741 - conchoidNotes functional test: uses parametric conchoid x = a + b*cos(theta) and y = a*tan(theta) +/- b*sin(theta)", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/x\s*=\s*a\s*\+\s*b\s*\*\s*cosT/.test(src), 'x = a + b*cos(theta) (conchoid x parametric)');
+    t.assertTruthy(/yUpper\s*=\s*a\s*\*\s*tanT\s*\+\s*b\s*\*\s*sinT/.test(src), 'yUpper = a*tan(theta) + b*sin(theta) (upper branch)');
+    t.assertTruthy(/yLower\s*=\s*a\s*\*\s*tanT\s*-\s*b\s*\*\s*sinT/.test(src), 'yLower = a*tan(theta) - b*sin(theta) (lower branch)');
+});
+
+TestRunner.test("Day 741 - conchoidNotes functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/xRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(src), 'xRange min 0.01');
+    t.assertTruthy(/yRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(src), 'yRange min 0.01');
+});
+
+TestRunner.test("Day 741 - conchoidNotes functional test: skips source cell (no self-reference)", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'skips source cell');
+});
+
+TestRunner.test("Day 741 - conchoidNotes functional test: shapeRatioMap resolves shape to b/a ratio (4 mappings)", (t) => {
+    const src = Track.prototype.conchoidNotes.toString();
+    t.assertTruthy(/shapeRatioMap/.test(src), 'declares shapeRatioMap');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_STANDARD[\s\S]{0,40}:\s*0\.5/.test(src), 'STANDARD maps to 0.5');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_CUSPIDAL[\s\S]{0,40}:\s*1\.0/.test(src), 'CUSPIDAL maps to 1.0');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_LOOPED[\s\S]{0,40}:\s*1\.6/.test(src), 'LOOPED maps to 1.6');
+    t.assertTruthy(/CONCHOID_NOTES_SHAPE_ASYMPTOTIC[\s\S]{0,40}:\s*0\.2/.test(src), 'ASYMPTOTIC maps to 0.2');
+});
+
+TestRunner.test("Day 741 - conchoidNotes functional test: includes all 4 menu shape variants in ui.js", (t) => {
+    const uiSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Conchoid Notes \(Standard/.test(uiSrc), 'Standard menu item exists');
+    t.assertTruthy(/Conchoid Notes \(Cuspidal/.test(uiSrc), 'Cuspidal menu item exists');
+    t.assertTruthy(/Conchoid Notes \(Looped/.test(uiSrc), 'Looped menu item exists');
+    t.assertTruthy(/Conchoid Notes \(Asymptotic/.test(uiSrc), 'Asymptotic menu item exists');
+});
+
 
 export async function runTests() {
     return await TestRunner.runAll();
