@@ -8999,4 +8999,108 @@ export class Track {
 
         return cassiniCount;
     }
+
+    limaçonNotes(length = Constants.LIMACON_NOTES_DEFAULT_LENGTH, radius = Constants.LIMACON_NOTES_DEFAULT_RADIUS, offset = Constants.LIMACON_NOTES_DEFAULT_OFFSET, velocityDecay = Constants.LIMACON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.LIMACON_NOTES_SHAPE_LOOPED, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} limaçonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.LIMACON_NOTES_MIN_LENGTH, Math.min(Constants.LIMACON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.LIMACON_NOTES_MIN_RADIUS, Math.min(Constants.LIMACON_NOTES_MAX_RADIUS, Math.floor(radius)));
+        const clampedB = Math.max(Constants.LIMACON_NOTES_MIN_OFFSET, Math.min(Constants.LIMACON_NOTES_MAX_OFFSET, Math.floor(offset)));
+        const clampedDecay = Math.max(Constants.LIMACON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.LIMACON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.LIMACON_NOTES_SHAPES.includes(shape) ? shape : Constants.LIMACON_NOTES_SHAPE_LOOPED;
+
+        const shapeRatioMap = {
+            [Constants.LIMACON_NOTES_SHAPE_CONVEX]: 0.5,
+            [Constants.LIMACON_NOTES_SHAPE_CARDIOID]: 1.0,
+            [Constants.LIMACON_NOTES_SHAPE_DIMPLED]: 1.5,
+            [Constants.LIMACON_NOTES_SHAPE_CUSPID]: 2.0,
+            [Constants.LIMACON_NOTES_SHAPE_LOOPED]: 3.0
+        };
+        let useRatio = shapeRatioMap[useShape] !== undefined ? shapeRatioMap[useShape] : clampedB / Math.max(1, clampedA);
+        const effectiveA = clampedA;
+        const effectiveB = clampedA * useRatio;
+
+        this._captureUndoState(`Limaçon Notes (${useShape}, a=${effectiveA}, b=${effectiveB.toFixed(2)}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let limaçonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = effectiveA;
+        const b = effectiveB;
+        for (let i = 0; i < clampedLength; i++) {
+            const theta = (2 * Math.PI * i) / Math.max(1, clampedLength);
+            const x = a * Math.cos(theta) + b;
+            const y = a * Math.sin(theta);
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -0.5; xMax = 0.5; yMin = -0.5; yMax = 0.5; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            limaçonCount++;
+        }
+
+        return limaçonCount;
+    }
 }

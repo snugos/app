@@ -10,7 +10,33 @@
 
 // App Version
 
-export const APP_VERSION = '2.389.0';
+export const APP_VERSION = '2.390.0';
+
+export const LIMACON_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the curve
+export const LIMACON_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution limaçon)
+export const LIMACON_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the limaçon
+export const LIMACON_NOTES_MIN_RADIUS = 1; // Minimum 1 base-circle radius a
+export const LIMACON_NOTES_MAX_RADIUS = 8; // Maximum 8 base-circle radius a
+export const LIMACON_NOTES_DEFAULT_RADIUS = 3; // Default 3 base-circle radius a
+export const LIMACON_NOTES_MIN_OFFSET = 0; // Minimum 0 conchoid offset b (degenerates to circle at b=0)
+export const LIMACON_NOTES_MAX_OFFSET = 12; // Maximum 12 conchoid offset b
+export const LIMACON_NOTES_DEFAULT_OFFSET = 4; // Default 4 conchoid offset b (intermediate shape, b/a > 1)
+export const LIMACON_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const LIMACON_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const LIMACON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const LIMACON_NOTES_SHAPE_CONVEX = 'convex'; // b < a: smooth convex oval
+export const LIMACON_NOTES_SHAPE_CARDIOID = 'cardioid'; // b = a: classic cardioid heart (Pascal 1650, the namesake case)
+export const LIMACON_NOTES_SHAPE_DIMPLED = 'dimpled'; // a < b < 2a: oval with small dimple on the inner side
+export const LIMACON_NOTES_SHAPE_CUSPID = 'cuspid'; // b = 2a: vertical cusp through origin
+export const LIMACON_NOTES_SHAPE_LOOPED = 'looped'; // b > 2a: inner loop, the most distinctive limaçon
+export const LIMACON_NOTES_SHAPES = [
+    LIMACON_NOTES_SHAPE_CONVEX,
+    LIMACON_NOTES_SHAPE_CARDIOID,
+    LIMACON_NOTES_SHAPE_DIMPLED,
+    LIMACON_NOTES_SHAPE_CUSPID,
+    LIMACON_NOTES_SHAPE_LOOPED
+];
+
 // Day 378: Audio Clip Editor normalizeAudioClip Function Tests // Day 377: UI Constants Tests // Day 376: Utils Module Functions Tests // Day 375: Effects Registry Tests // Day 374: Sound Browser Extended Functions Tests // Day 373: Global Controls Window UI Tests // Day 372: DB Module Extended Tests // Day 371: Mixer UI Event Handler Functions Tests // Day 370: MIDI Import Functions Tests // Day 369: MIDI Export/Import Functions Tests
 // Day 367: Audio Module Extended Utility Functions Tests // Day 366: Effect Presets State Functions Tests // Day 365: Timeline Zoom State Functions Tests // Day 364: Sequence & Note Methods Tests // Day 363: Knob UI & Inspector Initialization Function Tests // Day 362: Audio Track Inspector UI Functions Tests // Day 361: Scale Mode & Swing State Functions Tests // Day 360: Scale Mode & Swing State Functions Tests // Day 359: Chord Mode State Functions Tests // Day 358: Track Effect Instance Methods Tests // Day 357: Window Management State Functions Tests // Day 356: Project Save/Load Functions Tests // Day 355: Recording Audio Module Extended Function Tests
 // Day 313: Extended UI Function Tests (2026-04-28)

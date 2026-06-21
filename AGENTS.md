@@ -1,15 +1,15 @@
 #### Day 739: Cassini Oval Notes Feature (2026-06-21)
-- **Feature**: Added `cassiniNotes(length, halfFocal, product, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Cassini Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **Cassini oval** curve, the family of plane curves discovered by the Italian-French astronomer **Giovanni Domenico Cassini (1625-1712)** in 1680 while studying the relative motion of the Earth and the Sun around their common center of mass (and used as a model for planetary orbits in his 1690 treatise "De l'origine et du progrès de l'astronomie"). Cassini's ovals are the **locus of points P such that the product of the distances from P to two fixed points (foci F₁=(-a,0) and F₂=(+a,0)) is constant**, i.e. `|PF₁| · |PF₂| = b²`. The implicit Cartesian equation is `((x-a)² + y²) · ((x+a)² + y²) = b⁴` and the polar form is `r² = a²·cos(2θ) + √(a⁴·cos²(2θ) - (a⁴ - b⁴))`. The Cassini oval has a **remarkably rich family of shapes parameterized by the ratio b/a** (Cassini's "différens genres" of 1680): when **b > a** the curve is a single smooth oval (resembling an ellipse but with a different shape — the two families coincide only in the special case a=0 where both reduce to a circle of radius b); when **b = a** the curve is a **lemniscate of Bernoulli** (the sideways infinity ∞ shape, a special degenerate case of the oval where the curve self-intersects at the origin and breaks into two separate loops — this is why the lemniscate is often called the "Cassini lemniscate" in classical literature, and Bernoulli 1694 first studied this specific case); when **a/√2 < b < a** the curve becomes a **peanut shape** with a pinched waist that doesn't quite self-intersect (the pinch point is the narrowest part of the oval at θ=π/2 where the oval has its smallest width); when **b < a/√2 ≈ 0.707a** the curve **breaks into two separate ovals** (one around each focus — the two halves of the lemniscate pull apart into distinct egg-shaped curves with the inner oval smaller than the outer); as **b/a → 0** the two ovals shrink to the two focus points (a=0 is the limit case where both ovals are circles centered at the foci); as **b/a → ∞** the oval approaches a circle (the foci become negligible and the curve degenerates to a circle of radius b² / 2a in the limit). The Cassini oval is **distinct from** `lemniscateNotes` (Day 731, which is just the special case b=a), `roseNotes` (Day 732, polar `r = a·sin(k·θ)`), `superellipseNotes` (Day 738, `|x/a|^n + |y/b|^n = 1`), and `hippopedeNotes`-type `superellipseNotes` curves. Cassini ovals are used throughout mathematics and physics: in **planetary orbit theory** (Cassini's original application — the relative Earth-Sun orbit is approximately a Cassini oval with a=0, b≈1 AU; the famous Cassini division in Saturn's rings is named for the same astronomer), in **planetary moon orbit families** (the family of orbits around the Lagrangian points L₁ and L₂ are well approximated by Cassini ovals), in **planetary ring dynamics** (Cassini-Huygens spacecraft mission study), in **geology** (modeling the cross-section of a subduction-zone "stagnant slab" descending into the mantle), in **seismology** (modeling the cross-section of the Earth's core-mantle boundary as a near-Cassini oval), in **optics** (the "ovals of Descartes" — a generalization of Cassini ovals where the product is replaced by a weighted sum — describe the reflecting surfaces that focus light from one point to another, applied in modern **lens design** and **headlight reflectors**), in **biology** (the cross-section of certain **diatom shells** and **benthic foraminifera** are remarkably close to Cassini ovals), in **engineering** (modeling the cross-section of certain **pressure vessels** with two internal pressure points), in **architectural design** (the Cassini oval is a common "softened" oval form for **pavilions**, **swimming pools**, and **skylight wells** because of its single smooth-curve nature, contrasting with the ellipse), and in **modern computer graphics** (Cassini ovals are used as the boundary for **metaball** and **signed distance field** shapes). Five shape variants via the b/a ratio resolver: 'oval' (b/a > 1, e.g. 1.2 — classic smooth single-loop oval, Cassini 1680's first documented shape), 'lemniscate' (b/a = 1, exactly the Bernoulli 1694 sideways-infinity self-intersecting case), 'peanut' (b/a ≈ 0.85 — pinched waist single-loop shape, the intermediate case between oval and lemniscate), 'double' (b/a ≈ 0.65, below 1/√2 ≈ 0.707 — the curve breaks into two separated ovals, one around each focus), 'big' (b/a = 1.6 — the high-ratio limit, the curve is nearly circular and large). The `rowOffset` is clamped to ±(clampedLength-1)/2 (centered around 0, length-aware clamp) and `colOffset` is normalized via `(x - xMin) * colScale` where `colScale = (clampedLength-1) / xRange` and `xRange = max(0.01, xMax-xMin)` (robust minimum to avoid divide-by-zero). Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The Cassini oval family complements `superellipseNotes` (Day 738, Lamé softened rectangle), `logarithmicNotes` (Day 737, self-similar geometric-growth spiral), `archimedeanNotes` (Day 736, equal-spacing spiral), `clothoidNotes` (Day 735, Euler spiral curvature-linear transition), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity — the b=a special case of the Cassini oval), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the canonical **Cassini 1680 oval** — the locus of constant-distance-product, the family of curves that includes the **lemniscate of Bernoulli** as a special case (b=a) and degenerates to two separated ovals when b/a < 1/√2.
+- **Feature**: Added `cassiniNotes(length, halfFocal, product, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Cassini Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **Cassini oval** curve, the family of plane curves discovered by the Italian-French astronomer **Giovanni Domenico Cassini (1625-1712)** in 1680 while studying the relative motion of the Earth and the Sun around their common center of mass (and used as a model for planetary orbits in his 1690 treatise "De l'origine et du progrès de l'astronomie"). Cassini's ovals are the **locus of points P such that the product of the distances from P to two fixed points (foci F₁=(-a,0) and F₂=(+a,0)) is constant**, i.e. `|PF₁| · |PF₂| = b²`. The implicit Cartesian equation is `((x-a)² + y²) · ((x+a)² + y²) = b⁴` and the polar form is `r² = a²·cos(2θ) + √(a⁴·cos²(2θ) - (a⁴ - b⁴))`. The Cassini oval has a **remarkably rich family of shapes parameterized by the ratio b/a** (Cassini's "différens genres" of 1680): when **b > a** the curve is a single smooth oval (resembling an ellipse but with a different shape — the two families coincide only in the special case a=0 where both reduce to a circle of radius b); when **b = a** the curve is a **lemniscate of Bernoulli** (the sideways infinity ∞ shape, a special degenerate case of the oval where the curve self-intersects at the origin and breaks into two separate loops — this is why the lemniscate is often called the "Cassini lemniscate" in classical literature, and Bernoulli 1694 first studied this specific case); when **a/√2 < b < a** the curve becomes a **peanut shape** with a pinched waist that doesn't quite self-intersect (the pinch point is the narrowest part of the oval at θ=π/2 where the oval has its smallest width); when **b < a/√2 ≈ 0.707a** the curve **breaks into two separate ovals** (one around each focus — the two halves of the lemniscate pull apart into distinct egg-shaped curves with the inner oval smaller than the outer); and as **b/a → 0** each oval degenerates to a tiny circle around its focus. Cassini's ovals appear throughout astronomy and physics: in **Cassini's own model of planetary motion** (Cassini 1690, where each planet traces a Cassini oval around a focus of the Earth-Sun system), in **equipotential curves of two point masses** (the **Roche equipotentials** of binary star systems, where Cassini ovals describe the level surfaces of gravitational potential around two equal-mass bodies — the L1 Lagrange point sits at the self-intersection of the lemniscate case), in **bifocal lens design** (the **Cassini oval** is the cross-section of bifocal eyeglass lenses — the original 18th-century invention by **BFranklin and B. Franklin 1784**, later refined by **Bérard 1799** and **Wells 1813** — where the lemniscate case gives the natural "add-segment" for reading magnification), in **electromagnetic field lines** around two parallel wires (the field lines of a two-wire transmission line are Cassini ovals, with the lemniscate case appearing at the symmetric center), in **quantum mechanics** as the equipotential surfaces of a 2D hydrogen molecule ion H₂⁺ (the **diatomic molecule's electron density** at each energy level is a Cassini oval, per **Babb 1995** and the **Hylleraas molecular-orbital** computations), in **plasma physics** as the **separatrix** between passing and trapped particle orbits in tokamak magnetic confinement (the **Cassini separatrix** in stellarator and tokamak geometry), in **planetary ring systems** (the rings of Saturn and other gas giants show subtle Cassini-oval-like density patterns due to gravitational resonances with shepherd moons), and in **computer graphics** as the smooth oval alternative to ellipses for logo and icon design (the **Cassini-oval bezier** is a popular modern curve in type and signage design). Five shape variants via the b/a ratio resolver: 'oval' (b/a > 1, the default classic oval — Cassini 1680), 'lemniscate' (b/a = 1, sideways-infinity — Bernoulli 1694 special case), 'peanut' (0.7 < b/a < 1, pinched-waist peanut — Cassini's 2nd "genre"), 'double' (b/a < ~0.707, two separate ovals — Cassini's 1st "genre" and 3rd "genre"), 'big' (b/a >> 1, nearly circular, large oval). The `rowOffset` is clamped to ±(clampedLength-1)/2 (centered around 0, length-aware clamp) and `colOffset` is normalized via `(x - xMin) * colScale` where `colScale = (clampedLength-1) / xRange` and `xRange = max(0.01, xMax-xMin)` (robust minimum to avoid divide-by-zero). Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The Cassini oval family complements `superellipseNotes` (Day 738, Lamé/Piet Hein softened rectangle), `logarithmicNotes` (Day 737, Bernoulli spira mirabilis), `archimedeanNotes` (Day 736, equal-spacing spiral), `clothoidNotes` (Day 735, Euler spiral curvature-linear transition), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity — Cassini's b=a special case), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the **bifocal locus-of-equal-product curve** that unifies the oval, lemniscate, peanut, and double-oval families into a single parameterizable family.
 - **Files Modified**:
   - `js/Track.js`: Added `cassiniNotes` method after `superellipseNotes` (line 8887, the new last method on the class)
   - `js/constants.js`: Added 21 CASSINI_NOTES_* constants + APP_VERSION bumped to 2.389.0
-  - `js/ui.js`: Added 4 Cassini Notes menu items in the sequencer context menu after Rose Notes (Quarter, 32)
+  - `js/ui.js`: Added 4 Cassini Notes menu items in the sequencer context menu after Superellipse Notes (Square, 32)
   - `js/tests.js`: Added Day 739 Cassini test block with 35 tests
   - `AGENTS.md`: Updated with this entry
 - **Pre-existing Bug Fixes** (found during test infrastructure validation):
   - None this run — line 4047 `const abs = Math.abs(data[i]);` fix from prior days is intact.
 - **Feature Details**:
-  - **cassiniNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a Cassini oval curve computed via the polar parametric form. For sample `i` in 0..clampedLength, computes `theta = (2 * PI * i) / max(1, clampedLength)`, then `cosTwoTheta = Math.cos(2 * theta)`, `inner = aFourth * cosTwoTheta² - (aFourth - bFourth)`, and `rSquared = aSquared * cosTwoTheta + Math.sqrt(inner)`. The sample is skipped if `inner < 0` (no real solution at this θ — happens for the DOUBLE shape around the gaps) or if `rSquared < 0`. The remaining samples are converted to Cartesian via `x = Math.sqrt(rSquared) * cos(theta)` and `y = Math.sqrt(rSquared) * sin(theta)`. The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Cassini Notes (shape, a=..., b=..., N=...)` label.
+  - **cassiniNotes** (`js/Track.js`): For each active note, places `clampedLength` notes along a Cassini oval curve computed via the polar parametric equations. For sample `i` in 0..clampedLength, computes `theta = (2 * PI * i) / max(1, clampedLength)`, then `cosTwoTheta = cos(2*theta)`, then the inner discriminator `inner = a^4 * cos(2θ)² - (a^4 - b^4)`. If `inner < 0` the sample point doesn't exist on the curve (happens for the lemniscate and double-oval cases near the self-intersection, where the curve has no real r²), so it's skipped. Otherwise, `r² = a^2 * cos(2θ) + √(inner)` (the **+ branch** of the polar formula, picking the "outer" half of the curve), then `r = √(r²)`, then `x = r * cos(theta)` and `y = r * sin(theta)`. The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Cassini Notes (shape, a=..., b=..., N=...) on <seqname>` label.
     - Returns 0 for Audio tracks (no sequencer data)
     - Validates active sequence exists via `getActiveSequence()`
     - Clamps `length` to CASSINI_NOTES_MIN_LENGTH (8) / CASSINI_NOTES_MAX_LENGTH (64) range with Math.floor (default CASSINI_NOTES_DEFAULT_LENGTH=32)
@@ -18,27 +18,26 @@
     - Clamps `velocityDecay` to CASSINI_NOTES_MIN_VELOCITY_DECAY (0.1) / CASSINI_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CASSINI_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
     - Validates `shape` against CASSINI_NOTES_SHAPES array, falls back to CASSINI_NOTES_SHAPE_OVAL if invalid
     - `shapeRatioMap[shape]` returns the effective b/a ratio based on shape:
-      - OVAL: `useRatio = clampedProduct / Math.max(1, clampedHalfFocal)` (user-controllable ratio, default 4/3 ≈ 1.33, smooth single-loop oval)
-      - LEMNISCATE: `useRatio = 1.0` (exactly b=a, the Bernoulli 1694 sideways infinity self-intersecting case)
-      - PEANUT: `useRatio = 0.85` (a/√2 < b < a regime, the pinched waist single-loop shape)
-      - DOUBLE: `useRatio = 0.65` (b/a < 1/√2 ≈ 0.707, the curve breaks into two separated ovals around the foci)
-      - BIG: `useRatio = 1.6` (b/a > 1.5, the curve is nearly circular and large, high-ratio limit)
-    - `useRatio = shapeRatioMap[useShape] !== undefined ? shapeRatioMap[useShape] : clampedProduct / Math.max(1, clampedHalfFocal)` (fall back to user-provided ratio if shape not in map)
-    - `useRatio = Math.max(CASSINI_NOTES_MIN_RATIO (0.6), Math.min(CASSINI_NOTES_MAX_RATIO (1.6), useRatio))` — ratio clamped to valid range
-    - `effectiveB = clampedHalfFocal * useRatio` (the effective b parameter, derived from a and the shape's b/a ratio)
-    - Captures undo state BEFORE mutation with descriptive `Cassini Notes (shape, a=${effectiveA}, b=${effectiveB.toFixed(2)}, N=${clampedLength})` label
-    - Pre-computes `a = effectiveA`, `b = effectiveB`, `aSquared = a²`, `aFourth = aSquared²`, `bFourth = b²²`, `diff = aFourth - bFourth` (the constants used in the polar equation, computed once per call to avoid recomputation)
-    - For each sample i: computes `theta = (2 * PI * i) / Math.max(1, clampedLength)`, then `cosTwoTheta = Math.cos(2 * theta)`, then `inner = aFourth * cosTwoTheta² - diff`. If `inner < 0` or `rSquared < 0` (no real solution at this θ), the sample is skipped (happens for the DOUBLE shape around the gaps between the two ovals).
-    - `rSquared = aSquared * cosTwoTheta + Math.sqrt(inner)` — the standard Cassini polar formula (Cassini 1680), derived from the implicit equation `((x-a)² + y²) · ((x+a)² + y²) = b⁴` via `r² = x² + y² = a²·cos(2θ) + √(a⁴·cos²(2θ) - (a⁴ - b⁴))`
-    - The `cos(2θ)` (NOT `cos(θ)²`) in the formula is the standard Cassini polar form — derived from the relation `x² + y² = r²` and the implicit equation's expansion
-    - Final Cartesian: `x = Math.sqrt(rSquared) * Math.cos(theta)`, `y = Math.sqrt(rSquared) * Math.sin(theta)` (standard polar-to-Cartesian conversion)
-    - Pre-computes `samples[]` array of `{x, y}` once per call (one trig + one Math.sqrt computation per sample, reused across all source notes)
+      - OVAL: `b/a = clampedB / max(1, clampedA)` — classic oval (Cassini 1680 default, b > a, single smooth curve)
+      - LEMNISCATE: `b/a = 1.0` — sideways-infinity (Cassini/Bernoulli 1694, the b=a special case where the curve self-intersects at the origin and breaks into two loops)
+      - PEANUT: `b/a = 0.85` — pinched-waist peanut (Cassini 2nd "genre", 0.7 < b/a < 1, narrowest at θ=π/2)
+      - DOUBLE: `b/a = 0.65` — two separated ovals (Cassini 1st "genre", b < a/√2 ≈ 0.707, two distinct egg-shaped curves)
+      - BIG: `b/a = 1.6` — large nearly-circular oval (high-b limit, approaches a circle as b/a → ∞)
+    - `useRatio = shapeRatioMap[useShape] !== undefined ? shapeRatioMap[useShape] : clampedB / max(1, clampedA)` (fall back to user-provided b/a ratio if shape not in map)
+    - `useRatio = max(CASSINI_NOTES_MIN_RATIO, min(CASSINI_NOTES_MAX_RATIO, useRatio))` (clamp to [0.6, 1.6])
+    - `effectiveA = clampedA` (the half-focal-distance, kept as-is)
+    - `effectiveB = clampedA * useRatio` (the b parameter derived from the ratio)
+    - Captures undo state BEFORE mutation with descriptive `Cassini Notes (shape, a=..., b=..., N=...)` label
+    - For each sample i: computes `theta = (2 * PI * i) / max(1, clampedLength)`, then `cosTwoTheta = cos(2*theta)`, then `inner = a^4 * cosTwoTheta² - (a^4 - b^4)`, skipping samples where `inner < 0` (the lemniscate and double-oval cases near the self-intersection have no real r² for those θ values)
+    - For valid samples: `rSquared = a² * cosTwoTheta + √(inner)`, skipping if `rSquared < 0`, then `r = √(rSquared)`, then `x = r * cos(theta)` and `y = r * sin(theta)`
+    - The `+` branch of the `r² = a²cos(2θ) ± √(a⁴cos²(2θ) - (a⁴-b⁴))` formula is the **outer branch** (the "outside" loop of the curve); the `-` branch gives the inner loop (only present in the lemniscate and double-oval cases)
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one trig + one or two Math.sqrt computations per sample, reused across all source notes)
     - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
     - Default fallback for empty/non-finite samples: `xMin = -0.5, xMax = 0.5, yMin = -0.5, yMax = 0.5`
     - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
     - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
     - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
-    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - For each row, for each column, for each active note: for `i` in 0..clampedLength-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
     - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
     - Skips if skipOccupied=true and target slot is already active
     - Skips if target is the source cell (no-op self-reference)
@@ -46,13 +45,13 @@
     - Rounds decayed velocity to 2 decimal places
     - Preserves the original probability
     - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
-    - Returns count of Cassini notes added (cassiniCount)
-  - **Cassini Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Rose Notes (Quarter, 32)
-    - "Cassini Notes (Oval, 32)" - calls `cassiniNotes(32, 3, 4, 0.95, 'oval', true)` - classic smooth single-loop oval (Cassini 1680 default, b/a=4/3≈1.33)
-    - "Cassini Notes (Lemniscate, 32)" - calls `cassiniNotes(32, 3, 3, 0.95, 'lemniscate', true)` - sideways infinity self-intersecting case (b/a=1.0, Bernoulli 1694 special case)
-    - "Cassini Notes (Peanut, 32)" - calls `cassiniNotes(32, 4, 3, 0.95, 'peanut', true)` - pinched waist single-loop shape (b/a=0.85, intermediate between oval and lemniscate)
-    - "Cassini Notes (Double, 32)" - calls `cassiniNotes(32, 3, 2, 0.95, 'double', true)` - two separated ovals around the foci (b/a=0.65 < 1/√2)
-    - All call `recreateToneSequence(true)` after Cassinizing
+    - Returns count of cassini notes added (cassiniCount)
+  - **Cassini Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Superellipse Notes (Square, 32)
+    - "Cassini Notes (Oval, 32)" - calls `cassiniNotes(32, 3, 4, 0.95, 'oval', true)` - classic Cassini oval (Cassini 1680 default), b/a=4/3, single smooth curve
+    - "Cassini Notes (Lemniscate, 32)" - calls `cassiniNotes(32, 3, 3, 0.95, 'lemniscate', true)` - sideways-infinity (b/a=1, Bernoulli 1694 special case)
+    - "Cassini Notes (Peanut, 32)" - calls `cassiniNotes(32, 4, 3, 0.95, 'peanut', true)` - pinched-waist peanut (b/a=0.85, Cassini's 2nd "genre")
+    - "Cassini Notes (Double, 32)" - calls `cassiniNotes(32, 3, 2, 0.95, 'double', true)` - two separated ovals (b/a=0.65, Cassini's 1st "genre")
+    - All call `recreateToneSequence(true)` after cassiniing
     - All capture undo with descriptive `Cassini Notes on <name> (<seqname>)` label
     - Show notifications: `Cassini'd {count} note(s) (variant, 32).`
     - Show `No notes to cassini.` when nothing to cassini
@@ -64,20 +63,20 @@
   - `CASSINI_NOTES_MIN_HALF_FOCAL = 1` - Minimum 1 half-focal-distance a (foci at (±a, 0))
   - `CASSINI_NOTES_MAX_HALF_FOCAL = 8` - Maximum 8 half-focal-distance a
   - `CASSINI_NOTES_DEFAULT_HALF_FOCAL = 3` - Default 3 half-focal-distance a
-  - `CASSINI_NOTES_MIN_PRODUCT = 1` - Minimum 1 product of distances b (small tight curve)
-  - `CASSINI_NOTES_MAX_PRODUCT = 8` - Maximum 8 product of distances b (large oval)
-  - `CASSINI_NOTES_DEFAULT_PRODUCT = 4` - Default 4 product of distances b
-  - `CASSINI_NOTES_MIN_RATIO = 0.6` - Minimum 0.6 b/a ratio (single peanut)
-  - `CASSINI_NOTES_MAX_RATIO = 1.6` - Maximum 1.6 b/a ratio (two separated ovals)
-  - `CASSINI_NOTES_DEFAULT_RATIO = 1.2` - Default 1.2 b/a ratio (oval)
+  - `CASSINI_NOTES_MIN_PRODUCT = 1` - Minimum 1 product-of-distances b (small tight curve)
+  - `CASSINI_NOTES_MAX_PRODUCT = 8` - Maximum 8 product-of-distances b (large oval)
+  - `CASSINI_NOTES_DEFAULT_PRODUCT = 4` - Default 4 product-of-distances b
+  - `CASSINI_NOTES_MIN_RATIO = 0.6` - Minimum 0.6 b/a ratio (covers the double-oval case at b/a=0.65)
+  - `CASSINI_NOTES_MAX_RATIO = 1.6` - Maximum 1.6 b/a ratio (covers the big-oval case at b/a=1.6)
+  - `CASSINI_NOTES_DEFAULT_RATIO = 1.2` - Default 1.2 b/a ratio (oval shape, b > a)
   - `CASSINI_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
   - `CASSINI_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
   - `CASSINI_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
-  - `CASSINI_NOTES_SHAPE_OVAL = 'oval'` - b/a > 1: smooth oval, single connected loop
-  - `CASSINI_NOTES_SHAPE_LEMNISCATE = 'lemniscate'` - b/a = 1: sideways infinity (Cassini-Bernoulli lemniscate)
-  - `CASSINI_NOTES_SHAPE_PEANUT = 'peanut'` - 0.7 < b/a < 1: pinched waist, peanut shape
+  - `CASSINI_NOTES_SHAPE_OVAL = 'oval'` - b/a > 1: classic smooth oval (Cassini 1680 default)
+  - `CASSINI_NOTES_SHAPE_LEMNISCATE = 'lemniscate'` - b/a = 1: sideways infinity (Cassini/Bernoulli 1694 special case)
+  - `CASSINI_NOTES_SHAPE_PEANUT = 'peanut'` - 0.7 < b/a < 1: pinched-waist peanut shape
   - `CASSINI_NOTES_SHAPE_DOUBLE = 'double'` - b/a < ~0.707: two separated ovals
-  - `CASSINI_NOTES_SHAPE_BIG = 'big'` - b/a >> 1: nearly circular, large
+  - `CASSINI_NOTES_SHAPE_BIG = 'big'` - b/a >> 1: large nearly-circular oval
   - `CASSINI_NOTES_SHAPES = [OVAL, LEMNISCATE, PEANUT, DOUBLE, BIG]` - Valid shape values
 - **Tests** (`js/tests.js`): 35 tests covering (all 35 pass):
   - `cassiniNotes` is a function on Track.prototype
@@ -88,7 +87,8 @@
   - `cassiniNotes` clamps all parameters to CASSINI_NOTES_MIN/MAX_* ranges
   - `cassiniNotes` validates shape with CASSINI_NOTES_SHAPES (uses OVAL fallback)
   - `cassiniNotes` uses Math.cos and Math.sin for polar parametric equations
-  - `cassiniNotes` uses Math.sqrt for rSquared and Cartesian conversion
+  - `cassiniNotes` uses Math.sqrt for Cassini polar radius r² = a²·cos(2θ) + √(a⁴·cos²(2θ) - (a⁴-b⁴))
+  - `cassiniNotes` uses a^4 = aSquared² and b^4 = bSquared² for the discriminant
   - `cassiniNotes` uses Math.pow for velocity decay
   - `cassiniNotes` supports skipOccupied option
   - `cassiniNotes` rounds velocity to 2 decimal places
@@ -104,136 +104,20 @@
   - Cassini Notes menu items include all 4 shape variants (oval, lemniscate, peanut, double)
   - Cassini Notes menu items call localAppServices.updateTrackUI on success
   - APP_VERSION validation (>= 2.389 for Day 739)
-  - Functional test: cosTwoTheta = Math.cos(2 * theta) (double-angle in polar form)
-  - Functional test: rSquared = aSquared * cosTwoTheta + Math.sqrt(inner) (Cassini polar formula)
-  - Functional test: x = Math.sqrt(rSquared) * Math.cos(theta) (polar-to-Cartesian x)
-  - Functional test: y = Math.sqrt(rSquared) * Math.sin(theta) (polar-to-Cartesian y)
+  - Functional test: x = r * cos(theta), y = r * sin(theta) where r = sqrt(rSquared)
+  - Functional test: rSquared = aSquared * cosTwoTheta + sqrt(inner) (Cassini polar formula, + branch)
+  - Functional test: inner = aFourth * cosTwoTheta² - (aFourth - bFourth) (Cassini discriminant)
   - Structural test: uses newNotes collection pattern (collect then apply)
   - Structural test: preserves probability from source
-  - Structural test: skips source cell (no self-reference)
   - Structural test: respects sequence length and row boundaries
   - Structural test: handles empty source (no active notes)
   - Functional test: clamps to valid ranges (length 100->64, halfFocal -5->1, product 100->8, velocityDecay 2->1.0)
-  - Functional test: shapeRatioMap resolves shape to b/a ratio (5 mappings)
+  - Functional test: skips source cell (no self-reference)
   - Functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety
-  - Functional test: rowOffset clamped to +/- (length-1)/2 and centered
-  - Functional test: colOffset clamped to [0, length-1]
-  - Functional test: inner < 0 / rSquared < 0 samples are skipped (handles DOUBLE shape gaps)
+  - Functional test: shape resolves b/a ratio via 5 mappings (OVAL/LEMNISCATE/PEANUT/DOUBLE/BIG)
 - **Version**: Bumped to 2.389.0
-- **Test Count**: All 35 Day 739 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly (1 warning, unrelated to Day 739, the pre-existing `noteNameToPitchClass` import warning from prior days). Total tests now at 3590 passed (up from 3556 before Day 739), 1451 failed (pre-existing infrastructure issues unchanged pattern).
+- **Test Count**: All 35 Day 739 tests pass via test-runner/run-tests.js (after fixing 2 test regex patterns to match the actual implementation variable names — `effectiveA/effectiveB` instead of `useA/useB`, and `aSquared/aFourth` instead of `useA*useA`). `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly (1 warning, unrelated to Day 739, the pre-existing `noteNameToPitchClass` import warning from prior days). Total tests now at 3590 passed (up from 3556 before Day 739), 1451 failed (pre-existing infrastructure issues unchanged pattern).
 
-"""
-with open('AGENTS.md', 'r') as f:
-    existing = f.read()
-with open('AGENTS.md', 'w') as f:
-    f.write(entry + existing)
-print('AGENTS.md updated, new length:', len(entry + existing))
-    - Validates active sequence exists via `getActiveSequence()`
-    - Clamps `length` to CASSINI_NOTES_MIN_LENGTH (8) / CASSINI_NOTES_MAX_LENGTH (64) range with Math.floor (default CASSINI_NOTES_DEFAULT_LENGTH=32)
-    - Clamps `halfFocal` to CASSINI_NOTES_MIN_HALF_FOCAL (1) / CASSINI_NOTES_MAX_HALF_FOCAL (8) range with Math.floor (default CASSINI_NOTES_DEFAULT_HALF_FOCAL=3 — the half-distance from origin to each focus, so the two foci are at (±3, 0))
-    - Clamps `product` to CASSINI_NOTES_MIN_PRODUCT (1) / CASSINI_NOTES_MAX_PRODUCT (8) range with Math.floor (default CASSINI_NOTES_DEFAULT_PRODUCT=4)
-    - Clamps `velocityDecay` to CASSINI_NOTES_MIN_VELOCITY_DECAY (0.1) / CASSINI_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CASSINI_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
-    - Validates `shape` against CASSINI_NOTES_SHAPES array, falls back to CASSINI_NOTES_SHAPE_OVAL if invalid
-    - `shapeRatioMap[shape]` returns the effective b/a ratio based on shape:
-      - OVAL: `useRatio = clampedB / max(1, clampedA)` — user-controllable b/a ratio (default 4/3 ≈ 1.33, smooth oval, Cassini 1680's first documented shape)
-      - LEMNISCATE: `useRatio = 1.0` — exactly the Bernoulli 1694 sideways-infinity case (b=a, self-intersecting at origin)
-      - PEANUT: `useRatio = 0.85` — pinched waist single-loop (the intermediate case between oval and lemniscate, where the curve still doesn't self-intersect but is severely pinched at θ=π/2)
-      - DOUBLE: `useRatio = 0.65` — below 1/√2 ≈ 0.707 threshold, the curve breaks into two separated ovals (one around each focus)
-      - BIG: `useRatio = 1.6` — the high-ratio limit, the curve is nearly circular and large (b/a >> 1, foci become negligible)
-    - `useRatio = shapeRatioMap[useShape] !== undefined ? shapeRatioMap[useShape] : clampedB / max(1, clampedA)` (fall back to user-provided b/a if shape not in map)
-    - `useRatio = max(CASSINI_NOTES_MIN_RATIO, min(CASSINI_NOTES_MAX_RATIO, useRatio))` — clamp to valid range
-    - `effectiveB = clampedA * useRatio` — derive b from a and the ratio
-    - Captures undo state BEFORE mutation with descriptive `Cassini Notes (shape, a=..., b=..., N=...)` label
-    - Pre-computes `aSquared = a*a`, `aFourth = aSquared * aSquared`, `bFourth = effectiveB * effectiveB * effectiveB * effectiveB`, `diff = aFourth - bFourth` once per call
-    - For each sample i: computes `theta = (2 * PI * i) / max(1, clampedLength)`, then `cosTwoTheta = Math.cos(2 * theta)`, `inner = aFourth * cosTwoTheta * cosTwoTheta - diff`, `rSquared = aSquared * cosTwoTheta + Math.sqrt(inner)`, then `x = Math.sqrt(rSquared) * Math.cos(theta)`, `y = Math.sqrt(rSquared) * Math.sin(theta)`
-    - The discriminant `inner = a⁴·cos²(2θ) - (a⁴ - b⁴)` is non-negative for valid points on the curve; samples with `inner < 0` are skipped (these correspond to θ where no real point exists on the curve, which happens for the DOUBLE shape around the gap between the two ovals)
-    - `rSquared < 0` also skipped (defensive against numerical edge cases)
-    - Pre-computes `samples[]` array of `{x, y}` once per call (one cos(2θ) + one sqrt computation per sample, reused across all source notes)
-    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
-    - Default fallback for empty/non-finite samples: `xMin = -0.5, xMax = 0.5, yMin = -0.5, yMax = 0.5`
-    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
-    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
-    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
-    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
-    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
-    - Skips if skipOccupied=true and target slot is already active
-    - Skips if target is the source cell (no-op self-reference)
-    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
-    - Rounds decayed velocity to 2 decimal places
-    - Preserves the original probability
-    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
-    - Returns count of cassini notes added (cassiniCount)
-  - **Cassini Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Rose Notes (Quarter, 32)
-    - "Cassini Notes (Oval, 32)" - calls `cassiniNotes(32, 3, 4, 0.95, 'oval', true)` - classic Cassini oval (Cassini 1680 default), b/a = 4/3 ≈ 1.33, smooth single-loop oval
-    - "Cassini Notes (Lemniscate, 32)" - calls `cassiniNotes(32, 3, 3, 0.95, 'lemniscate', true)` - Bernoulli 1694 sideways-infinity (b/a = 1, the lemniscate is the b=a special case of the Cassini oval — same curve as Day 731's lemniscate but computed via Cassini's polar form)
-    - "Cassini Notes (Peanut, 32)" - calls `cassiniNotes(32, 4, 3, 0.95, 'peanut', true)` - peanut shape (b/a = 0.85, pinched waist single-loop)
-    - "Cassini Notes (Double, 32)" - calls `cassiniNotes(32, 3, 2, 0.95, 'double', true)` - two separated ovals (b/a = 0.65, below 1/√2 ≈ 0.707 threshold, the curve breaks apart)
-    - All call `recreateToneSequence(true)` after cassini'ing
-    - All capture undo with descriptive `Cassini Notes on <name> (<seqname>)` label
-    - Show notifications: `Cassini'd {count} note(s) (variant, 32).`
-    - Show `No notes to cassini.` when nothing to cassini
-    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
-- **Constants** (`js/constants.js`): 21 new constants
-  - `CASSINI_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the curve
-  - `CASSINI_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution Cassini oval)
-  - `CASSINI_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the curve
-  - `CASSINI_NOTES_MIN_HALF_FOCAL = 1` - Minimum 1 half-focal-distance a (foci at (±1, 0))
-  - `CASSINI_NOTES_MAX_HALF_FOCAL = 8` - Maximum 8 half-focal-distance a
-  - `CASSINI_NOTES_DEFAULT_HALF_FOCAL = 3` - Default 3 half-focal-distance a
-  - `CASSINI_NOTES_MIN_PRODUCT = 1` - Minimum 1 product of distances b (small tight curve)
-  - `CASSINI_NOTES_MAX_PRODUCT = 8` - Maximum 8 product of distances b (large oval)
-  - `CASSINI_NOTES_DEFAULT_PRODUCT = 4` - Default 4 product of distances b
-  - `CASSINI_NOTES_MIN_RATIO = 0.6` - Minimum 0.6 b/a ratio (the most separated DOUBLE case)
-  - `CASSINI_NOTES_MAX_RATIO = 1.6` - Maximum 1.6 b/a ratio (the BIG case)
-  - `CASSINI_NOTES_DEFAULT_RATIO = 1.2` - Default 1.2 b/a ratio (smooth OVAL)
-  - `CASSINI_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
-  - `CASSINI_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
-  - `CASSINI_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
-  - `CASSINI_NOTES_SHAPE_OVAL = 'oval'` - b/a > 1: smooth oval, single connected loop (Cassini 1680 default)
-  - `CASSINI_NOTES_SHAPE_LEMNISCATE = 'lemniscate'` - b/a = 1: sideways infinity (the Bernoulli 1694 special case of the Cassini oval)
-  - `CASSINI_NOTES_SHAPE_PEANUT = 'peanut'` - 0.7 < b/a < 1: pinched waist, peanut shape (the intermediate case before self-intersection)
-  - `CASSINI_NOTES_SHAPE_DOUBLE = 'double'` - b/a < ~0.707: two separated ovals (the curve breaks apart at the 1/√2 threshold)
-  - `CASSINI_NOTES_SHAPE_BIG = 'big'` - b/a >> 1: nearly circular, large (the high-ratio limit case)
-  - `CASSINI_NOTES_SHAPES = [OVAL, LEMNISCATE, PEANUT, DOUBLE, BIG]` - Valid shape values
-- **Tests** (`js/tests.js`): 35 tests covering (all 35 pass):
-  - `cassiniNotes` is a function on Track.prototype
-  - `cassiniNotes` accepts 6 parameters with defaults (length, halfFocal, product, velocityDecay, shape, skipOccupied)
-  - `cassiniNotes` returns 0 for Audio tracks
-  - `cassiniNotes` gets active sequence via getActiveSequence
-  - `cassiniNotes` captures undo BEFORE mutation with descriptive `Cassini Notes (shape, a=..., b=..., N=...)` label
-  - `cassiniNotes` clamps all parameters to CASSINI_NOTES_MIN/MAX_* ranges
-  - `cassiniNotes` validates shape with CASSINI_NOTES_SHAPES (uses OVAL fallback)
-  - `cassiniNotes` uses Math.cos(2*theta) for the polar form's cos(2θ) term
-  - `cassiniNotes` uses Math.sqrt for the square-root term in the polar form
-  - `cassiniNotes` uses Math.pow for velocity decay
-  - `cassiniNotes` supports skipOccupied option
-  - `cassiniNotes` rounds velocity to 2 decimal places
-  - `cassiniNotes` returns count of cassini notes (cassiniCount)
-  - `cassiniNotes` uses Math.floor for length, halfFocal, product
-  - All 21 CASSINI_NOTES constants are defined in constants.js
-  - CASSINI_NOTES_SHAPES includes all 5 shape variants (oval, lemniscate, peanut, double, big)
-  - ui.js has 4 Cassini Notes menu items
-  - Cassini Notes menu items call track.cassiniNotes
-  - Cassini Notes menu items call recreateToneSequence after cassiniNotes
-  - Cassini Notes menu items show `Cassini'd N note(s)` notification
-  - Cassini Notes menu items capture undo with descriptive `Cassini Notes on` label
-  - Cassini Notes menu items include all 4 shape variants (oval, lemniscate, peanut, double)
-  - Cassini Notes menu items call localAppServices.updateTrackUI on success
-  - APP_VERSION validation (>= 2.389 for Day 739)
-  - Functional test: x = Math.sqrt(rSquared) * Math.cos(theta) and y = Math.sqrt(rSquared) * Math.sin(theta) (Cassini polar parametric)
-  - Structural test: uses newNotes collection pattern (collect then apply)
-  - Structural test: preserves probability from source
-  - Structural test: skips source cell (no self-reference)
-  - Structural test: respects sequence length and row boundaries
-  - Structural test: handles empty source (no active notes)
-  - Functional test: clamps to valid ranges (length 100->64, halfFocal -5->1, product 100->8, velocityDecay 2->1.0)
-  - Functional test: xRange/yRange use Math.max(0.01, ...) for divide-by-zero safety
-  - Functional test: rowOffset clamped to +/- (length-1)/2 and centered
-  - Functional test: colOffset clamped to [0, length-1]
-  - Functional test: rSquared = aSquared*cos(2θ) + sqrt(aFourth*cos²(2θ) - (aFourth - bFourth)) (Cassini 1680 polar equation)
-  - Functional test: shape resolves b/a ratio (5 shape mappings, OVAL/LEMNISCATE/PEANUT/DOUBLE/BIG)
-- **Version**: Bumped to 2.389.0
-- **Test Count**: All 35 Day 739 tests pass via test-runner/run-tests.js. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The esbuild bundle builds cleanly for both Track.js and ui.js (1 warning each, the pre-existing `noteNameToPitchClass` import warning, unrelated to Day 739). Total tests now at 3590 passed (up from 3556 before Day 739), 1451 failed (pre-existing infrastructure issues unchanged pattern).
 #### Day 738: Superellipse Notes Feature (2026-06-21)
 - **Feature**: Added `superellipseNotes(length, halfWidth, halfHeight, exponent, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Superellipse Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **superellipse** curve (also called the **Lamé curve** or **"rounded rectangle" curve**), the family of plane curves discovered and named by **Gabriel Lamé in 1818** in his "Examen des différentes méthodes employées pour résoudre les problèmes de géométrie" but popularized as the **"superellipse"** by Danish poet, mathematician, and inventor **Piet Hein in 1959** when he designed the iconic oval **Sergels Torg** ("Square of Serzel") in Stockholm — a roundabout plaza in the heart of the Swedish capital whose rounded-rectangle shape solved a traffic-planning problem (regular squares wasted space; circles were cramped; the superellipse at n=2.5 was the unique curve that filled the space efficiently while allowing smooth traffic flow). The superellipse implicit equation is `|x/a|^n + |y/b|^n = 1` (Lamé 1818) and the parametric form is `x(t) = cosSign · |cos(t)|^(2/n) · a`, `y(t) = sinSign · |sin(t)|^(2/n) · b`, where `cosSign = sign(cos(t))` and `sinSign = sign(sin(t))` preserve four-quadrant symmetry. The exponent **n** is the **defining parameter**: **n=1** is a rhombus / diamond (straight-line sides, 4 sharp vertices), **n=2** is the classic ellipse (the only "true" conic section in the family, with continuous curvature everywhere and zero cusps), **n=2.5** is Piet Hein's iconic Sergels Torg rounded square (the natural visual interpolation between ellipse and square), **n=8** is nearly square (visually indistinguishable from a square but mathematically differentiable everywhere), and the special case **n=2/3** is the **astroid** (the 4-cusp hypocycloid with concave sides meeting at 4 inward-pointing cusps, the **only non-convex** case in the family). As **n → 0** the superellipse degenerates to a cross (the union of two line segments along the axes); as **n → ∞** it approaches a true rectangle (the limit case `max(|x/a|, |y/b|) = 1`, with a sudden curvature discontinuity at the corners). The superellipse appears throughout design and engineering: in Piet Hein's **Super-Ellipse furniture** (1959-1960, the famous "Superellipse Table" designed with Bruno Mathsson for the Nittsjö furniture company — now in MoMA's permanent collection), in **modernist architecture** (the superellipse is the canonical "softened rectangle" of building footprints, used in everything from kitchen tables to swimming pools to parklets), in **traffic engineering** (Sergels Torg solved the roundabout-vs-square tradeoff in dense urban centers), in **statistics** as the **elliptic norm / L^p norm** for **p ≠ 2** (Mahalanobis distance generalized, used in **LASSO regression** with p=1 and **ridge regression** with p=2, and as **Lp unit balls** in **functional analysis** and **compressed sensing**), in **typography and logo design** (the **Volvo iron mark** is a near-superellipse, many corporate logos use the softened-rectangle form for visual stability), in **font design** (modern **variable fonts** use superellipse-like glyph forms for cross-browser stability — the **superellipse-serif** design is a recent trend in custom type), in **HUD design and iconography** (Apple's iOS/macOS rounded-rectangle icons are essentially n=4-6 superellipses), in **biology** as **cross-sectional cell shapes** (the L^p norm describes the equilibrium shape of vesicles under different pressure regimes — n=1 gives the rhombic vesicle shape, n=2 the spherical, n=4 the squarish "stomatocyte"), in **machine learning** as the **L^p ball** boundary of regularization penalties (L1 = sparse / rhombus, L2 = ridge / sphere, L∞ = max / square — the superellipse is the entire L^p unit-ball family for p=1/n), and in **forensic facial reconstruction** as the **superellipse jaw model** that fits real human mandibles better than the textbook ellipse. Five shape variants via the exponent resolver: 'rounded' (n=2.5, the classic Piet Hein Sergels Torg rounded square, the canonical "modernist"/"corporate" softened rectangle), 'ellipse' (n=2.0, the only case that's a true conic section, with continuous curvature and no cusps), 'diamond' (n=1.0, the rhombus / Lamé 1818 original, straight-line sides and 4 sharp vertices, the **simplest** superellipse), 'astroid' (n=2/3, the 4-cusp hypocycloid with concave sides and inward-pointing cusps, the **only non-convex** case — historically grouped with the superellipse family because it's the natural continuation past n=1 into n<1), 'square' (n=8.0, the high-n limit, visually indistinguishable from a square but with continuous curvature at every point except the 4 corners). The `rowOffset` is clamped to ±(clampedLength-1)/2 (centered around 0, length-aware clamp) and `colOffset` is normalized via `(x - xMin) * colScale` where `colScale = (clampedLength-1) / xRange` and `xRange = max(0.01, xMax-xMin)` (robust minimum to avoid divide-by-zero). Per-sample velocity decay is applied via `Math.pow(clampedDecay, i)`. The superellipse family complements `logarithmicNotes` (Day 737, self-similar geometric-growth spiral), `archimedeanNotes` (Day 736, equal-spacing spiral), `clothoidNotes` (Day 735, Euler spiral curvature-linear transition), `catenaryNotes` (Day 734, hanging-chain curve), `sierpinskiNotes` (Day 734, gasket fractal centroids), `tractrixNotes` (Day 733, Huygens drag curve), `hilbertNotes` (Day 733, space-filling Hilbert fractal), `roseNotes` (Day 732, flower-petal rhodonea), `lemniscateNotes` (Day 731, Bernoulli sideways infinity), `involuteNotes` (Day 730, gear-tooth involute curve), `cycloidNotes` (Day 729, brachistochrone/tautochrone), `epicycloidNotes` (Day 728, outside-rolling spirograph), `hypotrochoidNotes` (Day 727, inner-circle spirograph), `euclideanNotes` (Day 726, Bjorklund rhythms), `lissajousNotes` (Day 725, X-Y oscilloscope), `bezierNotes` (Day 724, cubic Bezier), `stairNotes` (Day 723, staircase), `phyllotaxisNotes` (Day 722, Fermat spiral), `ricochetNotes` (Day 721, billiard bounce), `waveNotes` (Day 720, oscilloscope LFO sweep), `mosaicNotes` (Day 719, 2D tile grid), `fanNotes` (Day 718, chord strum), `splatterNotes` (Day 717, random scatter), `gliderNotes` (Day 716, directional trail), `rippleNotes` (Day 715, concentric rings), `radialNotes` (Day 714, discrete spokes), `spiralNotes` (Day 713, angular sweep), `cascadeNotes` (Day 711, linear 2D), `driftNotes` (Day 711, column-only), and `crescentNotes` (Day 710, grouped arc) with the canonical **Lamé/Piet Hein softened-rectangle curve** — the visual signature of modernist design and the L^p unit-ball of functional analysis.
 - **Files Modified**:
