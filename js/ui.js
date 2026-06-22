@@ -2851,6 +2851,10 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 { label: `Folium of Descartes Notes (Inverted, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Folium Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.foliumNotes(32, 4, 0.95, 'inverted', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Folium'd ${result} note(s) (inverted, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to folium.", 2000); } } },
                 { label: `Folium of Descartes Notes (Right, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Folium Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.foliumNotes(32, 4, 0.95, 'right', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Folium'd ${result} note(s) (right, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to folium.", 2000); } } },
                 { label: `Folium of Descartes Notes (Tight, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Folium Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.foliumNotes(32, 4, 0.95, 'tight', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Folium'd ${result} note(s) (tight, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to folium.", 2000); } } },
+                { label: `Kampyle of Eudoxus Notes (Standard, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Kampyle Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.kampyleNotes(32, 2, 0.95, 'standard', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Kampyle'd ${result} note(s) (standard, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to kampyle.", 2000); } } },
+                { label: `Kampyle of Eudoxus Notes (Inverted, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Kampyle Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.kampyleNotes(32, 2, 0.95, 'inverted', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Kampyle'd ${result} note(s) (inverted, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to kampyle.", 2000); } } },
+                { label: `Kampyle of Eudoxus Notes (Right, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Kampyle Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.kampyleNotes(32, 2, 0.95, 'right', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Kampyle'd ${result} note(s) (right, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to kampyle.", 2000); } } },
+                { label: `Kampyle of Eudoxus Notes (Upper, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Kampyle Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.kampyleNotes(32, 2, 0.95, 'upper', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Kampyle'd ${result} note(s) (upper, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to kampyle.", 2000); } } },
 
 
                 { separator: true },
@@ -5009,111 +5013,4 @@ export function openSendEffectsWindow(sendId, savedState = null) {
                 controlWrapper.appendChild(selectEl);
             } else if (paramDef.type === 'toggle') {
                 const button = document.createElement('button');
-                button.className = `w-full p-1 border rounded text-xs dark:border-slate-500 dark:text-slate-300 ${currentValue ? 'bg-purple-400 text-white dark:bg-purple-500' : 'bg-gray-200 dark:bg-slate-600'}`;
-                button.textContent = `${paramDef.label}: ${currentValue ? 'ON' : 'OFF'}`;
-                button.addEventListener('click', () => {
-                    const newValue = !currentValue;
-                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle ${paramDef.label} for ${displayName}`);
-                    if (localAppServices.updateSendBusEffectParam) localAppServices.updateSendBusEffectParam(sendId, effect.id, paramDef.key, newValue);
-                    const newEffects = effectsArray.map(ef => {
-                        if (ef.id === effect.id) {
-                            return { ...ef, params: { ...ef.params, [paramDef.key]: newValue } };
-                        }
-                        return ef;
-                    });
-                    if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, newEffects);
-                    button.className = `w-full p-1 border rounded text-xs dark:border-slate-500 dark:text-slate-300 ${newValue ? 'bg-purple-400 text-white dark:bg-purple-500' : 'bg-gray-200 dark:bg-slate-600'}`;
-                    button.textContent = `${paramDef.label}: ${newValue ? 'ON' : 'OFF'}`;
-                });
-                controlWrapper.appendChild(label);
-                controlWrapper.appendChild(button);
-            }
-            gridContainer.appendChild(controlWrapper);
-        });
-        controlsContainer.appendChild(gridContainer);
-    }
-
-    // Helper for add effect modal on send bus
-    function showSendAddEffectModal(sendTrack) {
-        const ownerName = sendTrack ? sendTrack.name : sendId;
-        let modalContentHTML = `<div class="max-h-60 overflow-y-auto"><ul class="list-none p-0 m-0">`;
-        const AVAILABLE_EFFECTS_LOCAL = ((localAppServices.effectsRegistryAccess) && (localAppServices.effectsRegistryAccess).AVAILABLE_EFFECTS) || {};
-
-        for (const effectKey in AVAILABLE_EFFECTS_LOCAL) {
-            modalContentHTML += `<li class="p-1.5 hover:bg-purple-200 dark:hover:bg-purple-600 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS_LOCAL[effectKey].displayName}</li>`;
-        }
-        modalContentHTML += `</ul></div>`;
-        const modal = showCustomModal(`Add Effect to ${ownerName}`, modalContentHTML, [], 'add-effect-modal');
-        if ((modal) && (modal).contentDiv) {
-            modal.contentDiv.querySelectorAll('li[data-effect-type]').forEach(item => {
-                item.addEventListener('click', () => {
-                    const effectType = item.dataset.effectType;
-                    const defaultParams = (localAppServices.effectsRegistryAccess && localAppServices.effectsRegistryAccess.getEffectDefaultParams)
-                        ? localAppServices.effectsRegistryAccess.getEffectDefaultParams(effectType)
-                        : {};
-                    const effectId = `sendfx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                    const newEffect = { id: effectId, type: effectType, params: defaultParams };
-                    // Add to audio
-                    if (localAppServices.addEffectToSendBus) localAppServices.addEffectToSendBus(sendId, effectType, defaultParams);
-                    // Add to state
-                    const currentEffects = sendTrack && sendTrack.effects ? sendTrack.effects : [];
-                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Add ${AVAILABLE_EFFECTS_LOCAL[effectType]?.displayName || effectType} to send bus`);
-                    if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, [...currentEffects, newEffect]);
-                    modal.overlay.remove();
-                    // Refresh the window content
-                    const win = openWindows.get(windowId);
-                    if (win && win.element) {
-                        const listDiv = win.element.querySelector(`#effectsList-${sendId}`);
-                        const controlsContainer = win.element.querySelector(`#effectControlsContainer-${sendId}`);
-                        const updatedSendTrack = localAppServices.getSendTrackById ? localAppServices.getSendTrackById(sendId) : sendTrack;
-                        renderSendEffectsList(updatedSendTrack, listDiv, controlsContainer);
-                    }
-                });
-            });
-        }
-    }
-
-    const sendTrack = localAppServices.getSendTrackById ? localAppServices.getSendTrackById(sendId) : null;
-    const contentHTML = buildSendEffectsRackDOM(sendTrack);
-
-    const options = {
-        width: 350,
-        height: 400,
-        minWidth: 300,
-        minHeight: 250,
-        closable: true,
-        minimizable: true,
-        resizable: true,
-        initialContentKey: windowId
-    };
-
-    if (savedState) {
-        Object.assign(options, {
-            x: parseInt(savedState.left, 10),
-            y: parseInt(savedState.top, 10),
-            width: parseInt(savedState.width, 10),
-            height: parseInt(savedState.height, 10),
-            zIndex: savedState.zIndex,
-            isMinimized: savedState.isMinimized
-        });
-    }
-
-    const win = localAppServices.createWindow(windowId, `Send Effects: ${sendTrack ? sendTrack.name : sendId}`, contentHTML, options);
-
-    // Wire up initial state
-    if (win && win.element) {
-        const listDiv = win.element.querySelector(`#effectsList-${sendId}`);
-        const controlsContainer = win.element.querySelector(`#effectControlsContainer-${sendId}`);
-        const updatedSendTrack = localAppServices.getSendTrackById ? localAppServices.getSendTrackById(sendId) : sendTrack;
-        renderSendEffectsList(updatedSendTrack, listDiv, controlsContainer);
-        win.element.querySelector(`#addEffectBtn-${sendId}`)?.addEventListener('click', () => {
-            const currentSendTrack = localAppServices.getSendTrackById ? localAppServices.getSendTrackById(sendId) : sendTrack;
-            showSendAddEffectModal(currentSendTrack);
-        });
-    }
-
-    return win;
-}
-
-// --- Track Groups Window ---
-export function openTrackGroupsWindow(savedState = null) {
+                button.className =

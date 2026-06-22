@@ -1821,4 +1821,30 @@ export const FOLIUM_NOTES_SHAPES = [
     FOLIUM_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.394.0';
+export const KAMPYLE_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the kampyle curve
+export const KAMPYLE_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution kampyle)
+export const KAMPYLE_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the kampyle
+export const KAMPYLE_NOTES_MIN_A = 1; // Minimum 1 scale a (small kampyle)
+export const KAMPYLE_NOTES_MAX_A = 8; // Maximum 8 scale a (large kampyle)
+export const KAMPYLE_NOTES_DEFAULT_A = 2; // Default 2 scale a (medium kampyle, well into the asymptotic regime where sec(t) >> 1)
+export const KAMPYLE_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const KAMPYLE_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const KAMPYLE_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const KAMPYLE_NOTES_DEFAULT_T_MIN = -1.2; // Standard shape lower t bound (just before -pi/2 asymptote)
+export const KAMPYLE_NOTES_DEFAULT_T_MAX = 1.2; // Standard shape upper t bound (just before +pi/2 asymptote)
+export const KAMPYLE_NOTES_RIGHT_T_MIN = 0; // Right shape lower t bound (right branch only)
+export const KAMPYLE_NOTES_RIGHT_T_MAX = 1.2; // Right shape upper t bound (right branch only)
+export const KAMPYLE_NOTES_UPPER_T_MIN = -2.4; // Upper shape lower t bound (extended range past both asymptotes, traces both branches + cusp)
+export const KAMPYLE_NOTES_UPPER_T_MAX = 2.4; // Upper shape upper t bound (extended range past both asymptotes)
+export const KAMPYLE_NOTES_SHAPE_STANDARD = 'standard'; // t in [-1.2, +1.2]: full kampyle between asymptotes (Eudoxus ~390-340 BC default)
+export const KAMPYLE_NOTES_SHAPE_INVERTED = 'inverted'; // t in [+1.2, -1.2]: reversed traversal direction
+export const KAMPYLE_NOTES_SHAPE_RIGHT = 'right'; // t in [0, +1.2]: right branch only (t > 0, the right half of the kampyle)
+export const KAMPYLE_NOTES_SHAPE_UPPER = 'upper'; // t in [-2.4, +2.4]: extended range past both asymptotes (traces both branches and the cusp at origin)
+export const KAMPYLE_NOTES_SHAPES = [
+    KAMPYLE_NOTES_SHAPE_STANDARD,
+    KAMPYLE_NOTES_SHAPE_INVERTED,
+    KAMPYLE_NOTES_SHAPE_RIGHT,
+    KAMPYLE_NOTES_SHAPE_UPPER
+];
+
+export const APP_VERSION = '2.395.0';

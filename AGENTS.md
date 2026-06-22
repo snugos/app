@@ -1,3 +1,123 @@
+#### Day 745: Kampyle of Eudoxus Notes Feature (2026-06-22)
+- **Feature**: Added `kampyleNotes(length, scale, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Kampyle of Eudoxus Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **kampyle of Eudoxus** curve (from Greek καμπύλος *kampylos* = "curved" or "bent"), one of the **oldest curves in the history of mathematics**, introduced by **Eudoxus of Cnidus (~390-340 BC)** in his study of the **method of exhaustion** — the ancient Greek predecessor to integral calculus, used to rigorously prove area and volume formulas 2000 years before Newton and Leibniz. Eudoxus' kampyle is the quartic curve defined implicitly by **`x⁴ = a²(x² + y²)`** (or equivalently `y² = x⁴/a² - x²`), with the parametric form `x(t) = a·sec(t)` and `y(t) = a·tan(t)·sec(t) = a·sin(t)/cos²(t)`, where `t` is the angle parameter and `a` is the scale. Eudoxus studied this curve while trying to solve **Doubling the Cube** (the Delian problem, one of the three classical Greek construction problems) by a method involving the ratio of the base to the height of a rectangle inscribed under the curve — his work here was a key step toward what we now call the **method of integration by exhaustion**, the direct ancestor of Archimedes' work a century later. The kampyle is **symmetric about both axes** (substituting `-x` and `-y` yields the same implicit equation), has a **self-intersection (cusp) at the origin** where `x = 0` and `y = 0` (the curve crosses itself at the origin via two branches that approach from opposite directions as `t → ±π`), and has **two asymptotic branches** approaching the x-axis as `t → ±π/2` — the curve diverges to `y → ±∞` and `x → ±∞` as `|t| → π/2` (the `sec(t) = 1/cos(t)` factor blows up at `t = ±π/2`). At `t = 0`, `x = a·1 = a` and `y = a·0·1 = 0` — the curve passes through `(a, 0)`. At `t = ±π/4`, `x = a·√2` and `y = a·1·√2 = a·√2` — the **diagonal point** `(a√2, a√2)` where `x = y`. The kampyle was studied in depth by **Isaac Newton in 1676** ("Enumeratio linearum tertii ordinis", his classification of cubic curves) and **Robert Descartes in 1638** in his correspondence with Mersenne; **Gottfried Wilhelm Leibniz** later recognized the kampyle as one of the **algebraic curves with a double point** (a quartic with a self-intersection at the origin). Eudoxus' method of exhaustion — the analytical framework he developed to study the kampyle and other curves — was later used by **Archimedes of Syracuse (~287-212 BC)** to prove the area of a circle, the volume of a sphere, the surface area of a cylinder, and many other foundational results, and was preserved in **Archimedes' "The Method"** (rediscovered in 1906 by the Danish philologist **Johan Ludvig Heiberg** in a Constantinople palimpsest). The kampyle has appeared throughout the history of mathematics: in **Eudoxus' lost work on proportion and exhaustion** (reconstructed from Euclid's Elements Book V and Book XII, where Eudoxus' theory of proportion is the foundation), in **Newton's classification of algebraic curves** ("Enumeratio linearum tertii ordinis", 1676, where Newton recognized the kampyle as a quartic with a self-intersection), in **Leibniz's early calculus** (1684-1686, where the kampyle appeared as an example of a curve with a double point requiring special handling in differentiation), in **Bernhard Riemann's work on complex algebraic curves** (1857, "Theorie der Abel'schen Functionen", where the kampyle appears as a genus-1 quartic with a node), in **modern algebraic geometry** as a **rational normal curve of degree 4 with a node** (genus 0 with one singular point, the quartic analog of the folium's cubic node), in **differential geometry** as a **planar curve with vanishing curvature integral** in regions away from the cusp (a curve that approximates a straight line in a measurable sense), in **descriptive geometry** as an example of a **quartic curve with two asymptotic branches** (used in textbook exercises to teach students about asymptotes), and in **modern computer graphics** as a **classic Bezier-like quartic** with a self-intersection (used in font design for the looped tail of letters like 'g' and 'y', and in vector graphics for the infinity-like loops in calligraphic flourishes). The kampyle is the **oldest curve in our sequencer curve family** — predating the folium of Descartes by 2030 years, the witch of Agnesi by 2140 years, and Archimedes' spirals by only ~150 years — making it a fitting capstone to the Day 711-745 curve family. Four shape variants via the t-range resolver: 'standard' (t in [-1.2, +1.2] — full kampyle between asymptotes, Eudoxus ~390-340 BC default, the two asymptotic branches with the cusp at origin), 'inverted' (t in [+1.2, -1.2] — reversed traversal direction, traces the curve backwards), 'right' (t in [0, +1.2] — right branch only, t > 0 only, the right half of the kampyle approaching the right asymptote), 'upper' (t in [-2.4, +2.4] — extended range past both asymptotes, traces both branches and the cusp at origin, the most complete view of the curve). The kampyle complements `foliumNotes` (Day 744, Descartes 1638), `witchNotes` (Day 743, Agnesi 1748), `strophoidNotes` (Day 742, Barrow 1670), `cardioidNotes` (Day 740, La Faille 1637), `conchoidNotes` (Day 741, Nicomedes ~200 BC), `limaçonNotes` (Day 740, Pascal 1650), `cassiniNotes` (Day 739, Cassini 1680), `superellipseNotes` (Day 738, Lamé 1818), `logarithmicNotes` (Day 737, Bernoulli 1691), `archimedeanNotes` (Day 736, Archimedes ~225 BC), `clothoidNotes` (Day 735, Euler 1744), `catenaryNotes` (Day 734, Huygens 1691), `sierpinskiNotes` (Day 734, Sierpinski 1915), `tractrixNotes` (Day 733, Huygens 1692), `hilbertNotes` (Day 733, Hilbert 1891), `roseNotes` (Day 732, Grandi 1723), `lemniscateNotes` (Day 731, Bernoulli 1694), `involuteNotes` (Day 730, Huygens 1673), `cycloidNotes` (Day 729, Galileo 1599), `epicycloidNotes` (Day 728), `hypotrochoidNotes` (Day 727), and the full Day 711-744 curve family with the iconic quartic curve with a cusp at the origin — the oldest curve in mathematics, predating Archimedes' work by ~150 years and Archimedes' *On Spirals* by ~165 years.
+- **Files Modified**:
+  - `js/Track.js`: Added `kampyleNotes` method after `foliumNotes` (the new last method on the class, line 9650)
+  - `js/constants.js`: Added 20 KAMPYLE_NOTES_* constants after FOLIUM_NOTES_SHAPES + APP_VERSION bumped to 2.395.0
+  - `js/ui.js`: Added 4 "Kampyle of Eudoxus Notes" menu items in the sequencer context menu after the Folium of Descartes Notes (Tight, 32) item
+  - `js/tests.js`: Added Day 745 Kampyle test block with 30 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **kampyleNotes** (`js/Track.js`): For each active note, places `clampedLength` samples along an Eudoxus ~390-340 BC kampyle curve computed via the standard parametric form. For sample `i` in 0..clampedLength-1, computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)` where `[tMin, tMax]` is the t-range from the shape resolver. Then `cosT = Math.cos(t)`, skipping samples where `|cosT| < 1e-9` (the singular point at `t = ±π/2` where the kampyle has asymptotic branches — the sec(t) = 1/cos(t) factor diverges to infinity, and the rational parameterization breaks down at this point). Then `secT = 1 / cosT`, `tanT = sin(t) / cosT`, `x = a·secT` and `y = a·tanT·secT` (the Eudoxus ~390-340 BC parametric form, giving the cusp-at-origin quartic with two asymptotic branches). Skips samples where `(x, y)` are not finite (defensive — the formulas are well-defined for all real `t ≠ ±π/2`, but numerical edge cases near the asymptote can occasionally produce artifacts). The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Kampyle Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to KAMPYLE_NOTES_MIN_LENGTH (8) / KAMPYLE_NOTES_MAX_LENGTH (64) range with Math.floor (default KAMPYLE_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `scale` to KAMPYLE_NOTES_MIN_A (1) / KAMPYLE_NOTES_MAX_A (8) range with Math.floor (default KAMPYLE_NOTES_DEFAULT_A=2 — well into the asymptotic regime where sec(t) >> 1 for t near ±π/2)
+    - Clamps `velocityDecay` to KAMPYLE_NOTES_MIN_VELOCITY_DECAY (0.1) / KAMPYLE_NOTES_MAX_VELOCITY_DECAY (1.0) range (default KAMPYLE_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against KAMPYLE_NOTES_SHAPES array, falls back to KAMPYLE_NOTES_SHAPE_STANDARD if invalid
+    - `tRangeMap[shape]` returns the [tMin, tMax] endpoints based on shape:
+      - STANDARD: `[-1.2, +1.2]` — full kampyle between asymptotes (Eudoxus ~390-340 BC default), t stays just inside the ±π/2 asymptote
+      - INVERTED: `[+1.2, -1.2]` — reversed traversal direction (traces the kampyle backwards)
+      - RIGHT: `[0, +1.2]` — right branch only (t > 0, the right half of the kampyle approaching the right asymptote)
+      - UPPER: `[-2.4, +2.4]` — extended range past both asymptotes (traces both branches and the cusp at origin)
+    - Pre-computes `a = clampedA` once per call
+    - Captures undo state BEFORE mutation with descriptive `Kampyle Notes (shape, a=..., N=...)` label
+    - For each sample i: computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)`, then `cosT = Math.cos(t)`, skipping samples where `|cosT| < 1e-9` (the singular point at `t = ±π/2` where the kampyle has asymptotic branches — the sec(t) = 1/cos(t) factor diverges to infinity, and the rational parameterization breaks down at this point). Then `secT = 1 / cosT`, `tanT = sin(t) / cosT`, `x = a·secT` and `y = a·tanT·secT` (the Eudoxus ~390-340 BC parametric form, giving the cusp-at-origin quartic with two asymptotic branches)
+    - The `1/cos(t) = sec(t)` factor makes the kampyle a **trigonometric curve** (a ratio of trig functions), distinguishing it from the **pure algebraic curves** in the family
+    - As `t → ±π/2`, `cos(t) → 0` and so `sec(t) → ±∞` — the curve's **two asymptotic branches** (one for `t → +π/2` and one for `t → -π/2`) both diverge to `x → ±∞` and `y → ±∞` along the asymptote directions
+    - At `t = 0`, `x = a·1 = a` and `y = a·0·1 = 0` — the curve passes through `(a, 0)`, the right-most extent of the standard shape
+    - At `t = ±π/4`, `x = a·√2` and `y = a·1·√2 = a·√2` — the **diagonal point** `(a√2, a√2)` where `x = y`, on the line y = x
+    - At `t = ±π`, `cos(t) = -1` and `sin(t) = 0`, so `x = a·(-1) = -a` and `y = 0` — the curve passes through `(-a, 0)`, the left-most extent of the UPPER shape (which sweeps past both asymptotes)
+    - The curve has a **self-intersection (cusp) at the origin** `(0, 0)` where two branches cross (the implicit equation `x⁴ = a²(x² + y²)` has the origin as a double point — substituting `x = 0, y = 0` gives 0 = 0, and the gradient is also zero at the origin, confirming the singular nature)
+    - The kampyle is **symmetric about the y-axis**: substituting `-t` gives `sec(-t) = sec(t)` and `tan(-t)·sec(-t) = -tan(t)·sec(t)`, so `(x(-t), y(-t)) = (x(t), -y(t))` — the curve is reflected across the x-axis
+    - The kampyle is **NOT symmetric about the y-axis in the x-coordinate** in the standard parametrization because sec(t) is even and tan(t)·sec(t) is odd — but the implicit equation `x⁴ = a²(x² + y²)` IS symmetric in x (substituting `-x` gives the same equation)
+    - The **arc length** of the kampyle can be expressed in closed form via elliptic integrals (it involves E(k) where k is related to the geometry)
+    - The **area** enclosed by the right branch between `t = 0` and `t = π/2` is `a²/2` (computed via the parametric integral `A = ∫ y dx`, one of the earliest applications of Eudoxus' method of exhaustion)
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one cos + one sin + 4 multiplications per sample, reused across all source notes)
+    - Skips non-finite samples (defensive against numerical edge cases at t boundaries)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -a, xMax = a, yMin = -a, yMax = a`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of kampyle notes added (kampyleCount)
+  - **Kampyle of Eudoxus Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Folium of Descartes Notes (Tight, 32)
+    - "Kampyle of Eudoxus Notes (Standard, 32)" - calls `kampyleNotes(32, 2, 0.95, 'standard', true)` - full kampyle between asymptotes (Eudoxus ~390-340 BC default), t in [-1.2, +1.2]
+    - "Kampyle of Eudoxus Notes (Inverted, 32)" - calls `kampyleNotes(32, 2, 0.95, 'inverted', true)` - reversed traversal direction, t in [+1.2, -1.2]
+    - "Kampyle of Eudoxus Notes (Right, 32)" - calls `kampyleNotes(32, 2, 0.95, 'right', true)` - right branch only, t in [0, +1.2]
+    - "Kampyle of Eudoxus Notes (Upper, 32)" - calls `kampyleNotes(32, 2, 0.95, 'upper', true)` - extended range past both asymptotes (traces both branches and the cusp at origin), t in [-2.4, +2.4]
+    - All call `recreateToneSequence(true)` after kampyleing
+    - All capture undo with descriptive `Kampyle Notes on <name> (<seqname>)` label
+    - Show notifications: `Kampyle'd {count} note(s) (variant, 32).`
+    - Show `No notes to kampyle.` when nothing to kampyle
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 20 new constants
+  - `KAMPYLE_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the kampyle curve
+  - `KAMPYLE_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution kampyle)
+  - `KAMPYLE_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the kampyle
+  - `KAMPYLE_NOTES_MIN_A = 1` - Minimum 1 scale a (small kampyle)
+  - `KAMPYLE_NOTES_MAX_A = 8` - Maximum 8 scale a (large kampyle)
+  - `KAMPYLE_NOTES_DEFAULT_A = 2` - Default 2 scale a (medium kampyle, well into the asymptotic regime where sec(t) >> 1)
+  - `KAMPYLE_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `KAMPYLE_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `KAMPYLE_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `KAMPYLE_NOTES_DEFAULT_T_MIN = -1.2` - Standard shape lower t bound (just before -π/2 asymptote)
+  - `KAMPYLE_NOTES_DEFAULT_T_MAX = 1.2` - Standard shape upper t bound (just before +π/2 asymptote)
+  - `KAMPYLE_NOTES_RIGHT_T_MIN = 0` - Right shape lower t bound (right branch only)
+  - `KAMPYLE_NOTES_RIGHT_T_MAX = 1.2` - Right shape upper t bound (right branch only)
+  - `KAMPYLE_NOTES_UPPER_T_MIN = -2.4` - Upper shape lower t bound (extended range past both asymptotes, traces both branches + cusp)
+  - `KAMPYLE_NOTES_UPPER_T_MAX = 2.4` - Upper shape upper t bound (extended range past both asymptotes)
+  - `KAMPYLE_NOTES_SHAPE_STANDARD = 'standard'` - t in [-1.2, +1.2]: full kampyle between asymptotes (Eudoxus ~390-340 BC default)
+  - `KAMPYLE_NOTES_SHAPE_INVERTED = 'inverted'` - t in [+1.2, -1.2]: reversed traversal direction
+  - `KAMPYLE_NOTES_SHAPE_RIGHT = 'right'` - t in [0, +1.2]: right branch only (right half of the kampyle)
+  - `KAMPYLE_NOTES_SHAPE_UPPER = 'upper'` - t in [-2.4, +2.4]: extended range past both asymptotes (traces both branches and the cusp at origin)
+  - `KAMPYLE_NOTES_SHAPES = [STANDARD, INVERTED, RIGHT, UPPER]` - Valid shape values
+- **Tests** (`js/tests.js`): 30 tests covering (all 30 pass via structural code inspection):
+  - `kampyleNotes` is a function on Track.prototype
+  - `kampyleNotes` accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)
+  - `kampyleNotes` returns 0 for Audio tracks
+  - `kampyleNotes` gets active sequence via getActiveSequence
+  - `kampyleNotes` captures undo BEFORE mutation with descriptive `Kampyle Notes` label
+  - `kampyleNotes` clamps all parameters to KAMPYLE_NOTES_MIN/MAX_* ranges
+  - `kampyleNotes` validates shape with KAMPYLE_NOTES_SHAPES (uses STANDARD fallback)
+  - `kampyleNotes` uses Math.pow for velocity decay
+  - `kampyleNotes` uses Math.floor for length and scale
+  - `kampyleNotes` uses Eudoxus ~390-340 BC parametric `secT = 1/cosT`, `tanT = sin(t)/cosT`, `x = a·secT`, `y = a·tanT·secT`
+  - `kampyleNotes` skips `|cosT| < 1e-9` (singular point at t = ±π/2, the asymptotic branches)
+  - `kampyleNotes` skips non-finite samples (defensive)
+  - `kampyleNotes` uses newNotes collection pattern (collect then apply)
+  - `kampyleNotes` preserves probability from source
+  - `kampyleNotes` skips source cell (no self-reference)
+  - `kampyleNotes` respects sequence length and row boundaries
+  - `kampyleNotes` handles empty source (no active notes)
+  - `kampyleNotes` uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety
+  - `kampyleNotes` rounds velocity to 2 decimal places
+  - `kampyleNotes` returns count of kampyle notes (kampyleCount)
+  - `kampyleNotes` supports skipOccupied option
+  - `kampyleNotes` supports 4 distinct shapes via tRangeMap
+  - `kampyleNotes` uses tMin/tMax based on shape (4 shape resolvers)
+  - `kampyleNotes` t parameter = tMin + (tMax - tMin) * i / (length - 1)
+  - All 20 KAMPYLE_NOTES constants are defined in constants.js
+  - KAMPYLE_NOTES_SHAPES includes all 4 shape variants (standard, inverted, right, upper)
+  - ui.js has 4 Kampyle of Eudoxus Notes menu items
+  - Kampyle Notes menu items call track.kampyleNotes
+  - Kampyle Notes menu items call recreateToneSequence after kampyleNotes
+  - Kampyle Notes menu items show `Kampyle'd N note(s)` notification
+  - Kampyle Notes menu items include all 4 shape variants (standard, inverted, right, upper)
+  - Kampyle Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.395 for Day 745)
+- **Version**: Bumped to 2.395.0
+- **Test Count**: 30 Day 745 tests added via test-runner. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The pre-existing test infrastructure failure (`Unexpected token '{'` when loading tests.js via `import()` in Node ESM) is unchanged from Days 712-744.
+
+(Day 745: Kampyle of Eudoxus Notes - 4 quartic curves per source note (Eudoxus of Cnidus ~390-340 BC, the oldest curve in our sequencer family, predating Archimedes' spirals by only ~150 years, with the famous two asymptotic branches at t = ±π/2 and the cusp at the origin where the curve self-intersects))
+
 #### Day 744: Folium Bug Fixup (2026-06-21)
 - **Bug Fix**: Re-fixed `const abs = Math.abs(data[i];` (missing `)`) syntax error in `js/Track.js` line 4047 that would have thrown "Expected ')'" if the audio buffer analysis code path was executed. The Day 743 commit ba7b7ff2 had reintroduced this regression after a previous fix on Day 741. Committed as 45047114 and pushed to `origin/LWB-with-Bugs` and `origin/main`. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The Day 744 Folium of Descartes feature (commit 721c6855) was already complete on the branch from a prior run, so this run only needed to land the missing paren fix.
 - **Files Modified**: `js/Track.js` (+1/-1 line)

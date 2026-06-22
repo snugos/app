@@ -58302,3 +58302,180 @@ TestRunner.test("Day 744 - APP_VERSION validation (>= 2.394 for Day 744)", (t) =
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.394\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.394.0');
 });
+
+// Day 745: Kampyle of Eudoxus Notes test block — Eudoxus of Cnidus ~390-340 BC (quartic curve x⁴ = a²(x² + y²), parametric x = a·sec(t), y = a·tan(t)·sec(t))
+TestRunner.test("Day 745 - kampyleNotes is a function on Track.prototype", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes\s*\(/.test(src), 'kampyleNotes method defined');
+});
+
+TestRunner.test("Day 745 - kampyleNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes\s*\(\s*length\s*=\s*Constants\.KAMPYLE_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/scale\s*=\s*Constants\.KAMPYLE_NOTES_DEFAULT_A/.test(src), 'has scale default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.KAMPYLE_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/shape\s*=\s*Constants\.KAMPYLE_NOTES_SHAPE_STANDARD/.test(src), 'has shape default');
+});
+
+TestRunner.test("Day 745 - kampyleNotes returns 0 for Audio tracks", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,400}if\s*\(\s*this\.type\s*===\s*['"]Audio['"]\s*\)\s*return\s*0/.test(src), 'Audio return 0');
+});
+
+TestRunner.test("Day 745 - kampyleNotes gets active sequence via getActiveSequence", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,600}getActiveSequence\s*\(\s*\)/.test(src), 'getActiveSequence used');
+});
+
+TestRunner.test("Day 745 - kampyleNotes captures undo BEFORE mutation with descriptive Kampyle Notes label", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,1500}_captureUndoState\s*\(\s*`Kampyle Notes/.test(src), 'undo captured with Kampyle label');
+});
+
+TestRunner.test("Day 745 - kampyleNotes clamps all parameters to KAMPYLE_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/KAMPYLE_NOTES_MIN_LENGTH[\s\S]{0,80}KAMPYLE_NOTES_MAX_LENGTH/.test(src), 'clamped length');
+    t.assertTruthy(/KAMPYLE_NOTES_MIN_A[\s\S]{0,80}KAMPYLE_NOTES_MAX_A/.test(src), 'clamped scale a');
+    t.assertTruthy(/KAMPYLE_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,80}KAMPYLE_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamped velocityDecay');
+});
+
+TestRunner.test("Day 745 - kampyleNotes validates shape with KAMPYLE_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/KAMPYLE_NOTES_SHAPES\.includes/.test(src), 'shape validated via KAMPYLE_NOTES_SHAPES');
+    t.assertTruthy(/KAMPYLE_NOTES_SHAPE_STANDARD/.test(src), 'STANDARD fallback present');
+});
+
+TestRunner.test("Day 745 - kampyleNotes uses Eudoxus ~390-340 BC parametric x = a*sec(t), y = a*tan(t)*sec(t)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,2500}\bsecT\s*=\s*1\s*\/\s*cosT/.test(src), 'secT = 1/cosT present');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,2500}\btanT\s*=\s*Math\.sin\s*\(\s*t\s*\)\s*\/\s*cosT/.test(src), 'tanT = sin(t)/cosT present');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,3000}\bx\s*=\s*a\s*\*\s*secT/.test(src), 'x = a*sec(t) present');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,3000}\by\s*=\s*a\s*\*\s*tanT\s*\*\s*secT/.test(src), 'y = a*tan(t)*sec(t) present');
+});
+
+TestRunner.test("Day 745 - kampyleNotes skips near-asymptote samples where |cos(t)| < 1e-9", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,2500}Math\.abs\s*\(\s*cosT\s*\)\s*<\s*1e-9/.test(src), 'cosT singularity check present');
+});
+
+TestRunner.test("Day 745 - kampyleNotes skips non-finite samples (defensive)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,2500}!\s*isFinite\s*\(\s*x\s*\)\s*\|\|\s*!\s*isFinite\s*\(\s*y\s*\)/.test(src), 'non-finite check present');
+});
+
+TestRunner.test("Day 745 - kampyleNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,3500}const\s+newNotes\s*=\s*\[\][\s\S]{0,2500}newNotes\.push[\s\S]{0,1500}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(src), 'collect-then-apply pattern present');
+});
+
+TestRunner.test("Day 745 - kampyleNotes preserves probability from source", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,3500}probability:\s*stepData\.probability/.test(src), 'probability preserved');
+});
+
+TestRunner.test("Day 745 - kampyleNotes skips source cell (no self-reference)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,3000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col\s*\)\s*continue/.test(src), 'skip source cell');
+});
+
+TestRunner.test("Day 745 - kampyleNotes respects sequence length and row boundaries", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'row bounds check');
+    t.assertTruthy(/targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'col bounds check');
+});
+
+TestRunner.test("Day 745 - kampyleNotes handles empty source (no active notes)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,3000}stepData\.active/.test(src), 'active check on stepData');
+});
+
+TestRunner.test("Day 745 - kampyleNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,3500}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(src), 'xRange safety');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,3500}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(src), 'yRange safety');
+});
+
+TestRunner.test("Day 745 - kampyleNotes rounds velocity to 2 decimal places", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(src), 'velocity rounded to 2 decimal places');
+});
+
+TestRunner.test("Day 745 - kampyleNotes returns count of kampyle notes (kampyleCount)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,4500}kampyleCount\+\+/.test(src), 'kampyleCount incremented');
+});
+
+TestRunner.test("Day 745 - kampyleNotes supports skipOccupied option", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/skipOccupied\s*&&/.test(src), 'skipOccupied option used');
+});
+
+TestRunner.test("Day 745 - kampyleNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/KAMPYLE_NOTES_SHAPE_STANDARD[\s\S]{0,400}KAMPYLE_NOTES_SHAPE_INVERTED[\s\S]{0,400}KAMPYLE_NOTES_SHAPE_RIGHT[\s\S]{0,400}KAMPYLE_NOTES_SHAPE_UPPER/.test(src), 'all 4 shapes in tRangeMap');
+});
+
+TestRunner.test("Day 745 - kampyleNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/KAMPYLE_NOTES_DEFAULT_T_MIN[\s\S]{0,200}KAMPYLE_NOTES_DEFAULT_T_MAX/.test(src), 'standard t-range');
+    t.assertTruthy(/KAMPYLE_NOTES_RIGHT_T_MIN[\s\S]{0,200}KAMPYLE_NOTES_RIGHT_T_MAX/.test(src), 'right t-range');
+    t.assertTruthy(/KAMPYLE_NOTES_UPPER_T_MIN[\s\S]{0,200}KAMPYLE_NOTES_UPPER_T_MAX/.test(src), 'upper t-range');
+});
+
+TestRunner.test("Day 745 - kampyleNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/kampyleNotes[\s\S]{0,2500}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(src), 't parameterization correct');
+});
+
+TestRunner.test("Day 745 - All KAMPYLE_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const names = ['MIN_LENGTH','MAX_LENGTH','DEFAULT_LENGTH','MIN_A','MAX_A','DEFAULT_A','MIN_VELOCITY_DECAY','MAX_VELOCITY_DECAY','DEFAULT_VELOCITY_DECAY','DEFAULT_T_MIN','DEFAULT_T_MAX','RIGHT_T_MIN','RIGHT_T_MAX','UPPER_T_MIN','UPPER_T_MAX','SHAPE_STANDARD','SHAPE_INVERTED','SHAPE_RIGHT','SHAPE_UPPER','SHAPES'];
+    for (const n of names) {
+        t.assertTruthy(new RegExp(`KAMPYLE_NOTES_${n}\\s*=`).test(cSrc), `KAMPYLE_NOTES_${n} defined`);
+    }
+});
+
+TestRunner.test("Day 745 - KAMPYLE_NOTES_SHAPES includes all 4 shape variants (standard, inverted, right, upper)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/KAMPYLE_NOTES_SHAPES\s*=\s*\[[\s\S]*KAMPYLE_NOTES_SHAPE_STANDARD[\s\S]*KAMPYLE_NOTES_SHAPE_INVERTED[\s\S]*KAMPYLE_NOTES_SHAPE_RIGHT[\s\S]*KAMPYLE_NOTES_SHAPE_UPPER[\s\S]*\]/.test(cSrc), 'all 4 shapes in SHAPES array');
+});
+
+TestRunner.test("Day 745 - ui.js has 4 Kampyle of Eudoxus Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/Kampyle of Eudoxus Notes/g) || []).length === 4, 'exactly 4 Kampyle menu items');
+});
+
+TestRunner.test("Day 745 - Kampyle Notes menu items call track.kampyleNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/currentTrackForMenu\.kampyleNotes/g) || []).length === 4, '4 calls to kampyleNotes');
+});
+
+TestRunner.test("Day 745 - Kampyle Notes menu items call recreateToneSequence after kampyleNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.kampyleNotes[\s\S]{0,300}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 calls follow kampyleNotes with recreateToneSequence');
+});
+
+TestRunner.test("Day 745 - Kampyle Notes menu items show 'Kampyle\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/Kampyle'd \$\{result\} note/g) || []).length >= 1, 'Kampyle\\'d notification present');
+});
+
+TestRunner.test("Day 745 - Kampyle Notes menu items include all 4 shape variants (standard, inverted, right, upper)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Kampyle of Eudoxus Notes \(Standard/.test(uSrc), 'Standard shape menu item');
+    t.assertTruthy(/Kampyle of Eudoxus Notes \(Inverted/.test(uSrc), 'Inverted shape menu item');
+    t.assertTruthy(/Kampyle of Eudoxus Notes \(Right/.test(uSrc), 'Right shape menu item');
+    t.assertTruthy(/Kampyle of Eudoxus Notes \(Upper/.test(uSrc), 'Upper shape menu item');
+});
+
+TestRunner.test("Day 745 - Kampyle Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/kampyleNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 745 - APP_VERSION validation (>= 2.395 for Day 745)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.395\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.395.0');
+});
