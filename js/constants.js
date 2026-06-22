@@ -1962,4 +1962,32 @@ export const NEPHROID_NOTES_SHAPES = [
     NEPHROID_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.399.0';
+export const ASTROID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the astroid
+export const ASTROID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution astroid)
+export const ASTROID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the astroid
+export const ASTROID_NOTES_MIN_A = 1; // Minimum 1 scale a (small astroid)
+export const ASTROID_NOTES_MAX_A = 8; // Maximum 8 scale a (large astroid)
+export const ASTROID_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium astroid, classic Viviani 1692)
+export const ASTROID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const ASTROID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const ASTROID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const ASTROID_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const ASTROID_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 4 cusps visited)
+export const ASTROID_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const ASTROID_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const ASTROID_NOTES_UPPER_T_MIN = 0; // Upper shape lower t bound (covers upper-right cusp region)
+export const ASTROID_NOTES_UPPER_T_MAX = Math.PI / 2; // Upper shape upper t bound (quarter revolution, 1 cusp)
+export const ASTROID_NOTES_TIGHT_T_MIN = -Math.PI / 2; // Tight shape lower t bound (concentrated near left cusp)
+export const ASTROID_NOTES_TIGHT_T_MAX = Math.PI / 2; // Tight shape upper t bound (concentrated around one cusp)
+export const ASTROID_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2π]: full astroid with all 4 cusps (Rømer 1674 default)
+export const ASTROID_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2π, 0]: reversed traversal direction
+export const ASTROID_NOTES_SHAPE_UPPER = 'upper'; // t in [0, π/2]: quarter revolution, just 1 cusp region (the upper-right cusp)
+export const ASTROID_NOTES_SHAPE_TIGHT = 'tight'; // t in [-π/2, π/2]: tight concentration around the right cusp region
+export const ASTROID_NOTES_SHAPES = [
+    ASTROID_NOTES_SHAPE_STANDARD,
+    ASTROID_NOTES_SHAPE_INVERTED,
+    ASTROID_NOTES_SHAPE_UPPER,
+    ASTROID_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.400.0';
