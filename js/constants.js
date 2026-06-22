@@ -1878,4 +1878,32 @@ export const BICORN_NOTES_SHAPES = [
     BICORN_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.396.0';
+export const TRISECTRIX_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the trisectrix
+export const TRISECTRIX_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution trisectrix)
+export const TRISECTRIX_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the trisectrix
+export const TRISECTRIX_NOTES_MIN_A = 1; // Minimum 1 scale a (small trisectrix)
+export const TRISECTRIX_NOTES_MAX_A = 8; // Maximum 8 scale a (large trisectrix)
+export const TRISECTRIX_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium trisectrix, classic Maclaurin 1742)
+export const TRISECTRIX_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const TRISECTRIX_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const TRISECTRIX_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const TRISECTRIX_NOTES_DEFAULT_T_MIN = -2.5; // Standard shape lower t bound (full sweep)
+export const TRISECTRIX_NOTES_DEFAULT_T_MAX = 2.5; // Standard shape upper t bound (full sweep)
+export const TRISECTRIX_NOTES_INVERTED_T_MIN = 2.5; // Inverted shape lower t bound (reverse direction)
+export const TRISECTRIX_NOTES_INVERTED_T_MAX = -2.5; // Inverted shape upper t bound (reverse direction)
+export const TRISECTRIX_NOTES_OUTER_T_MIN = -1.5; // Outer shape lower t bound (avoid asymptote)
+export const TRISECTRIX_NOTES_OUTER_T_MAX = 1.5; // Outer shape upper t bound (avoid asymptote)
+export const TRISECTRIX_NOTES_TIGHT_T_MIN = -0.5; // Tight shape lower t bound (concentrated near node)
+export const TRISECTRIX_NOTES_TIGHT_T_MAX = 0.5; // Tight shape upper t bound (concentrated near node)
+export const TRISECTRIX_NOTES_SHAPE_STANDARD = 'standard'; // t in [-2.5, +2.5]: full trisectrix (Maclaurin 1742 default, both branches)
+export const TRISECTRIX_NOTES_SHAPE_INVERTED = 'inverted'; // t in [+2.5, -2.5]: reversed traversal direction
+export const TRISECTRIX_NOTES_SHAPE_OUTER = 'outer'; // t in [-1.5, +1.5]: outer branch only (right of the asymptote, the main loop)
+export const TRISECTRIX_NOTES_SHAPE_TIGHT = 'tight'; // t in [-0.5, +0.5]: tight near node at origin (compact profile)
+export const TRISECTRIX_NOTES_SHAPES = [
+    TRISECTRIX_NOTES_SHAPE_STANDARD,
+    TRISECTRIX_NOTES_SHAPE_INVERTED,
+    TRISECTRIX_NOTES_SHAPE_OUTER,
+    TRISECTRIX_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.397.0';

@@ -58880,3 +58880,195 @@ TestRunner.test("Day 746 - APP_VERSION validation (>= 2.396 for Day 746)", (t) =
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.396\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.396.0');
 });
+
+TestRunner.test("Day 747 - trisectrixNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes\s*\(/.test(tSrc), 'trisectrixNotes defined');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes\s*\(\s*length\s*=\s*Constants\.TRISECTRIX_NOTES_DEFAULT_LENGTH\s*,\s*scale\s*=\s*Constants\.TRISECTRIX_NOTES_DEFAULT_A\s*,\s*velocityDecay\s*=\s*Constants\.TRISECTRIX_NOTES_DEFAULT_VELOCITY_DECAY\s*,\s*shape\s*=\s*Constants\.TRISECTRIX_NOTES_SHAPE_STANDARD\s*,\s*skipOccupied\s*=\s*true\s*\)/.test(tSrc), 'all 5 params with defaults');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,200}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'returns 0 for Audio');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,300}getActiveSequence\s*\(/.test(tSrc), 'getActiveSequence called');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes captures undo BEFORE mutation with descriptive 'Trisectrix Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,2500}_captureUndoState\s*\(\s*`Trisectrix Notes/.test(tSrc), 'undo capture with descriptive label');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes clamps all parameters to TRISECTRIX_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,1500}TRISECTRIX_NOTES_MIN_LENGTH[\s\S]{0,200}TRISECTRIX_NOTES_MAX_LENGTH/.test(tSrc), 'length clamp');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,1500}TRISECTRIX_NOTES_MIN_A[\s\S]{0,200}TRISECTRIX_NOTES_MAX_A/.test(tSrc), 'a clamp');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,1500}TRISECTRIX_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,200}TRISECTRIX_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'velocityDecay clamp');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes validates shape with TRISECTRIX_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,1500}TRISECTRIX_NOTES_SHAPES\.includes\s*\(\s*shape\s*\)/.test(tSrc), 'shape validation');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes uses Maclaurin 1742 parametric x = a*t*(t^2-3)/(t^2+1) and y = a*t^2*(3-t^2)/(t^2+1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*t\s*\*\s*\(\s*tSquared\s*-\s*3\s*\)\s*\/\s*denom/.test(tSrc), 'Maclaurin x formula');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*tSquared\s*\*\s*\(\s*3\s*-\s*tSquared\s*\)\s*\/\s*denom/.test(tSrc), 'Maclaurin y formula');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes skips |denom| < 1e-9 (defensive, never triggers since t^2+1 >= 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,3000}Math\.abs\s*\(\s*denom\s*\)\s*<\s*1e-9/.test(tSrc), 'denom guard');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,4000}newNotes\.push[\s\S]{0,2000}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(tSrc), 'newNotes pattern');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,5000}probability:\s*stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,5000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(tSrc), 'row bounds');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,5000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(tSrc), 'col bounds');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,5000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(tSrc), 'self-reference skip');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,5000}if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(tSrc), 'skip non-active cells');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes uses Math.pow for velocity decay", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,5000}Math\.pow\s*\(\s*clampedDecay\s*,\s*i\s*\)/.test(tSrc), 'Math.pow velocity decay');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes uses Math.floor for length and scale", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,300}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor length');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,300}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor scale');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,5000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'rounds velocity');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes returns count of trisectrix notes (trisectrixCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,6000}return\s+trisectrixCount/.test(tSrc), 'returns trisectrixCount');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,5000}skipOccupied\s*&&/.test(tSrc), 'skipOccupied option');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/TRISECTRIX_NOTES_DEFAULT_T_MIN[\s\S]{0,200}TRISECTRIX_NOTES_DEFAULT_T_MAX/.test(tSrc), 'standard t-range');
+    t.assertTruthy(/TRISECTRIX_NOTES_INVERTED_T_MIN[\s\S]{0,200}TRISECTRIX_NOTES_INVERTED_T_MAX/.test(tSrc), 'inverted t-range');
+    t.assertTruthy(/TRISECTRIX_NOTES_OUTER_T_MIN[\s\S]{0,200}TRISECTRIX_NOTES_OUTER_T_MAX/.test(tSrc), 'outer t-range');
+    t.assertTruthy(/TRISECTRIX_NOTES_TIGHT_T_MIN[\s\S]{0,200}TRISECTRIX_NOTES_TIGHT_T_MAX/.test(tSrc), 'tight t-range');
+});
+
+TestRunner.test("Day 747 - trisectrixNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/trisectrixNotes[\s\S]{0,2500}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 747 - All 23 TRISECTRIX_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/TRISECTRIX_NOTES_MIN_LENGTH\s*=/.test(cSrc), 'TRISECTRIX_NOTES_MIN_LENGTH defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_MAX_LENGTH\s*=/.test(cSrc), 'TRISECTRIX_NOTES_MAX_LENGTH defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_DEFAULT_LENGTH\s*=/.test(cSrc), 'TRISECTRIX_NOTES_DEFAULT_LENGTH defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_MIN_A\s*=/.test(cSrc), 'TRISECTRIX_NOTES_MIN_A defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_MAX_A\s*=/.test(cSrc), 'TRISECTRIX_NOTES_MAX_A defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_DEFAULT_A\s*=/.test(cSrc), 'TRISECTRIX_NOTES_DEFAULT_A defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_MIN_VELOCITY_DECAY\s*=/.test(cSrc), 'TRISECTRIX_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_MAX_VELOCITY_DECAY\s*=/.test(cSrc), 'TRISECTRIX_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(cSrc), 'TRISECTRIX_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_DEFAULT_T_MIN\s*=/.test(cSrc), 'TRISECTRIX_NOTES_DEFAULT_T_MIN defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_DEFAULT_T_MAX\s*=/.test(cSrc), 'TRISECTRIX_NOTES_DEFAULT_T_MAX defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_INVERTED_T_MIN\s*=/.test(cSrc), 'TRISECTRIX_NOTES_INVERTED_T_MIN defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_INVERTED_T_MAX\s*=/.test(cSrc), 'TRISECTRIX_NOTES_INVERTED_T_MAX defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_OUTER_T_MIN\s*=/.test(cSrc), 'TRISECTRIX_NOTES_OUTER_T_MIN defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_OUTER_T_MAX\s*=/.test(cSrc), 'TRISECTRIX_NOTES_OUTER_T_MAX defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_TIGHT_T_MIN\s*=/.test(cSrc), 'TRISECTRIX_NOTES_TIGHT_T_MIN defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_TIGHT_T_MAX\s*=/.test(cSrc), 'TRISECTRIX_NOTES_TIGHT_T_MAX defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_SHAPE_STANDARD\s*=/.test(cSrc), 'TRISECTRIX_NOTES_SHAPE_STANDARD defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_SHAPE_INVERTED\s*=/.test(cSrc), 'TRISECTRIX_NOTES_SHAPE_INVERTED defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_SHAPE_OUTER\s*=/.test(cSrc), 'TRISECTRIX_NOTES_SHAPE_OUTER defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_SHAPE_TIGHT\s*=/.test(cSrc), 'TRISECTRIX_NOTES_SHAPE_TIGHT defined');
+    t.assertTruthy(/TRISECTRIX_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'TRISECTRIX_NOTES_SHAPES array defined');
+});
+
+TestRunner.test("Day 747 - TRISECTRIX_NOTES_SHAPES includes all 4 shape variants (standard, inverted, outer, tight)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const arrayMatch = cSrc.match(/TRISECTRIX_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(arrayMatch, 'SHAPES array present');
+    const contents = arrayMatch[1];
+    t.assertTruthy(/TRISECTRIX_NOTES_SHAPE_STANDARD/.test(contents), 'STANDARD in array');
+    t.assertTruthy(/TRISECTRIX_NOTES_SHAPE_INVERTED/.test(contents), 'INVERTED in array');
+    t.assertTruthy(/TRISECTRIX_NOTES_SHAPE_OUTER/.test(contents), 'OUTER in array');
+    t.assertTruthy(/TRISECTRIX_NOTES_SHAPE_TIGHT/.test(contents), 'TIGHT in array');
+});
+
+TestRunner.test("Day 747 - ui.js has 4 Trisectrix Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Trisectrix Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, '4 Trisectrix menu items');
+});
+
+TestRunner.test("Day 747 - Trisectrix Notes menu items call track.trisectrixNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.trisectrixNotes/g) || [];
+    t.assertEqual(matches.length, 4, '4 calls to track.trisectrixNotes');
+});
+
+TestRunner.test("Day 747 - Trisectrix Notes menu items call recreateToneSequence after trisectrixNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.trisectrixNotes[\s\S]{0,300}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 recreateToneSequence after trisectrixNotes');
+});
+
+TestRunner.test("Day 747 - Trisectrix Notes menu items show 'Trisectrix\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/Trisectrix'd \$\{result\} note/g) || []).length >= 1, 'Trisectrix notification present');
+});
+
+TestRunner.test("Day 747 - Trisectrix Notes menu items include all 4 shape variants (standard, inverted, outer, tight)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Trisectrix Notes \(Standard/.test(uSrc), 'Standard shape menu item');
+    t.assertTruthy(/Trisectrix Notes \(Inverted/.test(uSrc), 'Inverted shape menu item');
+    t.assertTruthy(/Trisectrix Notes \(Outer/.test(uSrc), 'Outer shape menu item');
+    t.assertTruthy(/Trisectrix Notes \(Tight/.test(uSrc), 'Tight shape menu item');
+});
+
+TestRunner.test("Day 747 - Trisectrix Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/trisectrixNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 747 - APP_VERSION validation (>= 2.397 for Day 747)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.397\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.397.0');
+});
