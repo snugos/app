@@ -60130,3 +60130,229 @@ TestRunner.test("Day 752 - Structural test: pentoidNotes uses Math.floor for len
     t.assertTruthy(/pentoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
     t.assertTruthy(/pentoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
 });
+TestRunner.test("Day 753 - hexacuspidNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes\s*\(/.test(tSrc), 'hexacuspidNotes defined');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes accepts 5 params with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes\s*\(\s*length\s*=\s*Constants\.HEXACUSPID_NOTES_DEFAULT_LENGTH/.test(tSrc), 'length default');
+    t.assertTruthy(/scale\s*=\s*Constants\.HEXACUSPID_NOTES_DEFAULT_A/.test(tSrc), 'scale default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.HEXACUSPID_NOTES_DEFAULT_VELOCITY_DECAY/.test(tSrc), 'velocityDecay default');
+    t.assertTruthy(/shape\s*=\s*Constants\.HEXACUSPID_NOTES_SHAPE_STANDARD/.test(tSrc), 'shape default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(tSrc), 'skipOccupied default');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,500}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'returns 0 for Audio');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,500}getActiveSequence\s*\(/.test(tSrc), 'getActiveSequence called');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes captures undo BEFORE mutation with descriptive 'Hexacuspid Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,2500}_captureUndoState\s*\(\s*`Hexacuspid Notes/.test(tSrc), 'undo capture with descriptive label');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes clamps all parameters to HEXACUSPID_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,1500}HEXACUSPID_NOTES_MIN_LENGTH[\s\S]{0,200}HEXACUSPID_NOTES_MAX_LENGTH/.test(tSrc), 'length clamp');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,1500}HEXACUSPID_NOTES_MIN_A[\s\S]{0,200}HEXACUSPID_NOTES_MAX_A/.test(tSrc), 'a clamp');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,1500}HEXACUSPID_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,200}HEXACUSPID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'velocityDecay clamp');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes validates shape with HEXACUSPID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,1500}HEXACUSPID_NOTES_SHAPES\.includes\s*\(\s*shape\s*\)/.test(tSrc), 'shape validation');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes uses 6-cusped hypocycloid parametric x = a*cos(t) + (a/5)*cos(5t) and y = a*sin(t) - (a/5)*sin(5t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver5\s*\*\s*cos5T/.test(tSrc), 'hexacuspid x formula (a*cos(t)+(a/5)*cos(5t))');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver5\s*\*\s*sin5T/.test(tSrc), 'hexacuspid y formula (a*sin(t)-(a/5)*sin(5t))');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes uses Math.cos, Math.sin, Math.cos(5t), Math.sin(5t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,2500}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t)');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,2500}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t)');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,2500}Math\.cos\s*\(\s*5\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(5*t)');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,2500}Math\.sin\s*\(\s*5\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(5*t)');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes skips non-finite samples (defensive)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}isFinite\s*\(\s*x\s*\)\s*\|\|\s*!isFinite\s*\(\s*y\s*\)/.test(tSrc), 'non-finite guard');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,4000}newNotes\.push[\s\S]{0,2000}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(tSrc), 'newNotes pattern');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,5000}probability:\s*stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,5000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(tSrc), 'row bounds');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,5000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(tSrc), 'col bounds');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,5000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(tSrc), 'source cell skip');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,5000}stepData\s*\|\|\s*!stepData\.active/.test(tSrc), 'empty source guard');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange guard');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange guard');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,5000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity 2-decimal rounding');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes returns count of hexacuspid notes (hexacuspidCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let\s+hexacuspidCount\s*=\s*0/.test(tSrc), 'hexacuspidCount initialized');
+    t.assertTruthy(/return\s+hexacuspidCount/.test(tSrc), 'returns hexacuspidCount');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,5000}skipOccupied\s*&&/.test(tSrc), 'skipOccupied used');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}HEXACUSPID_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD shape');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}HEXACUSPID_NOTES_SHAPE_INVERTED/.test(tSrc), 'INVERTED shape');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}HEXACUSPID_NOTES_SHAPE_HEXAGON/.test(tSrc), 'HEXAGON shape');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}HEXACUSPID_NOTES_SHAPE_TIGHT/.test(tSrc), 'TIGHT shape');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}tRangeMap/.test(tSrc), 'tRangeMap exists');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}const\s+tMin\s*=\s*tRange\[0\]/.test(tSrc), 'tMin extracted');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}const\s+tMax\s*=\s*tRange\[1\]/.test(tSrc), 'tMax extracted');
+});
+
+TestRunner.test("Day 753 - hexacuspidNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 753 - All 22 HEXACUSPID_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEXACUSPID_NOTES_MIN_LENGTH\s*=\s*8/.test(cSrc), 'HEXACUSPID_NOTES_MIN_LENGTH = 8');
+    t.assertTruthy(/HEXACUSPID_NOTES_MAX_LENGTH\s*=\s*64/.test(cSrc), 'HEXACUSPID_NOTES_MAX_LENGTH = 64');
+    t.assertTruthy(/HEXACUSPID_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'HEXACUSPID_NOTES_DEFAULT_LENGTH = 32');
+    t.assertTruthy(/HEXACUSPID_NOTES_MIN_A\s*=\s*1/.test(cSrc), 'HEXACUSPID_NOTES_MIN_A = 1');
+    t.assertTruthy(/HEXACUSPID_NOTES_MAX_A\s*=\s*8/.test(cSrc), 'HEXACUSPID_NOTES_MAX_A = 8');
+    t.assertTruthy(/HEXACUSPID_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'HEXACUSPID_NOTES_DEFAULT_A = 4');
+    t.assertTruthy(/HEXACUSPID_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(cSrc), 'HEXACUSPID_NOTES_MIN_VELOCITY_DECAY = 0.1');
+    t.assertTruthy(/HEXACUSPID_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(cSrc), 'HEXACUSPID_NOTES_MAX_VELOCITY_DECAY = 1.0');
+    t.assertTruthy(/HEXACUSPID_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'HEXACUSPID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/HEXACUSPID_NOTES_DEFAULT_T_MIN\s*=\s*0/.test(cSrc), 'HEXACUSPID_NOTES_DEFAULT_T_MIN = 0');
+    t.assertTruthy(/HEXACUSPID_NOTES_DEFAULT_T_MAX\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'HEXACUSPID_NOTES_DEFAULT_T_MAX = 2*PI');
+    t.assertTruthy(/HEXACUSPID_NOTES_INVERTED_T_MIN\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'HEXACUSPID_NOTES_INVERTED_T_MIN = 2*PI');
+    t.assertTruthy(/HEXACUSPID_NOTES_INVERTED_T_MAX\s*=\s*0/.test(cSrc), 'HEXACUSPID_NOTES_INVERTED_T_MAX = 0');
+    t.assertTruthy(/HEXACUSPID_NOTES_HEXAGON_T_MIN\s*=\s*0/.test(cSrc), 'HEXACUSPID_NOTES_HEXAGON_T_MIN = 0');
+    t.assertTruthy(/HEXACUSPID_NOTES_HEXAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*6/.test(cSrc), 'HEXACUSPID_NOTES_HEXAGON_T_MAX = 2*PI/6');
+    t.assertTruthy(/HEXACUSPID_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*6/.test(cSrc), 'HEXACUSPID_NOTES_TIGHT_T_MIN = -PI/6');
+    t.assertTruthy(/HEXACUSPID_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*6/.test(cSrc), 'HEXACUSPID_NOTES_TIGHT_T_MAX = PI/6');
+    t.assertTruthy(/HEXACUSPID_NOTES_SHAPE_STANDARD\s*=\s*'standard'/.test(cSrc), 'SHAPE_STANDARD');
+    t.assertTruthy(/HEXACUSPID_NOTES_SHAPE_INVERTED\s*=\s*'inverted'/.test(cSrc), 'SHAPE_INVERTED');
+    t.assertTruthy(/HEXACUSPID_NOTES_SHAPE_HEXAGON\s*=\s*'hexagon'/.test(cSrc), 'SHAPE_HEXAGON');
+    t.assertTruthy(/HEXACUSPID_NOTES_SHAPE_TIGHT\s*=\s*'tight'/.test(cSrc), 'SHAPE_TIGHT');
+});
+
+TestRunner.test("Day 753 - HEXACUSPID_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = cSrc.match(/export\s+const\s+HEXACUSPID_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(shapes, 'SHAPES array exists');
+    if (shapes) {
+        t.assertTruthy(shapes[1].includes('HEXACUSPID_NOTES_SHAPE_STANDARD'), 'STANDARD');
+        t.assertTruthy(shapes[1].includes('HEXACUSPID_NOTES_SHAPE_INVERTED'), 'INVERTED');
+        t.assertTruthy(shapes[1].includes('HEXACUSPID_NOTES_SHAPE_HEXAGON'), 'HEXAGON');
+        t.assertTruthy(shapes[1].includes('HEXACUSPID_NOTES_SHAPE_TIGHT'), 'TIGHT');
+    }
+});
+
+TestRunner.test("Day 753 - ui.js has 4 Hexacuspid Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const standard = /label:\s*`Hexacuspid Notes \(Standard, 32\)`/.test(uSrc);
+    const inverted = /label:\s*`Hexacuspid Notes \(Inverted, 32\)`/.test(uSrc);
+    const hexagon = /label:\s*`Hexacuspid Notes \(Hexagon, 32\)`/.test(uSrc);
+    const tight = /label:\s*`Hexacuspid Notes \(Tight, 32\)`/.test(uSrc);
+    t.assertTruthy(standard, 'Standard menu item');
+    t.assertTruthy(inverted, 'Inverted menu item');
+    t.assertTruthy(hexagon, 'Hexagon menu item');
+    t.assertTruthy(tight, 'Tight menu item');
+});
+
+TestRunner.test("Day 753 - Hexacuspid Notes menu items call track.hexacuspidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.hexacuspidNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 hexacuspidNotes calls');
+});
+
+TestRunner.test("Day 753 - Hexacuspid Notes menu items call recreateToneSequence after hexacuspidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/hexacuspidNotes[\s\S]{0,400}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 recreateToneSequence calls');
+});
+
+TestRunner.test("Day 753 - Hexacuspid Notes menu items show 'Hexacuspid'd N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Hexacuspid'd\s+\$\{result\}\s+note\(s\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Hexacuspid\\'d notifications');
+});
+
+TestRunner.test("Day 753 - Hexacuspid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/hexacuspidNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 753 - APP_VERSION validation (>= 2.403 for Day 753)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.403\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.403.0');
+});
+
+TestRunner.test("Day 753 - Functional test: hexacuspid parametric x = a*cos(t) + (a/5)*cos(5t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver5\s*\*\s*cos5T/.test(tSrc), 'x = a*cos(t) + (a/5)*cos(5t)');
+});
+
+TestRunner.test("Day 753 - Functional test: hexacuspid parametric y = a*sin(t) - (a/5)*sin(5t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver5\s*\*\s*sin5T/.test(tSrc), 'y = a*sin(t) - (a/5)*sin(5t)');
+});
+
+TestRunner.test("Day 753 - Functional test: at t=0, x=6a/5 and y=0 (the rightmost extreme of the hexacuspid)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,3000}At\s+t\s*=\s*0[\s\S]{0,200}\(6a\/5,\s*0\)/.test(tSrc), 'rightmost extreme (6a/5, 0) documented in comments');
+});
+
+TestRunner.test("Day 753 - Structural test: hexacuspidNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/hexacuspidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});

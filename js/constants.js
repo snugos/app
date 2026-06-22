@@ -2046,4 +2046,32 @@ export const PENTOID_NOTES_SHAPES = [
     PENTOID_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.402.0';
+export const HEXACUSPID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the hexacuspid
+export const HEXACUSPID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution hexacuspid)
+export const HEXACUSPID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the hexacuspid
+export const HEXACUSPID_NOTES_MIN_A = 1; // Minimum 1 scale a (small hexacuspid)
+export const HEXACUSPID_NOTES_MAX_A = 8; // Maximum 8 scale a (large hexacuspid)
+export const HEXACUSPID_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium hexacuspid)
+export const HEXACUSPID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const HEXACUSPID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const HEXACUSPID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const HEXACUSPID_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const HEXACUSPID_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 6 cusps visited)
+export const HEXACUSPID_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const HEXACUSPID_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const HEXACUSPID_NOTES_HEXAGON_T_MIN = 0; // Hexagon shape lower t bound (sixth revolution, 1 cusp region)
+export const HEXACUSPID_NOTES_HEXAGON_T_MAX = 2 * Math.PI / 6; // Hexagon shape upper t bound (sixth revolution, 1 cusp)
+export const HEXACUSPID_NOTES_TIGHT_T_MIN = -Math.PI / 6; // Tight shape lower t bound (concentrated around 1 cusp)
+export const HEXACUSPID_NOTES_TIGHT_T_MAX = Math.PI / 6; // Tight shape upper t bound (concentrated around 1 cusp)
+export const HEXACUSPID_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2π]: full hexacuspid with all 6 cusps (R/r=6 default)
+export const HEXACUSPID_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2π, 0]: reversed traversal direction
+export const HEXACUSPID_NOTES_SHAPE_HEXAGON = 'hexagon'; // t in [0, 2π/6]: sixth revolution, just 1 cusp region
+export const HEXACUSPID_NOTES_SHAPE_TIGHT = 'tight'; // t in [-π/6, +π/6]: tight concentration around the right cusp region
+export const HEXACUSPID_NOTES_SHAPES = [
+    HEXACUSPID_NOTES_SHAPE_STANDARD,
+    HEXACUSPID_NOTES_SHAPE_INVERTED,
+    HEXACUSPID_NOTES_SHAPE_HEXAGON,
+    HEXACUSPID_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.403.0';
