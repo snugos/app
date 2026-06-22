@@ -59685,3 +59685,225 @@ TestRunner.test("Day 750 - Functional test: astroid parametric y = a*sin^3(t) (R
     t.assertTruthy(/astroidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinCubed/.test(tSrc), 'y = a*sin^3(t)');
 });
 
+TestRunner.test("Day 751 - deltoidNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes\s*\(/.test(tSrc), 'deltoidNotes defined');
+});
+
+TestRunner.test("Day 751 - deltoidNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes\s*\(\s*length\s*=\s*Constants\.DELTOID_NOTES_DEFAULT_LENGTH\s*,\s*scale\s*=\s*Constants\.DELTOID_NOTES_DEFAULT_A\s*,\s*velocityDecay\s*=\s*Constants\.DELTOID_NOTES_DEFAULT_VELOCITY_DECAY\s*,\s*shape\s*=\s*Constants\.DELTOID_NOTES_SHAPE_STANDARD\s*,\s*skipOccupied\s*=\s*true\s*\)/.test(tSrc), 'all 5 params with defaults');
+});
+
+TestRunner.test("Day 751 - deltoidNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,200}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'returns 0 for Audio');
+});
+
+TestRunner.test("Day 751 - deltoidNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,300}getActiveSequence\s*\(/.test(tSrc), 'getActiveSequence called');
+});
+
+TestRunner.test("Day 751 - deltoidNotes captures undo BEFORE mutation with descriptive 'Deltoid Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,2500}_captureUndoState\s*\(\s*`Deltoid Notes/.test(tSrc), 'undo capture with descriptive label');
+});
+
+TestRunner.test("Day 751 - deltoidNotes clamps all parameters to DELTOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,1500}DELTOID_NOTES_MIN_LENGTH[\s\S]{0,200}DELTOID_NOTES_MAX_LENGTH/.test(tSrc), 'length clamp');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,1500}DELTOID_NOTES_MIN_A[\s\S]{0,200}DELTOID_NOTES_MAX_A/.test(tSrc), 'a clamp');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,1500}DELTOID_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,200}DELTOID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'velocityDecay clamp');
+});
+
+TestRunner.test("Day 751 - deltoidNotes validates shape with DELTOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,1500}DELTOID_NOTES_SHAPES\.includes\s*\(\s*shape\s*\)/.test(tSrc), 'shape validation');
+});
+
+TestRunner.test("Day 751 - deltoidNotes uses Euler 1745 parametric x = 2a*cos(t) + a*cos(2t) and y = 2a*sin(t) - a*sin(2t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*\(\s*2\s*\*\s*cosT\s*\+\s*cos2T\s*\)/.test(tSrc), 'Euler 1745 x formula (2cos(t)+cos(2t))');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*\(\s*2\s*\*\s*sinT\s*-\s*sin2T\s*\)/.test(tSrc), 'Euler 1745 y formula (2sin(t)-sin(2t))');
+});
+
+TestRunner.test("Day 751 - deltoidNotes uses Math.cos, Math.sin, Math.cos(2t), Math.sin(2t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,2500}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t)');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,2500}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t)');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,2500}Math\.cos\s*\(\s*2\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(2*t)');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,2500}Math\.sin\s*\(\s*2\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(2*t)');
+});
+
+TestRunner.test("Day 751 - deltoidNotes skips non-finite samples (defensive)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}isFinite\s*\(\s*x\s*\)\s*\|\|\s*!isFinite\s*\(\s*y\s*\)/.test(tSrc), 'non-finite guard');
+});
+
+TestRunner.test("Day 751 - deltoidNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,4000}newNotes\.push[\s\S]{0,2000}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(tSrc), 'newNotes pattern');
+});
+
+TestRunner.test("Day 751 - deltoidNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,5000}probability:\s*stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 751 - deltoidNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,5000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(tSrc), 'row bounds');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,5000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(tSrc), 'col bounds');
+});
+
+TestRunner.test("Day 751 - deltoidNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,5000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(tSrc), 'source cell skip');
+});
+
+TestRunner.test("Day 751 - deltoidNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,5000}stepData\s*\|\|\s*!stepData\.active/.test(tSrc), 'empty source guard');
+});
+
+TestRunner.test("Day 751 - deltoidNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange guard');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange guard');
+});
+
+TestRunner.test("Day 751 - deltoidNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,5000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity 2-decimal rounding');
+});
+
+TestRunner.test("Day 751 - deltoidNotes returns count of deltoid notes (deltoidCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let\s+deltoidCount\s*=\s*0/.test(tSrc), 'deltoidCount initialized');
+    t.assertTruthy(/return\s+deltoidCount/.test(tSrc), 'returns deltoidCount');
+});
+
+TestRunner.test("Day 751 - deltoidNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,5000}skipOccupied\s*&&/.test(tSrc), 'skipOccupied used');
+});
+
+TestRunner.test("Day 751 - deltoidNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}DELTOID_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD shape');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}DELTOID_NOTES_SHAPE_INVERTED/.test(tSrc), 'INVERTED shape');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}DELTOID_NOTES_SHAPE_UPPER/.test(tSrc), 'UPPER shape');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}DELTOID_NOTES_SHAPE_TIGHT/.test(tSrc), 'TIGHT shape');
+});
+
+TestRunner.test("Day 751 - deltoidNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}tRangeMap/.test(tSrc), 'tRangeMap exists');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}const\s+tMin\s*=\s*tRange\[0\]/.test(tSrc), 'tMin extracted');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}const\s+tMax\s*=\s*tRange\[1\]/.test(tSrc), 'tMax extracted');
+});
+
+TestRunner.test("Day 751 - deltoidNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 751 - All 21 DELTOID_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/DELTOID_NOTES_MIN_LENGTH\s*=\s*8/.test(cSrc), 'DELTOID_NOTES_MIN_LENGTH = 8');
+    t.assertTruthy(/DELTOID_NOTES_MAX_LENGTH\s*=\s*64/.test(cSrc), 'DELTOID_NOTES_MAX_LENGTH = 64');
+    t.assertTruthy(/DELTOID_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DELTOID_NOTES_DEFAULT_LENGTH = 32');
+    t.assertTruthy(/DELTOID_NOTES_MIN_A\s*=\s*1/.test(cSrc), 'DELTOID_NOTES_MIN_A = 1');
+    t.assertTruthy(/DELTOID_NOTES_MAX_A\s*=\s*8/.test(cSrc), 'DELTOID_NOTES_MAX_A = 8');
+    t.assertTruthy(/DELTOID_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'DELTOID_NOTES_DEFAULT_A = 4');
+    t.assertTruthy(/DELTOID_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(cSrc), 'DELTOID_NOTES_MIN_VELOCITY_DECAY = 0.1');
+    t.assertTruthy(/DELTOID_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(cSrc), 'DELTOID_NOTES_MAX_VELOCITY_DECAY = 1.0');
+    t.assertTruthy(/DELTOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'DELTOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/DELTOID_NOTES_DEFAULT_T_MIN\s*=\s*0/.test(cSrc), 'DELTOID_NOTES_DEFAULT_T_MIN = 0');
+    t.assertTruthy(/DELTOID_NOTES_DEFAULT_T_MAX\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'DELTOID_NOTES_DEFAULT_T_MAX = 2*PI');
+    t.assertTruthy(/DELTOID_NOTES_INVERTED_T_MIN\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'DELTOID_NOTES_INVERTED_T_MIN = 2*PI');
+    t.assertTruthy(/DELTOID_NOTES_INVERTED_T_MAX\s*=\s*0/.test(cSrc), 'DELTOID_NOTES_INVERTED_T_MAX = 0');
+    t.assertTruthy(/DELTOID_NOTES_UPPER_T_MIN\s*=\s*0/.test(cSrc), 'DELTOID_NOTES_UPPER_T_MIN = 0');
+    t.assertTruthy(/DELTOID_NOTES_UPPER_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*3/.test(cSrc), 'DELTOID_NOTES_UPPER_T_MAX = 2*PI/3');
+    t.assertTruthy(/DELTOID_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*3/.test(cSrc), 'DELTOID_NOTES_TIGHT_T_MIN = -PI/3');
+    t.assertTruthy(/DELTOID_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*3/.test(cSrc), 'DELTOID_NOTES_TIGHT_T_MAX = PI/3');
+    t.assertTruthy(/DELTOID_NOTES_SHAPE_STANDARD\s*=\s*'standard'/.test(cSrc), 'SHAPE_STANDARD');
+    t.assertTruthy(/DELTOID_NOTES_SHAPE_INVERTED\s*=\s*'inverted'/.test(cSrc), 'SHAPE_INVERTED');
+    t.assertTruthy(/DELTOID_NOTES_SHAPE_UPPER\s*=\s*'upper'/.test(cSrc), 'SHAPE_UPPER');
+    t.assertTruthy(/DELTOID_NOTES_SHAPE_TIGHT\s*=\s*'tight'/.test(cSrc), 'SHAPE_TIGHT');
+});
+
+TestRunner.test("Day 751 - DELTOID_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = cSrc.match(/export\s+const\s+DELTOID_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(shapes, 'SHAPES array exists');
+    if (shapes) {
+        t.assertTruthy(shapes[1].includes('DELTOID_NOTES_SHAPE_STANDARD'), 'STANDARD');
+        t.assertTruthy(shapes[1].includes('DELTOID_NOTES_SHAPE_INVERTED'), 'INVERTED');
+        t.assertTruthy(shapes[1].includes('DELTOID_NOTES_SHAPE_UPPER'), 'UPPER');
+        t.assertTruthy(shapes[1].includes('DELTOID_NOTES_SHAPE_TIGHT'), 'TIGHT');
+    }
+});
+
+TestRunner.test("Day 751 - ui.js has 4 Deltoid Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const standard = /label:\s*`Deltoid Notes \(Standard, 32\)`/.test(uSrc);
+    const inverted = /label:\s*`Deltoid Notes \(Inverted, 32\)`/.test(uSrc);
+    const upper = /label:\s*`Deltoid Notes \(Upper, 32\)`/.test(uSrc);
+    const tight = /label:\s*`Deltoid Notes \(Tight, 32\)`/.test(uSrc);
+    t.assertTruthy(standard, 'Standard menu item');
+    t.assertTruthy(inverted, 'Inverted menu item');
+    t.assertTruthy(upper, 'Upper menu item');
+    t.assertTruthy(tight, 'Tight menu item');
+});
+
+TestRunner.test("Day 751 - Deltoid Notes menu items call track.deltoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.deltoidNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 deltoidNotes calls');
+});
+
+TestRunner.test("Day 751 - Deltoid Notes menu items call recreateToneSequence after deltoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/deltoidNotes[\s\S]{0,400}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 recreateToneSequence calls');
+});
+
+TestRunner.test("Day 751 - Deltoid Notes menu items show 'Deltoid\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Deltoid'd\s+\$\{result\}\s+note\(s\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Deltoid\\'d notifications');
+});
+
+TestRunner.test("Day 751 - Deltoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/deltoidNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 751 - APP_VERSION validation (>= 2.401 for Day 751)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.401\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.401.0');
+});
+
+TestRunner.test("Day 751 - Functional test: deltoid parametric x = a*(2*cos(t) + cos(2t)) (Euler 1745)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*\(\s*2\s*\*\s*cosT\s*\+\s*cos2T\s*\)/.test(tSrc), 'x = a*(2*cos(t)+cos(2t))');
+});
+
+TestRunner.test("Day 751 - Functional test: deltoid parametric y = a*(2*sin(t) - sin(2t)) (Euler 1745)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*\(\s*2\s*\*\s*sinT\s*-\s*sin2T\s*\)/.test(tSrc), 'y = a*(2*sin(t)-sin(2t))');
+});
+
+TestRunner.test("Day 751 - Functional test: at t=0, x=3a and y=0 (the rightmost extreme of the deltoid)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,3000}At\s+t\s*=\s*0[\s\S]{0,200}\(3a,\s*0\)/.test(tSrc), 'rightmost extreme (3a, 0) documented in comments');
+});
+
+TestRunner.test("Day 751 - Structural test: deltoidNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/deltoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
