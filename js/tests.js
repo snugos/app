@@ -59270,3 +59270,206 @@ TestRunner.test("Day 748 - APP_VERSION validation (>= 2.398 for Day 748)", (t) =
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.398\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.398.0');
 });
+
+TestRunner.test("Day 749 - nephroidNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes\s*\(/.test(tSrc), 'nephroidNotes defined');
+});
+
+TestRunner.test("Day 749 - nephroidNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes\s*\(\s*length\s*=\s*Constants\.NEPHROID_NOTES_DEFAULT_LENGTH\s*,\s*scale\s*=\s*Constants\.NEPHROID_NOTES_DEFAULT_A\s*,\s*velocityDecay\s*=\s*Constants\.NEPHROID_NOTES_DEFAULT_VELOCITY_DECAY\s*,\s*shape\s*=\s*Constants\.NEPHROID_NOTES_SHAPE_STANDARD\s*,\s*skipOccupied\s*=\s*true\s*\)/.test(tSrc), 'all 5 params with defaults');
+});
+
+TestRunner.test("Day 749 - nephroidNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,200}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'returns 0 for Audio');
+});
+
+TestRunner.test("Day 749 - nephroidNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,300}getActiveSequence\s*\(/.test(tSrc), 'getActiveSequence called');
+});
+
+TestRunner.test("Day 749 - nephroidNotes captures undo BEFORE mutation with descriptive 'Nephroid Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,2500}_captureUndoState\s*\(\s*`Nephroid Notes/.test(tSrc), 'undo capture with descriptive label');
+});
+
+TestRunner.test("Day 749 - nephroidNotes clamps all parameters to NEPHROID_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,1500}NEPHROID_NOTES_MIN_LENGTH[\s\S]{0,200}NEPHROID_NOTES_MAX_LENGTH/.test(tSrc), 'length clamp');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,1500}NEPHROID_NOTES_MIN_A[\s\S]{0,200}NEPHROID_NOTES_MAX_A/.test(tSrc), 'a clamp');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,1500}NEPHROID_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,200}NEPHROID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'velocityDecay clamp');
+});
+
+TestRunner.test("Day 749 - nephroidNotes validates shape with NEPHROID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,1500}NEPHROID_NOTES_SHAPES\.includes\s*\(\s*shape\s*\)/.test(tSrc), 'shape validation');
+});
+
+TestRunner.test("Day 749 - nephroidNotes uses de la Hire ~1670 parametric x = a*(3*cos(t) + cos(2t)) and y = a*(3*sin(t) - sin(2t))", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*\(\s*3\s*\*\s*cosT\s*\+\s*cos2T\s*\)/.test(tSrc), 'de la Hire x formula');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*\(\s*3\s*\*\s*sinT\s*-\s*sin2T\s*\)/.test(tSrc), 'de la Hire y formula');
+});
+
+TestRunner.test("Day 749 - nephroidNotes uses Math.cos and Math.sin for parametric t and 2t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,2500}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t)');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,2500}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t)');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,2500}Math\.cos\s*\(\s*2\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(2*t)');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,2500}Math\.sin\s*\(\s*2\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(2*t)');
+});
+
+TestRunner.test("Day 749 - nephroidNotes skips non-finite samples (defensive)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,3000}isFinite\s*\(\s*x\s*\)\s*\|\|\s*!isFinite\s*\(\s*y\s*\)/.test(tSrc), 'non-finite guard');
+});
+
+TestRunner.test("Day 749 - nephroidNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,4000}newNotes\.push[\s\S]{0,2000}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(tSrc), 'newNotes pattern');
+});
+
+TestRunner.test("Day 749 - nephroidNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}probability:\s*stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 749 - nephroidNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(tSrc), 'row bounds');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(tSrc), 'col bounds');
+});
+
+TestRunner.test("Day 749 - nephroidNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(tSrc), 'self-reference skip');
+});
+
+TestRunner.test("Day 749 - nephroidNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(tSrc), 'skip non-active cells');
+});
+
+TestRunner.test("Day 749 - nephroidNotes uses Math.pow for velocity decay", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}Math\.pow\s*\(\s*clampedDecay\s*,\s*i\s*\)/.test(tSrc), 'Math.pow velocity decay');
+});
+
+TestRunner.test("Day 749 - nephroidNotes uses Math.floor for length and scale", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,300}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor length');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,300}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor scale');
+});
+
+TestRunner.test("Day 749 - nephroidNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'rounds velocity');
+});
+
+TestRunner.test("Day 749 - nephroidNotes returns count of nephroid notes (nephroidCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,6000}return\s+nephroidCount/.test(tSrc), 'returns nephroidCount');
+});
+
+TestRunner.test("Day 749 - nephroidNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}skipOccupied\s*&&/.test(tSrc), 'skipOccupied option');
+});
+
+TestRunner.test("Day 749 - nephroidNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange min');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,5000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange min');
+});
+
+TestRunner.test("Day 749 - nephroidNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,2500}NEPHROID_NOTES_SHAPE_STANDARD[\s\S]{0,1500}NEPHROID_NOTES_SHAPE_INVERTED[\s\S]{0,1500}NEPHROID_NOTES_SHAPE_UPPER[\s\S]{0,1500}NEPHROID_NOTES_SHAPE_TIGHT/.test(tSrc), '4 shape mappings');
+});
+
+TestRunner.test("Day 749 - nephroidNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,2500}tRange\s*=\s*tRangeMap\[useShape\]\s*\|\|\s*tRangeMap\[Constants\.NEPHROID_NOTES_SHAPE_STANDARD\]/.test(tSrc), 'tRange resolver');
+});
+
+TestRunner.test("Day 749 - nephroidNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/nephroidNotes[\s\S]{0,2500}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 749 - All 23 NEPHROID_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/NEPHROID_NOTES_MIN_LENGTH\s*=\s*8/.test(cSrc), 'MIN_LENGTH');
+    t.assertTruthy(/NEPHROID_NOTES_MAX_LENGTH\s*=\s*64/.test(cSrc), 'MAX_LENGTH');
+    t.assertTruthy(/NEPHROID_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH');
+    t.assertTruthy(/NEPHROID_NOTES_MIN_A\s*=\s*1/.test(cSrc), 'MIN_A');
+    t.assertTruthy(/NEPHROID_NOTES_MAX_A\s*=\s*8/.test(cSrc), 'MAX_A');
+    t.assertTruthy(/NEPHROID_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'DEFAULT_A');
+    t.assertTruthy(/NEPHROID_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(cSrc), 'MIN_VELOCITY_DECAY');
+    t.assertTruthy(/NEPHROID_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(cSrc), 'MAX_VELOCITY_DECAY');
+    t.assertTruthy(/NEPHROID_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'DEFAULT_VELOCITY_DECAY');
+    t.assertTruthy(/NEPHROID_NOTES_DEFAULT_T_MIN\s*=\s*0/.test(cSrc), 'DEFAULT_T_MIN');
+    t.assertTruthy(/NEPHROID_NOTES_DEFAULT_T_MAX\s*=\s*2\s*\*/.test(cSrc), 'DEFAULT_T_MAX');
+    t.assertTruthy(/NEPHROID_NOTES_INVERTED_T_MIN\s*=\s*2\s*\*/.test(cSrc), 'INVERTED_T_MIN');
+    t.assertTruthy(/NEPHROID_NOTES_INVERTED_T_MAX\s*=\s*0/.test(cSrc), 'INVERTED_T_MAX');
+    t.assertTruthy(/NEPHROID_NOTES_UPPER_T_MIN\s*=\s*0/.test(cSrc), 'UPPER_T_MIN');
+    t.assertTruthy(/NEPHROID_NOTES_UPPER_T_MAX\s*=\s*Math\.PI/.test(cSrc), 'UPPER_T_MAX');
+    t.assertTruthy(/NEPHROID_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*2/.test(cSrc), 'TIGHT_T_MIN');
+    t.assertTruthy(/NEPHROID_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*2/.test(cSrc), 'TIGHT_T_MAX');
+    t.assertTruthy(/NEPHROID_NOTES_SHAPE_STANDARD\s*=\s*'standard'/.test(cSrc), 'SHAPE_STANDARD');
+    t.assertTruthy(/NEPHROID_NOTES_SHAPE_INVERTED\s*=\s*'inverted'/.test(cSrc), 'SHAPE_INVERTED');
+    t.assertTruthy(/NEPHROID_NOTES_SHAPE_UPPER\s*=\s*'upper'/.test(cSrc), 'SHAPE_UPPER');
+    t.assertTruthy(/NEPHROID_NOTES_SHAPE_TIGHT\s*=\s*'tight'/.test(cSrc), 'SHAPE_TIGHT');
+    t.assertTruthy(/NEPHROID_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'SHAPES array');
+});
+
+TestRunner.test("Day 749 - NEPHROID_NOTES_SHAPES includes all 4 shape variants (standard, inverted, upper, tight)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/NEPHROID_NOTES_SHAPES\s*=\s*\[[\s\S]*?NEPHROID_NOTES_SHAPE_STANDARD[\s\S]*?NEPHROID_NOTES_SHAPE_INVERTED[\s\S]*?NEPHROID_NOTES_SHAPE_UPPER[\s\S]*?NEPHROID_NOTES_SHAPE_TIGHT/.test(cSrc), 'all 4 shapes in array');
+});
+
+TestRunner.test("Day 749 - ui.js has 4 Nephroid Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Nephroid Notes \([A-Za-z]+, 32\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Nephroid menu items');
+});
+
+TestRunner.test("Day 749 - Nephroid Notes menu items call track.nephroidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.nephroidNotes/g) || [];
+    t.assertEqual(matches.length, 4, '4 calls to track.nephroidNotes');
+});
+
+TestRunner.test("Day 749 - Nephroid Notes menu items call recreateToneSequence after nephroidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.nephroidNotes[\s\S]{0,300}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 recreateToneSequence after nephroidNotes');
+});
+
+TestRunner.test("Day 749 - Nephroid Notes menu items show 'Nephroid\\\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Nephroid'd \$\{result\} note\(s\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Nephroid\'d notifications');
+});
+
+TestRunner.test("Day 749 - Nephroid Notes menu items include all 4 shape variants (standard, inverted, upper, tight)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Nephroid Notes \(Standard/.test(uSrc), 'Standard shape menu item');
+    t.assertTruthy(/Nephroid Notes \(Inverted/.test(uSrc), 'Inverted shape menu item');
+    t.assertTruthy(/Nephroid Notes \(Upper/.test(uSrc), 'Upper shape menu item');
+    t.assertTruthy(/Nephroid Notes \(Tight/.test(uSrc), 'Tight shape menu item');
+});
+
+TestRunner.test("Day 749 - Nephroid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/nephroidNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 749 - APP_VERSION validation (>= 2.399 for Day 749)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.399\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.399.0');
+});
