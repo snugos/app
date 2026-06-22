@@ -59907,3 +59907,226 @@ TestRunner.test("Day 751 - Structural test: deltoidNotes uses Math.floor for len
     t.assertTruthy(/deltoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
     t.assertTruthy(/deltoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
 });
+
+TestRunner.test("Day 752 - pentoidNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes\s*\(/.test(tSrc), 'pentoidNotes defined');
+});
+
+TestRunner.test("Day 752 - pentoidNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes\s*\(\s*length\s*=\s*Constants\.PENTOID_NOTES_DEFAULT_LENGTH\s*,\s*scale\s*=\s*Constants\.PENTOID_NOTES_DEFAULT_A\s*,\s*velocityDecay\s*=\s*Constants\.PENTOID_NOTES_DEFAULT_VELOCITY_DECAY\s*,\s*shape\s*=\s*Constants\.PENTOID_NOTES_SHAPE_STANDARD\s*,\s*skipOccupied\s*=\s*true\s*\)/.test(tSrc), 'all 5 params with defaults');
+});
+
+TestRunner.test("Day 752 - pentoidNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,200}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'returns 0 for Audio');
+});
+
+TestRunner.test("Day 752 - pentoidNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,300}getActiveSequence\s*\(/.test(tSrc), 'getActiveSequence called');
+});
+
+TestRunner.test("Day 752 - pentoidNotes captures undo BEFORE mutation with descriptive 'Pentoid Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,2500}_captureUndoState\s*\(\s*`Pentoid Notes/.test(tSrc), 'undo capture with descriptive label');
+});
+
+TestRunner.test("Day 752 - pentoidNotes clamps all parameters to PENTOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,1500}PENTOID_NOTES_MIN_LENGTH[\s\S]{0,200}PENTOID_NOTES_MAX_LENGTH/.test(tSrc), 'length clamp');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,1500}PENTOID_NOTES_MIN_A[\s\S]{0,200}PENTOID_NOTES_MAX_A/.test(tSrc), 'a clamp');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,1500}PENTOID_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,200}PENTOID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'velocityDecay clamp');
+});
+
+TestRunner.test("Day 752 - pentoidNotes validates shape with PENTOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,1500}PENTOID_NOTES_SHAPES\.includes\s*\(\s*shape\s*\)/.test(tSrc), 'shape validation');
+});
+
+TestRunner.test("Day 752 - pentoidNotes uses 5-cusped hypocycloid parametric x = a*cos(t) + (a/4)*cos(4t) and y = a*sin(t) - (a/4)*sin(4t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver4\s*\*\s*cos4T/.test(tSrc), 'pentoid x formula (a*cos(t)+(a/4)*cos(4t))');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver4\s*\*\s*sin4T/.test(tSrc), 'pentoid y formula (a*sin(t)-(a/4)*sin(4t))');
+});
+
+TestRunner.test("Day 752 - pentoidNotes uses Math.cos, Math.sin, Math.cos(4t), Math.sin(4t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,2500}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t)');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,2500}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t)');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,2500}Math\.cos\s*\(\s*4\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(4*t)');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,2500}Math\.sin\s*\(\s*4\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(4*t)');
+});
+
+TestRunner.test("Day 752 - pentoidNotes skips non-finite samples (defensive)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}isFinite\s*\(\s*x\s*\)\s*\|\|\s*!isFinite\s*\(\s*y\s*\)/.test(tSrc), 'non-finite guard');
+});
+
+TestRunner.test("Day 752 - pentoidNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,4000}newNotes\.push[\s\S]{0,2000}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(tSrc), 'newNotes pattern');
+});
+
+TestRunner.test("Day 752 - pentoidNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,5000}probability:\s*stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 752 - pentoidNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,5000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(tSrc), 'row bounds');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,5000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(tSrc), 'col bounds');
+});
+
+TestRunner.test("Day 752 - pentoidNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,5000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(tSrc), 'source cell skip');
+});
+
+TestRunner.test("Day 752 - pentoidNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,5000}stepData\s*\|\|\s*!stepData\.active/.test(tSrc), 'empty source guard');
+});
+
+TestRunner.test("Day 752 - pentoidNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange guard');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange guard');
+});
+
+TestRunner.test("Day 752 - pentoidNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,5000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity 2-decimal rounding');
+});
+
+TestRunner.test("Day 752 - pentoidNotes returns count of pentoid notes (pentoidCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let\s+pentoidCount\s*=\s*0/.test(tSrc), 'pentoidCount initialized');
+    t.assertTruthy(/return\s+pentoidCount/.test(tSrc), 'returns pentoidCount');
+});
+
+TestRunner.test("Day 752 - pentoidNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,5000}skipOccupied\s*&&/.test(tSrc), 'skipOccupied used');
+});
+
+TestRunner.test("Day 752 - pentoidNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}PENTOID_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD shape');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}PENTOID_NOTES_SHAPE_INVERTED/.test(tSrc), 'INVERTED shape');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}PENTOID_NOTES_SHAPE_PENTAGON/.test(tSrc), 'PENTAGON shape');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}PENTOID_NOTES_SHAPE_TIGHT/.test(tSrc), 'TIGHT shape');
+});
+
+TestRunner.test("Day 752 - pentoidNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}tRangeMap/.test(tSrc), 'tRangeMap exists');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}const\s+tMin\s*=\s*tRange\[0\]/.test(tSrc), 'tMin extracted');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}const\s+tMax\s*=\s*tRange\[1\]/.test(tSrc), 'tMax extracted');
+});
+
+TestRunner.test("Day 752 - pentoidNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 752 - All 22 PENTOID_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/PENTOID_NOTES_MIN_LENGTH\s*=\s*8/.test(cSrc), 'PENTOID_NOTES_MIN_LENGTH = 8');
+    t.assertTruthy(/PENTOID_NOTES_MAX_LENGTH\s*=\s*64/.test(cSrc), 'PENTOID_NOTES_MAX_LENGTH = 64');
+    t.assertTruthy(/PENTOID_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'PENTOID_NOTES_DEFAULT_LENGTH = 32');
+    t.assertTruthy(/PENTOID_NOTES_MIN_A\s*=\s*1/.test(cSrc), 'PENTOID_NOTES_MIN_A = 1');
+    t.assertTruthy(/PENTOID_NOTES_MAX_A\s*=\s*8/.test(cSrc), 'PENTOID_NOTES_MAX_A = 8');
+    t.assertTruthy(/PENTOID_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'PENTOID_NOTES_DEFAULT_A = 4');
+    t.assertTruthy(/PENTOID_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(cSrc), 'PENTOID_NOTES_MIN_VELOCITY_DECAY = 0.1');
+    t.assertTruthy(/PENTOID_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(cSrc), 'PENTOID_NOTES_MAX_VELOCITY_DECAY = 1.0');
+    t.assertTruthy(/PENTOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'PENTOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/PENTOID_NOTES_DEFAULT_T_MIN\s*=\s*0/.test(cSrc), 'PENTOID_NOTES_DEFAULT_T_MIN = 0');
+    t.assertTruthy(/PENTOID_NOTES_DEFAULT_T_MAX\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'PENTOID_NOTES_DEFAULT_T_MAX = 2*PI');
+    t.assertTruthy(/PENTOID_NOTES_INVERTED_T_MIN\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'PENTOID_NOTES_INVERTED_T_MIN = 2*PI');
+    t.assertTruthy(/PENTOID_NOTES_INVERTED_T_MAX\s*=\s*0/.test(cSrc), 'PENTOID_NOTES_INVERTED_T_MAX = 0');
+    t.assertTruthy(/PENTOID_NOTES_PENTAGON_T_MIN\s*=\s*0/.test(cSrc), 'PENTOID_NOTES_PENTAGON_T_MIN = 0');
+    t.assertTruthy(/PENTOID_NOTES_PENTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*5/.test(cSrc), 'PENTOID_NOTES_PENTAGON_T_MAX = 2*PI/5');
+    t.assertTruthy(/PENTOID_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*5/.test(cSrc), 'PENTOID_NOTES_TIGHT_T_MIN = -PI/5');
+    t.assertTruthy(/PENTOID_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*5/.test(cSrc), 'PENTOID_NOTES_TIGHT_T_MAX = PI/5');
+    t.assertTruthy(/PENTOID_NOTES_SHAPE_STANDARD\s*=\s*'standard'/.test(cSrc), 'SHAPE_STANDARD');
+    t.assertTruthy(/PENTOID_NOTES_SHAPE_INVERTED\s*=\s*'inverted'/.test(cSrc), 'SHAPE_INVERTED');
+    t.assertTruthy(/PENTOID_NOTES_SHAPE_PENTAGON\s*=\s*'pentagon'/.test(cSrc), 'SHAPE_PENTAGON');
+    t.assertTruthy(/PENTOID_NOTES_SHAPE_TIGHT\s*=\s*'tight'/.test(cSrc), 'SHAPE_TIGHT');
+});
+
+TestRunner.test("Day 752 - PENTOID_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = cSrc.match(/export\s+const\s+PENTOID_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(shapes, 'SHAPES array exists');
+    if (shapes) {
+        t.assertTruthy(shapes[1].includes('PENTOID_NOTES_SHAPE_STANDARD'), 'STANDARD');
+        t.assertTruthy(shapes[1].includes('PENTOID_NOTES_SHAPE_INVERTED'), 'INVERTED');
+        t.assertTruthy(shapes[1].includes('PENTOID_NOTES_SHAPE_PENTAGON'), 'PENTAGON');
+        t.assertTruthy(shapes[1].includes('PENTOID_NOTES_SHAPE_TIGHT'), 'TIGHT');
+    }
+});
+
+TestRunner.test("Day 752 - ui.js has 4 Pentoid Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const standard = /label:\s*`Pentoid Notes \(Standard, 32\)`/.test(uSrc);
+    const inverted = /label:\s*`Pentoid Notes \(Inverted, 32\)`/.test(uSrc);
+    const pentagon = /label:\s*`Pentoid Notes \(Pentagon, 32\)`/.test(uSrc);
+    const tight = /label:\s*`Pentoid Notes \(Tight, 32\)`/.test(uSrc);
+    t.assertTruthy(standard, 'Standard menu item');
+    t.assertTruthy(inverted, 'Inverted menu item');
+    t.assertTruthy(pentagon, 'Pentagon menu item');
+    t.assertTruthy(tight, 'Tight menu item');
+});
+
+TestRunner.test("Day 752 - Pentoid Notes menu items call track.pentoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.pentoidNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 pentoidNotes calls');
+});
+
+TestRunner.test("Day 752 - Pentoid Notes menu items call recreateToneSequence after pentoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/pentoidNotes[\s\S]{0,400}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 recreateToneSequence calls');
+});
+
+TestRunner.test("Day 752 - Pentoid Notes menu items show 'Pentoid\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Pentoid'd\s+\$\{result\}\s+note\(s\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Pentoid\\'d notifications');
+});
+
+TestRunner.test("Day 752 - Pentoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/pentoidNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 752 - APP_VERSION validation (>= 2.402 for Day 752)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.402\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.402.0');
+});
+
+TestRunner.test("Day 752 - Functional test: pentoid parametric x = a*cos(t) + (a/4)*cos(4t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver4\s*\*\s*cos4T/.test(tSrc), 'x = a*cos(t) + (a/4)*cos(4t)');
+});
+
+TestRunner.test("Day 752 - Functional test: pentoid parametric y = a*sin(t) - (a/4)*sin(4t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver4\s*\*\s*sin4T/.test(tSrc), 'y = a*sin(t) - (a/4)*sin(4t)');
+});
+
+TestRunner.test("Day 752 - Functional test: at t=0, x=5a/4 and y=0 (the rightmost extreme of the pentoid)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,3000}At\s+t\s*=\s*0[\s\S]{0,200}\(5a\/4,\s*0\)/.test(tSrc), 'rightmost extreme (5a/4, 0) documented in comments');
+});
+
+TestRunner.test("Day 752 - Structural test: pentoidNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/pentoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
