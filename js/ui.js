@@ -2855,6 +2855,10 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 { label: `Kampyle of Eudoxus Notes (Inverted, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Kampyle Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.kampyleNotes(32, 2, 0.95, 'inverted', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Kampyle'd ${result} note(s) (inverted, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to kampyle.", 2000); } } },
                 { label: `Kampyle of Eudoxus Notes (Right, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Kampyle Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.kampyleNotes(32, 2, 0.95, 'right', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Kampyle'd ${result} note(s) (right, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to kampyle.", 2000); } } },
                 { label: `Kampyle of Eudoxus Notes (Upper, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Kampyle Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.kampyleNotes(32, 2, 0.95, 'upper', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Kampyle'd ${result} note(s) (upper, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to kampyle.", 2000); } } },
+                { label: `Bicorn Notes (Standard, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Bicorn Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.bicornNotes(32, 4, 0.95, 'standard', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Bicorn'd ${result} note(s) (standard, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to bicorn.", 2000); } } },
+                { label: `Bicorn Notes (Inverted, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Bicorn Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.bicornNotes(32, 4, 0.95, 'inverted', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Bicorn'd ${result} note(s) (inverted, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to bicorn.", 2000); } } },
+                { label: `Bicorn Notes (Hat, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Bicorn Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.bicornNotes(32, 4, 0.95, 'hat', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Bicorn'd ${result} note(s) (hat, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to bicorn.", 2000); } } },
+                { label: `Bicorn Notes (Tight, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Bicorn Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.bicornNotes(32, 4, 0.95, 'tight', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Bicorn'd ${result} note(s) (tight, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to bicorn.", 2000); } } },
 
 
                 { separator: true },
@@ -4968,49 +4972,4 @@ export function openSendEffectsWindow(sendId, savedState = null) {
                     // Update state
                     const newEffects = effectsArray.map(ef => {
                         if (ef.id === effect.id) {
-                            return { ...ef, params: { ...ef.params, [paramDef.key]: newValue } };
-                        }
-                        return ef;
-                    });
-                    if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, newEffects);
-                    // Update slider display
-                    const valDisplay = controlWrapper.querySelector('.value-display');
-                    if (valDisplay) valDisplay.textContent = newValue.toFixed(2);
-                });
-                controlWrapper.appendChild(label);
-                controlWrapper.appendChild(slider);
-                const valueDisplay = document.createElement('span');
-                valueDisplay.className = 'value-display text-[10px] text-center dark:text-slate-300';
-                valueDisplay.textContent = currentValue !== undefined ? parseFloat(currentValue).toFixed(2) : (paramDef.defaultValue !== undefined ? paramDef.defaultValue.toFixed(2) : '0.00');
-                controlWrapper.appendChild(valueDisplay);
-            } else if (paramDef.type === 'select') {
-                const selectEl = document.createElement('select');
-                selectEl.className = 'w-full p-0.5 border rounded text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200';
-                const options = paramDef.options || [];
-                let initialValue = currentValue;
-                if (options.length > 0 && initialValue === undefined) initialValue = options[0].value;
-                options.forEach(opt => {
-                    const optEl = document.createElement('option');
-                    optEl.value = opt.value;
-                    optEl.textContent = opt.label || opt.value;
-                    if (opt.value === initialValue) optEl.selected = true;
-                    selectEl.appendChild(optEl);
-                });
-                selectEl.addEventListener('change', (e) => {
-                    const newValue = e.target.value;
-                    const finalValue = (typeof paramDef.defaultValue === 'number' && !isNaN(parseFloat(newValue))) ? parseFloat(newValue) : newValue;
-                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Change ${paramDef.label} for ${displayName}`);
-                    if (localAppServices.updateSendBusEffectParam) localAppServices.updateSendBusEffectParam(sendId, effect.id, paramDef.key, finalValue);
-                    const newEffects = effectsArray.map(ef => {
-                        if (ef.id === effect.id) {
-                            return { ...ef, params: { ...ef.params, [paramDef.key]: finalValue } };
-                        }
-                        return ef;
-                    });
-                    if (localAppServices.setSendTrackEffects) localAppServices.setSendTrackEffects(sendId, newEffects);
-                });
-                controlWrapper.appendChild(label);
-                controlWrapper.appendChild(selectEl);
-            } else if (paramDef.type === 'toggle') {
-                const button = document.createElement('button');
-                button.className =
+                            return { ...ef, params: { ...ef.params

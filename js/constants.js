@@ -1847,4 +1847,35 @@ export const KAMPYLE_NOTES_SHAPES = [
     KAMPYLE_NOTES_SHAPE_UPPER
 ];
 
-export const APP_VERSION = '2.395.0';
+// Bicorn (Cocked Hat) Notes constants — Day 746
+// The Bicorn curve is a quartic defined parametrically as x = a·sin(t), y = a·cos²(t)·(2 + cos(t)) / (3 + cos²(t)),
+// first studied by Sylvester in 1864. It has a cusp at (0, a) and is symmetric about the y-axis.
+export const BICORN_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the bicorn
+export const BICORN_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution bicorn)
+export const BICORN_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the bicorn
+export const BICORN_NOTES_MIN_A = 1; // Minimum 1 scale a (small bicorn)
+export const BICORN_NOTES_MAX_A = 8; // Maximum 8 scale a (large bicorn)
+export const BICORN_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium bicorn)
+export const BICORN_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const BICORN_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const BICORN_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const BICORN_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full sweep from 0)
+export const BICORN_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution)
+export const BICORN_NOTES_HAT_T_MIN = -Math.PI; // Hat shape lower t bound (the central cocked-hat profile)
+export const BICORN_NOTES_HAT_T_MAX = Math.PI; // Hat shape upper t bound
+export const BICORN_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const BICORN_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound
+export const BICORN_NOTES_TIGHT_T_MIN = -Math.PI / 2; // Tight shape lower t bound (concentrated near apex)
+export const BICORN_NOTES_TIGHT_T_MAX = Math.PI / 2; // Tight shape upper t bound
+export const BICORN_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2π]: full bicorn (Sylvester 1864 default)
+export const BICORN_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2π, 0]: reversed traversal direction
+export const BICORN_NOTES_SHAPE_HAT = 'hat'; // t in [-π, +π]: central cocked-hat profile (most distinctive bicorn)
+export const BICORN_NOTES_SHAPE_TIGHT = 'tight'; // t in [-π/2, +π/2]: tight concentration near apex
+export const BICORN_NOTES_SHAPES = [
+    BICORN_NOTES_SHAPE_STANDARD,
+    BICORN_NOTES_SHAPE_INVERTED,
+    BICORN_NOTES_SHAPE_HAT,
+    BICORN_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.396.0';

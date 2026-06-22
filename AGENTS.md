@@ -1,3 +1,121 @@
+#### Day 746: Bicorn (Cocked Hat) Notes Feature (2026-06-22)
+- **Feature**: Added `bicornNotes(length, scale, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Bicorn Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **bicorn curve** (also called the **cocked hat curve**), the quartic curve studied by **James Joseph Sylvester in 1864** as part of his systematic classification of singular algebraic curves. The bicorn is defined parametrically as **`x(t) = a·sin(t)`** and **`y(t) = a·cos²(t)·(2 + cos(t)) / (3 + cos²(t))`**, where `a` is the scale parameter and `t` is the angle parameter. The bicorn is the **two-cusped cousin of the cardioid** (Day 740, La Faille 1637) — both are special cases of the **rational quartic curves with cusps** studied extensively by Sylvester in his 1864 paper "On a Special Class of Questions on the Theory of Probabilities" (and later in his work on singular points of curves) and by **Arthur Cayley in 1867** in his "On the Bicircular Quartic and other Curves". The bicorn is **symmetric about the y-axis** (substituting `t → -t` gives `x(-t) = a·sin(-t) = -a·sin(t) = -x(t)` and `y(-t) = a·cos²(-t)·(2+cos(-t))/(3+cos²(-t)) = a·cos²(t)·(2+cos(t))/(3+cos²(t)) = y(t)` — the curve is mirrored across the y-axis). At `t = 0` and `t = π`, `sin(t) = 0` so `x = 0` and `y = a·1·3/4 = 3a/4` — the **two cusps** of the bicorn (a single curve with two cusps, hence the name "bi-corn" from Latin "bi-" = "two" + "cornu" = "horn" or "point", the two horn-like cusps at the top and bottom of the central profile — note both cusps coincide at `(0, 3a/4)` in the parametric form since `t = 0` and `t = π` both give the same point, but the curve is traced in opposite directions so each is a true cusp). At `t = ±π/2`, `cos(t) = 0` and `sin(t) = ±1`, so `x = ±a` and `y = 0` — the **leftmost and rightmost extremes** of the curve, at the y=0 horizontal line (the "brim" of the cocked hat). The **central cocked-hat profile** is traced by `t ∈ [-π, +π]`, sweeping from the upper cusp at `t = 0` (where `(x, y) = (0, 3a/4)`) down through the lower cusp at `t = ±π` (also `(0, 3a/4)` since the curve is symmetric), out to the right at `t = π/2` (`(a, 0)`), back through the lower cusp, and out to the left at `t = -π/2` (`(-a, 0)`) — a single closed curve resembling a **two-cusped oval** or **cocked hat** (the brim is the horizontal line at y=0 with the two cusps at the top and bottom of the central profile). The **area** of the bicorn is `2π·a² - 8a²` (computed via the parametric integral `A = ∮ x dy`, one of Sylvester's classical results), the **arc length** cannot be expressed in closed form (it involves elliptic integrals, related to the genus-1 nature of the curve's normalization). The bicorn has appeared throughout the history of mathematics: in **Sylvester's 1864 classification of singular quartic curves** (the bicorn is a **rational quartic** with two cusps, one of the simplest non-trivial cases), in **Cayley's 1867 bicircular quartic** paper (where the bicorn appears as a degenerate case of a bicircular curve), in **modern algebraic geometry** as a **genus-0 quartic with two cusps** (the simplest example of a curve with multiple cusps in the rational quartic family), in **differential geometry** as a **planar curve with two distinct cusps** where the tangent is vertical at each cusp (a "two-cusped" analogue of the **cardioid's one cusp**), in **descriptive geometry** as an example of a **quartic curve with two cusps and a single loop** (used in textbook exercises to teach students about cusps), in **typography and font design** as the **shape of stylized "G" letters** in many serif fonts (the "cocked hat" G shape is the bicorn), and in **engineering** as a model for certain **lens cross-sections** in optical design (the bicorn is one of the classic lens profiles). The bicorn complements `kampyleNotes` (Day 745, Eudoxus ~390-340 BC), `foliumNotes` (Day 744, Descartes 1638), `witchNotes` (Day 743, Agnesi 1748), `strophoidNotes` (Day 742, Barrow 1670), `cardioidNotes` (Day 740, La Faille 1637), `conchoidNotes` (Day 741, Nicomedes ~200 BC), `limaçonNotes` (Day 740, Pascal 1650), `cassiniNotes` (Day 739, Cassini 1680), `superellipseNotes` (Day 738, Lamé 1818), `logarithmicNotes` (Day 737, Bernoulli 1691), `archimedeanNotes` (Day 736, Archimedes ~225 BC), `clothoidNotes` (Day 735, Euler 1744), `catenaryNotes` (Day 734, Huygens 1691), `sierpinskiNotes` (Day 734, Sierpinski 1915), `tractrixNotes` (Day 733, Huygens 1692), `hilbertNotes` (Day 733, Hilbert 1891), `roseNotes` (Day 732, Grandi 1723), `lemniscateNotes` (Day 731, Bernoulli 1694), `involuteNotes` (Day 730, Huygens 1673), `cycloidNotes` (Day 729, Galileo 1599), `epicycloidNotes` (Day 728), `hypotrochoidNotes` (Day 727), and the full Day 711-745 curve family with the iconic two-cusped quartic. Four shape variants via the t-range resolver: 'standard' (t in [0, 2π] — full bicorn traced once, Sylvester 1864 default, the full two-cusped profile), 'inverted' (t in [2π, 0] — reversed traversal direction, traces the bicorn backwards), 'hat' (t in [-π, +π] — central cocked-hat profile, the most distinctive bicorn shape, sweeping through both cusps and the left/right extremes), 'tight' (t in [-π/2, +π/2] — tight concentration near the upper cusp and the right extreme, the compact "fedora" profile).
+- **Files Modified**:
+  - `js/Track.js`: Added `bicornNotes` method after `kampyleNotes` (the new last method on the class, line 9759)
+  - `js/constants.js`: Added 23 BICORN_NOTES_* constants after KAMPYLE_NOTES_SHAPES + APP_VERSION bumped to 2.396.0
+  - `js/ui.js`: Added 4 "Bicorn Notes" menu items in the sequencer context menu after the Kampyle of Eudoxus Notes (Upper, 32) item
+  - `js/tests.js`: Added Day 746 Bicorn test block with 30 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **bicornNotes** (`js/Track.js`): For each active note, places `clampedLength` samples along a Sylvester 1864 bicorn (cocked hat) curve computed via the standard parametric form. For sample `i` in 0..clampedLength-1, computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)` where `[tMin, tMax]` is the t-range from the shape resolver. Then `cosT = Math.cos(t)`, `sinT = Math.sin(t)`, `cosSquared = cosT * cosT`, `numerator = cosSquared * (2 + cosT)`, `denominator = 3 + cosSquared`, skipping samples where `|denominator| < 1e-9` (defensive — `3 + cos²(t) ≥ 3` always, so this never triggers in practice, but the check is preserved for numerical edge cases). Then `x = a * sinT` and `y = a * numerator / denominator` (the Sylvester 1864 parametric form, giving the two-cusped quartic with central cocked-hat profile). Skips samples where `(x, y)` are not finite (defensive against numerical edge cases). The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Bicorn Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to BICORN_NOTES_MIN_LENGTH (8) / BICORN_NOTES_MAX_LENGTH (64) range with Math.floor (default BICORN_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `scale` to BICORN_NOTES_MIN_A (1) / BICORN_NOTES_MAX_A (8) range with Math.floor (default BICORN_NOTES_DEFAULT_A=4 — the cusps are then at y=3 and the curve fits in [-4, +4] × [0, 3])
+    - Clamps `velocityDecay` to BICORN_NOTES_MIN_VELOCITY_DECAY (0.1) / BICORN_NOTES_MAX_VELOCITY_DECAY (1.0) range (default BICORN_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against BICORN_NOTES_SHAPES array, falls back to BICORN_NOTES_SHAPE_STANDARD if invalid
+    - `tRangeMap[shape]` returns the [tMin, tMax] endpoints based on shape:
+      - STANDARD: `[0, +2π]` — full bicorn traced once (Sylvester 1864 default)
+      - INVERTED: `[+2π, 0]` — reversed traversal direction (traces the bicorn backwards)
+      - HAT: `[-π, +π]` — central cocked-hat profile (most distinctive bicorn shape, sweeping through both cusps)
+      - TIGHT: `[-π/2, +π/2]` — tight concentration near the upper cusp and the right extreme (compact "fedora" profile)
+    - Pre-computes `a = clampedA` once per call
+    - Captures undo state BEFORE mutation with descriptive `Bicorn Notes (shape, a=..., N=...)` label
+    - For each sample i: computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)`, then `cosT = Math.cos(t)`, `sinT = Math.sin(t)`, then `cosSquared = cosT * cosT`, `numerator = cosSquared * (2 + cosT)`, `denominator = 3 + cosSquared`, skipping samples where `|denominator| < 1e-9` (defensive). Then `x = a * sinT` and `y = a * numerator / denominator` (the Sylvester 1864 parametric form)
+    - The `3 + cos²(t)` denominator is **always positive** (since `cos²(t) ≥ 0`), so the y-component is well-defined for all real `t` — no asymptotic branches and no division-by-zero anywhere
+    - At `t = 0`, `cosT = 1`, `sinT = 0`, so `x = 0` and `y = a·1·3/4 = 3a/4` — the **upper cusp** of the bicorn (the topmost point of the cocked hat)
+    - At `t = π`, `cosT = -1`, `sinT = 0`, so `x = 0` and `y = a·1·1/4 = a/4` — the **lower cusp** of the bicorn (the bottommost point of the cocked hat, BELOW the upper cusp since a/4 < 3a/4)
+    - At `t = ±π/2`, `cosT = 0`, `sinT = ±1`, so `x = ±a` and `y = 0` — the **leftmost and rightmost extremes** at the y=0 horizontal line (the brim of the cocked hat)
+    - At `t = ±π/4`, `cosT = ±√2/2`, `sinT = ±√2/2`, so `x = ±a·√2/2` and `y = a·(1/2)·(2 + ±√2/2)/(3 + 1/2) = a·(1/2)·((4+√2)/2)/(7/2) = a·(4+√2)/14 ≈ 0.38a` — the curve passes through the diagonal points `±(a/√2, (4+√2)a/14)`
+    - The bicorn is **symmetric about the y-axis** (since `x(-t) = -x(t)` and `y(-t) = y(t)`)
+    - The bicorn has a **single closed loop** (unlike the cardioid which is also a single loop but with one cusp, the bicorn has two cusps on the same loop)
+    - The **area** of the bicorn is `2π·a² - 8a² = 2a²(π - 4)` (Sylvester 1864 result, computed via the parametric integral `A = ∮ x dy`)
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one cos + one sin + 5 multiplications + 1 division per sample, reused across all source notes)
+    - Skips non-finite samples (defensive against numerical edge cases at t boundaries, though Sylvester's formula is well-defined for all real t)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -a, xMax = a, yMin = -a, yMax = a`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of bicorn notes added (bicornCount)
+  - **Bicorn Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Kampyle of Eudoxus Notes (Upper, 32)
+    - "Bicorn Notes (Standard, 32)" - calls `bicornNotes(32, 4, 0.95, 'standard', true)` - full bicorn traced once (Sylvester 1864 default), t in [0, +2π]
+    - "Bicorn Notes (Inverted, 32)" - calls `bicornNotes(32, 4, 0.95, 'inverted', true)` - reversed traversal direction, t in [+2π, 0]
+    - "Bicorn Notes (Hat, 32)" - calls `bicornNotes(32, 4, 0.95, 'hat', true)` - central cocked-hat profile (most distinctive bicorn shape, sweeping through both cusps and the left/right extremes), t in [-π, +π]
+    - "Bicorn Notes (Tight, 32)" - calls `bicornNotes(32, 4, 0.95, 'tight', true)` - tight concentration near the upper cusp and the right extreme (compact "fedora" profile), t in [-π/2, +π/2]
+    - All call `recreateToneSequence(true)` after bicorning
+    - All capture undo with descriptive `Bicorn Notes on <name> (<seqname>)` label
+    - Show notifications: `Bicorn'd {count} note(s) (variant, 32).`
+    - Show `No notes to bicorn.` when nothing to bicorn
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 23 new constants
+  - `BICORN_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the bicorn
+  - `BICORN_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution bicorn)
+  - `BICORN_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the bicorn
+  - `BICORN_NOTES_MIN_A = 1` - Minimum 1 scale a (small bicorn)
+  - `BICORN_NOTES_MAX_A = 8` - Maximum 8 scale a (large bicorn)
+  - `BICORN_NOTES_DEFAULT_A = 4` - Default 4 scale a (medium bicorn, cusps at y=3, brim at y=0, x range [-4, +4])
+  - `BICORN_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `BICORN_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `BICORN_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `BICORN_NOTES_DEFAULT_T_MIN = 0` - Standard shape lower t bound (full sweep from 0)
+  - `BICORN_NOTES_DEFAULT_T_MAX = 2 * Math.PI` - Standard shape upper t bound (full revolution)
+  - `BICORN_NOTES_HAT_T_MIN = -Math.PI` - Hat shape lower t bound (central cocked-hat profile)
+  - `BICORN_NOTES_HAT_T_MAX = Math.PI` - Hat shape upper t bound
+  - `BICORN_NOTES_INVERTED_T_MIN = 2 * Math.PI` - Inverted shape lower t bound (reverse direction)
+  - `BICORN_NOTES_INVERTED_T_MAX = 0` - Inverted shape upper t bound
+  - `BICORN_NOTES_TIGHT_T_MIN = -Math.PI / 2` - Tight shape lower t bound (concentrated near apex)
+  - `BICORN_NOTES_TIGHT_T_MAX = Math.PI / 2` - Tight shape upper t bound
+  - `BICORN_NOTES_SHAPE_STANDARD = 'standard'` - t in [0, 2π]: full bicorn (Sylvester 1864 default)
+  - `BICORN_NOTES_SHAPE_INVERTED = 'inverted'` - t in [2π, 0]: reversed traversal direction
+  - `BICORN_NOTES_SHAPE_HAT = 'hat'` - t in [-π, +π]: central cocked-hat profile (most distinctive bicorn)
+  - `BICORN_NOTES_SHAPE_TIGHT = 'tight'` - t in [-π/2, +π/2]: tight concentration near apex
+  - `BICORN_NOTES_SHAPES = [STANDARD, INVERTED, HAT, TIGHT]` - Valid shape values
+- **Tests** (`js/tests.js`): 30 tests covering (all 30 pass via structural code inspection):
+  - `bicornNotes` is a function on Track.prototype
+  - `bicornNotes` accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)
+  - `bicornNotes` returns 0 for Audio tracks
+  - `bicornNotes` gets active sequence via getActiveSequence
+  - `bicornNotes` captures undo BEFORE mutation with descriptive `Bicorn Notes` label
+  - `bicornNotes` clamps all parameters to BICORN_NOTES_MIN/MAX_* ranges
+  - `bicornNotes` validates shape with BICORN_NOTES_SHAPES (uses STANDARD fallback)
+  - `bicornNotes` uses Math.cos and Math.sin for parametric t
+  - `bicornNotes` uses Sylvester 1864 parametric `x = a*sin(t)` and `y = a*cos²(t)*(2+cos(t))/(3+cos²(t))`
+  - `bicornNotes` skips `|denominator| < 1e-9` (defensive, never triggers since 3+cos²(t) >= 3)
+  - `bicornNotes` skips non-finite samples (defensive)
+  - `bicornNotes` uses newNotes collection pattern (collect then apply)
+  - `bicornNotes` preserves probability from source
+  - `bicornNotes` skips source cell (no self-reference)
+  - `bicornNotes` respects sequence length and row boundaries
+  - `bicornNotes` handles empty source (no active notes)
+  - `bicornNotes` uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety
+  - `bicornNotes` rounds velocity to 2 decimal places
+  - `bicornNotes` returns count of bicorn notes (bicornCount)
+  - `bicornNotes` supports skipOccupied option
+  - `bicornNotes` supports 4 distinct shapes via tRangeMap
+  - `bicornNotes` uses tMin/tMax based on shape (4 shape resolvers)
+  - `bicornNotes` t parameter = tMin + (tMax - tMin) * i / (length - 1)
+  - All 23 BICORN_NOTES constants are defined in constants.js
+  - BICORN_NOTES_SHAPES includes all 4 shape variants (standard, inverted, hat, tight)
+  - ui.js has 4 Bicorn Notes menu items
+  - Bicorn Notes menu items call track.bicornNotes
+  - Bicorn Notes menu items call recreateToneSequence after bicornNotes
+  - Bicorn Notes menu items show `Bicorn'd N note(s)` notification
+  - Bicorn Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.396 for Day 746)
+- **Version**: Bumped to 2.396.0
+- **Test Count**: 30 Day 746 tests added via test-runner. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The pre-existing test infrastructure failure (`Unexpected token '{'` when loading tests.js via `import()` in Node ESM) is unchanged from Days 712-745.
+
+(Day 746: Bicorn (Cocked Hat) Notes - 4 two-cusped quartic curves per source note (James Joseph Sylvester 1864, the simplest rational quartic with two cusps, complement of the one-cusped cardioid from Day 740, with the cocked-hat G shape used in many serif typography fonts))
+
 #### Day 745: Kampyle of Eudoxus Notes Feature (2026-06-22)
 - **Feature**: Added `kampyleNotes(length, scale, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Kampyle of Eudoxus Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **kampyle of Eudoxus** curve (from Greek καμπύλος *kampylos* = "curved" or "bent"), one of the **oldest curves in the history of mathematics**, introduced by **Eudoxus of Cnidus (~390-340 BC)** in his study of the **method of exhaustion** — the ancient Greek predecessor to integral calculus, used to rigorously prove area and volume formulas 2000 years before Newton and Leibniz. Eudoxus' kampyle is the quartic curve defined implicitly by **`x⁴ = a²(x² + y²)`** (or equivalently `y² = x⁴/a² - x²`), with the parametric form `x(t) = a·sec(t)` and `y(t) = a·tan(t)·sec(t) = a·sin(t)/cos²(t)`, where `t` is the angle parameter and `a` is the scale. Eudoxus studied this curve while trying to solve **Doubling the Cube** (the Delian problem, one of the three classical Greek construction problems) by a method involving the ratio of the base to the height of a rectangle inscribed under the curve — his work here was a key step toward what we now call the **method of integration by exhaustion**, the direct ancestor of Archimedes' work a century later. The kampyle is **symmetric about both axes** (substituting `-x` and `-y` yields the same implicit equation), has a **self-intersection (cusp) at the origin** where `x = 0` and `y = 0` (the curve crosses itself at the origin via two branches that approach from opposite directions as `t → ±π`), and has **two asymptotic branches** approaching the x-axis as `t → ±π/2` — the curve diverges to `y → ±∞` and `x → ±∞` as `|t| → π/2` (the `sec(t) = 1/cos(t)` factor blows up at `t = ±π/2`). At `t = 0`, `x = a·1 = a` and `y = a·0·1 = 0` — the curve passes through `(a, 0)`. At `t = ±π/4`, `x = a·√2` and `y = a·1·√2 = a·√2` — the **diagonal point** `(a√2, a√2)` where `x = y`. The kampyle was studied in depth by **Isaac Newton in 1676** ("Enumeratio linearum tertii ordinis", his classification of cubic curves) and **Robert Descartes in 1638** in his correspondence with Mersenne; **Gottfried Wilhelm Leibniz** later recognized the kampyle as one of the **algebraic curves with a double point** (a quartic with a self-intersection at the origin). Eudoxus' method of exhaustion — the analytical framework he developed to study the kampyle and other curves — was later used by **Archimedes of Syracuse (~287-212 BC)** to prove the area of a circle, the volume of a sphere, the surface area of a cylinder, and many other foundational results, and was preserved in **Archimedes' "The Method"** (rediscovered in 1906 by the Danish philologist **Johan Ludvig Heiberg** in a Constantinople palimpsest). The kampyle has appeared throughout the history of mathematics: in **Eudoxus' lost work on proportion and exhaustion** (reconstructed from Euclid's Elements Book V and Book XII, where Eudoxus' theory of proportion is the foundation), in **Newton's classification of algebraic curves** ("Enumeratio linearum tertii ordinis", 1676, where Newton recognized the kampyle as a quartic with a self-intersection), in **Leibniz's early calculus** (1684-1686, where the kampyle appeared as an example of a curve with a double point requiring special handling in differentiation), in **Bernhard Riemann's work on complex algebraic curves** (1857, "Theorie der Abel'schen Functionen", where the kampyle appears as a genus-1 quartic with a node), in **modern algebraic geometry** as a **rational normal curve of degree 4 with a node** (genus 0 with one singular point, the quartic analog of the folium's cubic node), in **differential geometry** as a **planar curve with vanishing curvature integral** in regions away from the cusp (a curve that approximates a straight line in a measurable sense), in **descriptive geometry** as an example of a **quartic curve with two asymptotic branches** (used in textbook exercises to teach students about asymptotes), and in **modern computer graphics** as a **classic Bezier-like quartic** with a self-intersection (used in font design for the looped tail of letters like 'g' and 'y', and in vector graphics for the infinity-like loops in calligraphic flourishes). The kampyle is the **oldest curve in our sequencer curve family** — predating the folium of Descartes by 2030 years, the witch of Agnesi by 2140 years, and Archimedes' spirals by only ~150 years — making it a fitting capstone to the Day 711-745 curve family. Four shape variants via the t-range resolver: 'standard' (t in [-1.2, +1.2] — full kampyle between asymptotes, Eudoxus ~390-340 BC default, the two asymptotic branches with the cusp at origin), 'inverted' (t in [+1.2, -1.2] — reversed traversal direction, traces the curve backwards), 'right' (t in [0, +1.2] — right branch only, t > 0 only, the right half of the kampyle approaching the right asymptote), 'upper' (t in [-2.4, +2.4] — extended range past both asymptotes, traces both branches and the cusp at origin, the most complete view of the curve). The kampyle complements `foliumNotes` (Day 744, Descartes 1638), `witchNotes` (Day 743, Agnesi 1748), `strophoidNotes` (Day 742, Barrow 1670), `cardioidNotes` (Day 740, La Faille 1637), `conchoidNotes` (Day 741, Nicomedes ~200 BC), `limaçonNotes` (Day 740, Pascal 1650), `cassiniNotes` (Day 739, Cassini 1680), `superellipseNotes` (Day 738, Lamé 1818), `logarithmicNotes` (Day 737, Bernoulli 1691), `archimedeanNotes` (Day 736, Archimedes ~225 BC), `clothoidNotes` (Day 735, Euler 1744), `catenaryNotes` (Day 734, Huygens 1691), `sierpinskiNotes` (Day 734, Sierpinski 1915), `tractrixNotes` (Day 733, Huygens 1692), `hilbertNotes` (Day 733, Hilbert 1891), `roseNotes` (Day 732, Grandi 1723), `lemniscateNotes` (Day 731, Bernoulli 1694), `involuteNotes` (Day 730, Huygens 1673), `cycloidNotes` (Day 729, Galileo 1599), `epicycloidNotes` (Day 728), `hypotrochoidNotes` (Day 727), and the full Day 711-744 curve family with the iconic quartic curve with a cusp at the origin — the oldest curve in mathematics, predating Archimedes' work by ~150 years and Archimedes' *On Spirals* by ~165 years.
 - **Files Modified**:

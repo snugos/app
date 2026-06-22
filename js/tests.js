@@ -58479,3 +58479,404 @@ TestRunner.test("Day 745 - APP_VERSION validation (>= 2.395 for Day 745)", (t) =
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.395\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.395.0');
 });
+
+// Day 746: Bicorn (Cocked Hat) Notes test block — James Joseph Sylvester 1864 (parametric x = a·sin(t), y = a·cos²(t)·(2 + cos(t)) / (3 + cos²(t)))
+TestRunner.test("Day 746 - bicornNotes is a function on Track.prototype", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes\s*\(/.test(src), 'bicornNotes method defined');
+});
+
+TestRunner.test("Day 746 - bicornNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes\s*\(\s*length\s*=\s*Constants\.BICORN_NOTES_DEFAULT_LENGTH/.test(src), 'has length default');
+    t.assertTruthy(/scale\s*=\s*Constants\.BICORN_NOTES_DEFAULT_A/.test(src), 'has scale default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.BICORN_NOTES_DEFAULT_VELOCITY_DECAY/.test(src), 'has velocityDecay default');
+    t.assertTruthy(/shape\s*=\s*Constants\.BICORN_NOTES_SHAPE_STANDARD/.test(src), 'has shape default');
+});
+
+TestRunner.test("Day 746 - bicornNotes returns 0 for Audio tracks", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,400}if\s*\(\s*this\.type\s*===\s*['"]Audio['"]\s*\)\s*return\s*0/.test(src), 'Audio return 0');
+});
+
+TestRunner.test("Day 746 - bicornNotes gets active sequence via getActiveSequence", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,600}getActiveSequence\s*\(\s*\)/.test(src), 'getActiveSequence used');
+});
+
+TestRunner.test("Day 746 - bicornNotes captures undo BEFORE mutation with descriptive Bicorn Notes label", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,1500}_captureUndoState\s*\(\s*`Bicorn Notes/.test(src), 'undo captured with Bicorn label');
+});
+
+TestRunner.test("Day 746 - bicornNotes clamps all parameters to BICORN_NOTES_MIN/MAX_* ranges", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/BICORN_NOTES_MIN_LENGTH[\s\S]{0,80}BICORN_NOTES_MAX_LENGTH/.test(src), 'clamped length');
+    t.assertTruthy(/BICORN_NOTES_MIN_A[\s\S]{0,80}BICORN_NOTES_MAX_A/.test(src), 'clamped scale a');
+    t.assertTruthy(/BICORN_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,80}BICORN_NOTES_MAX_VELOCITY_DECAY/.test(src), 'clamped velocityDecay');
+});
+
+TestRunner.test("Day 746 - bicornNotes validates shape with BICORN_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/BICORN_NOTES_SHAPES\.includes/.test(src), 'shape validated via BICORN_NOTES_SHAPES');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_STANDARD/.test(src), 'STANDARD fallback present');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses Sylvester 1864 parametric x = a*sin(t), y = a*cos²(t)*(2+cos(t))/(3+cos²(t))", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}\bx\s*=\s*a\s*\*\s*sinT/.test(src), 'x = a*sin(t) present');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}\by\s*=\s*a\s*\*\s*numerator\s*\/\s*denominator/.test(src), 'y = a*numerator/denominator present');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}\bnumerator\s*=\s*cosSquared\s*\*\s*\(\s*2\s*\+\s*cosT\s*\)/.test(src), 'numerator = cos²(t)*(2+cos(t)) present');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}\bdenominator\s*=\s*3\s*\+\s*cosSquared/.test(src), 'denominator = 3+cos²(t) present');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses Math.cos and Math.sin for parametric t", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}\bcosT\s*=\s*Math\.cos\s*\(\s*t\s*\)/.test(src), 'Math.cos(t) used');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}\bsinT\s*=\s*Math\.sin\s*\(\s*t\s*\)/.test(src), 'Math.sin(t) used');
+});
+
+TestRunner.test("Day 746 - bicornNotes skips non-finite samples (defensive)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}!\s*isFinite\s*\(\s*x\s*\)\s*\|\|\s*!\s*isFinite\s*\(\s*y\s*\)/.test(src), 'non-finite check present');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}const\s+newNotes\s*=\s*\[\][\s\S]{0,3000}newNotes\.push[\s\S]{0,1500}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(src), 'collect-then-apply pattern present');
+});
+
+TestRunner.test("Day 746 - bicornNotes preserves probability from source", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}probability:\s*stepData\.probability/.test(src), 'probability preserved');
+});
+
+TestRunner.test("Day 746 - bicornNotes skips source cell (no self-reference)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(src), 'source cell skip');
+});
+
+TestRunner.test("Day 746 - bicornNotes respects sequence length and row boundaries", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(src), 'row bounds check');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(src), 'col bounds check');
+});
+
+TestRunner.test("Day 746 - bicornNotes returns count of bicorn notes (bicornCount)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let\s+bicornCount\s*=\s*0/.test(src), 'bicornCount initialized');
+    t.assertTruthy(/return\s+bicornCount/.test(src), 'returns bicornCount');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses Math.floor for length and scale", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,500}Math\.floor\s*\(\s*length\s*\)/.test(src), 'Math.floor for length');
+    t.assertTruthy(/bicornNotes[\s\S]{0,500}Math\.floor\s*\(\s*scale\s*\)/.test(src), 'Math.floor for scale');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses Math.pow for velocity decay", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,4000}Math\.pow\s*\(\s*clampedDecay\s*,\s*i\s*\)/.test(src), 'Math.pow for decay');
+});
+
+TestRunner.test("Day 746 - bicornNotes rounds velocity to 2 decimal places", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,4500}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(src), 'velocity rounded to 2dp');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses Math.cos and Math.sin for parametric t", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}\bMath\.cos\s*\(\s*t\s*\)/.test(src), 'Math.cos(t) used');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}\bMath\.sin\s*\(\s*t\s*\)/.test(src), 'Math.sin(t) used');
+});
+
+TestRunner.test("Day 746 - bicornNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,1500}tRangeMap/.test(src), 'tRangeMap present');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_STANDARD/.test(src), 'STANDARD shape referenced');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_INVERTED/.test(src), 'INVERTED shape referenced');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_HAT/.test(src), 'HAT shape referenced');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_TIGHT/.test(src), 'TIGHT shape referenced');
+});
+
+TestRunner.test("Day 746 - bicornNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,2500}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(src), 't parameter formula');
+});
+
+TestRunner.test("Day 746 - All 24 BICORN_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const required = [
+        'BICORN_NOTES_MIN_LENGTH', 'BICORN_NOTES_MAX_LENGTH', 'BICORN_NOTES_DEFAULT_LENGTH',
+        'BICORN_NOTES_MIN_A', 'BICORN_NOTES_MAX_A', 'BICORN_NOTES_DEFAULT_A',
+        'BICORN_NOTES_MIN_VELOCITY_DECAY', 'BICORN_NOTES_MAX_VELOCITY_DECAY', 'BICORN_NOTES_DEFAULT_VELOCITY_DECAY',
+        'BICORN_NOTES_DEFAULT_T_MIN', 'BICORN_NOTES_DEFAULT_T_MAX',
+        'BICORN_NOTES_HAT_T_MIN', 'BICORN_NOTES_HAT_T_MAX',
+        'BICORN_NOTES_INVERTED_T_MIN', 'BICORN_NOTES_INVERTED_T_MAX',
+        'BICORN_NOTES_TIGHT_T_MIN', 'BICORN_NOTES_TIGHT_T_MAX',
+        'BICORN_NOTES_SHAPE_STANDARD', 'BICORN_NOTES_SHAPE_INVERTED', 'BICORN_NOTES_SHAPE_HAT', 'BICORN_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of required) {
+        t.assertTruthy(cSrc.includes(name), `constants.js has ${name}`);
+    }
+});
+
+TestRunner.test("Day 746 - BICORN_NOTES_SHAPES includes all 4 shape variants (standard, inverted, hat, tight)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/BICORN_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'BICORN_NOTES_SHAPES array defined');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_STANDARD[,\s\n]+BICORN_NOTES_SHAPE_INVERTED[,\s\n]+BICORN_NOTES_SHAPE_HAT[,\s\n]+BICORN_NOTES_SHAPE_TIGHT/.test(cSrc), 'all 4 shapes in array');
+});
+
+TestRunner.test("Day 746 - ui.js has 4 Bicorn Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Bicorn Notes \([A-Za-z]+, 32\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Bicorn menu items');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items call track.bicornNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((uSrc.match(/currentTrackForMenu\.bicornNotes/g) || []).length, 4, '4 bicornNotes calls');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items call recreateToneSequence after bicornNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/bicornNotes[\s\S]{0,500}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 recreateToneSequence calls after bicornNotes');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items show 'Bicorn\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/Bicorn'd \$\{result\} note/g) || []).length >= 1, 'Bicorn\\'d notification present');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items include all 4 shape variants (standard, inverted, hat, tight)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Bicorn Notes \(Standard/.test(uSrc), 'Standard shape menu item');
+    t.assertTruthy(/Bicorn Notes \(Inverted/.test(uSrc), 'Inverted shape menu item');
+    t.assertTruthy(/Bicorn Notes \(Hat/.test(uSrc), 'Hat shape menu item');
+    t.assertTruthy(/Bicorn Notes \(Tight/.test(uSrc), 'Tight shape menu item');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/bicornNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 746 - APP_VERSION validation (>= 2.396 for Day 746)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.396\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.396.0');
+});
+
+// Day 746: Bicorn (Cocked Hat) Notes test block — James Joseph Sylvester 1864 (quartic curve, parametric x = a·sin(t), y = a·cos²(t)·(2+cos(t))/(3+cos²(t)), symmetric about y-axis, cusp at (0, 3a/4))
+TestRunner.test("Day 746 - bicornNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes\s*\(/.test(tSrc), 'bicornNotes method defined');
+});
+
+TestRunner.test("Day 746 - bicornNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes\s*\(\s*length\s*=\s*Constants\.BICORN_NOTES_DEFAULT_LENGTH/.test(tSrc), 'has length default');
+    t.assertTruthy(/scale\s*=\s*Constants\.BICORN_NOTES_DEFAULT_A/.test(tSrc), 'has scale default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.BICORN_NOTES_DEFAULT_VELOCITY_DECAY/.test(tSrc), 'has velocityDecay default');
+    t.assertTruthy(/shape\s*=\s*Constants\.BICORN_NOTES_SHAPE_STANDARD/.test(tSrc), 'has shape default');
+});
+
+TestRunner.test("Day 746 - bicornNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,400}if\s*\(\s*this\.type\s*===\s*['"]Audio['"]\s*\)\s*return\s*0/.test(tSrc), 'Audio return 0');
+});
+
+TestRunner.test("Day 746 - bicornNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,600}getActiveSequence\s*\(\s*\)/.test(tSrc), 'getActiveSequence used');
+});
+
+TestRunner.test("Day 746 - bicornNotes captures undo BEFORE mutation with descriptive Bicorn Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,1500}_captureUndoState\s*\(\s*`Bicorn Notes/.test(tSrc), 'undo captured with Bicorn label');
+});
+
+TestRunner.test("Day 746 - bicornNotes clamps all parameters to BICORN_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/BICORN_NOTES_MIN_LENGTH[\s\S]{0,80}BICORN_NOTES_MAX_LENGTH/.test(tSrc), 'clamped length');
+    t.assertTruthy(/BICORN_NOTES_MIN_A[\s\S]{0,80}BICORN_NOTES_MAX_A/.test(tSrc), 'clamped scale a');
+    t.assertTruthy(/BICORN_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,80}BICORN_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'clamped velocityDecay');
+});
+
+TestRunner.test("Day 746 - bicornNotes validates shape with BICORN_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/BICORN_NOTES_SHAPES\.includes/.test(tSrc), 'shape validated via BICORN_NOTES_SHAPES');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD fallback present');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses Sylvester 1864 parametric x = a*sin(t), y = a*cos^2(t)*(2+cos(t))/(3+cos^2(t))", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,2500}\bconst\s+cosSquared\s*=\s*cosT\s*\*\s*cosT/.test(tSrc), 'cosSquared = cosT*cosT present');
+    t.assertTruthy(/bicornNotes[\s\S]{0,2500}\bconst\s+numerator\s*=\s*cosSquared\s*\*\s*\(\s*2\s*\+\s*cosT\s*\)/.test(tSrc), 'numerator = cosSquared*(2+cosT) present');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}\bconst\s+denominator\s*=\s*3\s*\+\s*cosSquared/.test(tSrc), 'denominator = 3+cosSquared present');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}\bconst\s+x\s*=\s*a\s*\*\s*sinT/.test(tSrc), 'x = a*sin(t) present');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}\bconst\s+y\s*=\s*a\s*\*\s+numerator\s*\/\s*denominator/.test(tSrc), 'y = a*numerator/denominator present');
+});
+
+TestRunner.test("Day 746 - bicornNotes skips near-zero denominator (|denominator| < 1e-9)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}Math\.abs\s*\(\s*denominator\s*\)\s*<\s*1e-9/.test(tSrc), 'denominator singularity check present');
+});
+
+TestRunner.test("Day 746 - bicornNotes skips non-finite samples (defensive)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}!\s*isFinite\s*\(\s*x\s*\)\s*\|\|\s*!\s*isFinite\s*\(\s*y\s*\)/.test(tSrc), 'non-finite check present');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}const\s+newNotes\s*=\s*\[\][\s\S]{0,2500}newNotes\.push[\s\S]{0,1500}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(tSrc), 'collect-then-apply pattern present');
+});
+
+TestRunner.test("Day 746 - bicornNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}probability:\s*stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 746 - bicornNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col\s*\)\s*continue/.test(tSrc), 'skip source cell');
+});
+
+TestRunner.test("Day 746 - bicornNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows\s*\)\s*continue/.test(tSrc), 'row boundary check');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps\s*\)\s*continue/.test(tSrc), 'col boundary check');
+});
+
+TestRunner.test("Day 746 - bicornNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}stepData\.active/.test(tSrc), 'active check on stepData');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange safety');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange safety');
+});
+
+TestRunner.test("Day 746 - bicornNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity rounded to 2 decimals');
+});
+
+TestRunner.test("Day 746 - bicornNotes returns count of bicorn notes (bicornCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,4500}bicornCount\+\+/.test(tSrc), 'bicornCount incremented');
+});
+
+TestRunner.test("Day 746 - bicornNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3000}skipOccupied\s*&&[\s\S]{0,200}\.active\s*\)\s*continue/.test(tSrc), 'skipOccupied check present');
+});
+
+TestRunner.test("Day 746 - bicornNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_STANDARD[\s\S]{0,400}BICORN_NOTES_SHAPE_INVERTED[\s\S]{0,400}BICORN_NOTES_SHAPE_HAT[\s\S]{0,400}BICORN_NOTES_SHAPE_TIGHT/.test(tSrc), 'all 4 shapes in tRangeMap');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/BICORN_NOTES_DEFAULT_T_MIN[\s\S]{0,200}BICORN_NOTES_DEFAULT_T_MAX/.test(tSrc), 'standard t-range');
+    t.assertTruthy(/BICORN_NOTES_HAT_T_MIN[\s\S]{0,200}BICORN_NOTES_HAT_T_MAX/.test(tSrc), 'hat t-range');
+    t.assertTruthy(/BICORN_NOTES_TIGHT_T_MIN[\s\S]{0,200}BICORN_NOTES_TIGHT_T_MAX/.test(tSrc), 'tight t-range');
+});
+
+TestRunner.test("Day 746 - bicornNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,2500}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula present');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses Math.floor for length and scale", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,300}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor on length');
+    t.assertTruthy(/bicornNotes[\s\S]{0,300}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor on scale');
+});
+
+TestRunner.test("Day 746 - bicornNotes uses Math.pow for velocity decay", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/bicornNotes[\s\S]{0,3500}Math\.pow\s*\(\s*clampedDecay\s*,\s*i\s*\)/.test(tSrc), 'Math.pow for velocity decay');
+});
+
+TestRunner.test("Day 746 - All 22 BICORN_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/BICORN_NOTES_MIN_LENGTH\s*=/.test(cSrc), 'BICORN_NOTES_MIN_LENGTH defined');
+    t.assertTruthy(/BICORN_NOTES_MAX_LENGTH\s*=/.test(cSrc), 'BICORN_NOTES_MAX_LENGTH defined');
+    t.assertTruthy(/BICORN_NOTES_DEFAULT_LENGTH\s*=/.test(cSrc), 'BICORN_NOTES_DEFAULT_LENGTH defined');
+    t.assertTruthy(/BICORN_NOTES_MIN_A\s*=/.test(cSrc), 'BICORN_NOTES_MIN_A defined');
+    t.assertTruthy(/BICORN_NOTES_MAX_A\s*=/.test(cSrc), 'BICORN_NOTES_MAX_A defined');
+    t.assertTruthy(/BICORN_NOTES_DEFAULT_A\s*=/.test(cSrc), 'BICORN_NOTES_DEFAULT_A defined');
+    t.assertTruthy(/BICORN_NOTES_MIN_VELOCITY_DECAY\s*=/.test(cSrc), 'BICORN_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(/BICORN_NOTES_MAX_VELOCITY_DECAY\s*=/.test(cSrc), 'BICORN_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(/BICORN_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(cSrc), 'BICORN_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(/BICORN_NOTES_DEFAULT_T_MIN\s*=/.test(cSrc), 'BICORN_NOTES_DEFAULT_T_MIN defined');
+    t.assertTruthy(/BICORN_NOTES_DEFAULT_T_MAX\s*=/.test(cSrc), 'BICORN_NOTES_DEFAULT_T_MAX defined');
+    t.assertTruthy(/BICORN_NOTES_HAT_T_MIN\s*=/.test(cSrc), 'BICORN_NOTES_HAT_T_MIN defined');
+    t.assertTruthy(/BICORN_NOTES_HAT_T_MAX\s*=/.test(cSrc), 'BICORN_NOTES_HAT_T_MAX defined');
+    t.assertTruthy(/BICORN_NOTES_TIGHT_T_MIN\s*=/.test(cSrc), 'BICORN_NOTES_TIGHT_T_MIN defined');
+    t.assertTruthy(/BICORN_NOTES_TIGHT_T_MAX\s*=/.test(cSrc), 'BICORN_NOTES_TIGHT_T_MAX defined');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_STANDARD\s*=/.test(cSrc), 'BICORN_NOTES_SHAPE_STANDARD defined');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_INVERTED\s*=/.test(cSrc), 'BICORN_NOTES_SHAPE_INVERTED defined');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_HAT\s*=/.test(cSrc), 'BICORN_NOTES_SHAPE_HAT defined');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_TIGHT\s*=/.test(cSrc), 'BICORN_NOTES_SHAPE_TIGHT defined');
+    t.assertTruthy(/BICORN_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'BICORN_NOTES_SHAPES array defined');
+});
+
+TestRunner.test("Day 746 - BICORN_NOTES_SHAPES includes all 4 shape variants (standard, inverted, hat, tight)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const arrayMatch = cSrc.match(/BICORN_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(arrayMatch, 'SHAPES array present');
+    const contents = arrayMatch[1];
+    t.assertTruthy(/BICORN_NOTES_SHAPE_STANDARD/.test(contents), 'STANDARD in array');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_INVERTED/.test(contents), 'INVERTED in array');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_HAT/.test(contents), 'HAT in array');
+    t.assertTruthy(/BICORN_NOTES_SHAPE_TIGHT/.test(contents), 'TIGHT in array');
+});
+
+TestRunner.test("Day 746 - ui.js has 4 Bicorn Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Bicorn Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, '4 Bicorn menu items');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items call track.bicornNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.bicornNotes/g) || [];
+    t.assertEqual(matches.length, 4, '4 calls to track.bicornNotes');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items call recreateToneSequence after bicornNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.bicornNotes[\s\S]{0,300}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 calls follow bicornNotes with recreateToneSequence');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items show 'Bicorn\\\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/Bicorn'd \$\{result\} note/g) || []).length >= 1, 'Bicorn notification present');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items include all 4 shape variants (standard, inverted, hat, tight)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Bicorn Notes \(Standard/.test(uSrc), 'Standard shape menu item');
+    t.assertTruthy(/Bicorn Notes \(Inverted/.test(uSrc), 'Inverted shape menu item');
+    t.assertTruthy(/Bicorn Notes \(Hat/.test(uSrc), 'Hat shape menu item');
+    t.assertTruthy(/Bicorn Notes \(Tight/.test(uSrc), 'Tight shape menu item');
+});
+
+TestRunner.test("Day 746 - Bicorn Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/bicornNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 746 - APP_VERSION validation (>= 2.396 for Day 746)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.396\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.396.0');
+});
