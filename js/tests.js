@@ -59072,3 +59072,201 @@ TestRunner.test("Day 747 - APP_VERSION validation (>= 2.397 for Day 747)", (t) =
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.397\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.397.0');
 });
+
+TestRunner.test("Day 748 - cissoidNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes\s*\(/.test(tSrc), 'cissoidNotes defined');
+});
+
+TestRunner.test("Day 748 - cissoidNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes\s*\(\s*length\s*=\s*Constants\.CISSOID_NOTES_DEFAULT_LENGTH\s*,\s*scale\s*=\s*Constants\.CISSOID_NOTES_DEFAULT_A\s*,\s*velocityDecay\s*=\s*Constants\.CISSOID_NOTES_DEFAULT_VELOCITY_DECAY\s*,\s*shape\s*=\s*Constants\.CISSOID_NOTES_SHAPE_STANDARD\s*,\s*skipOccupied\s*=\s*true\s*\)/.test(tSrc), 'all 5 params with defaults');
+});
+
+TestRunner.test("Day 748 - cissoidNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,200}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'returns 0 for Audio');
+});
+
+TestRunner.test("Day 748 - cissoidNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,300}getActiveSequence\s*\(/.test(tSrc), 'getActiveSequence called');
+});
+
+TestRunner.test("Day 748 - cissoidNotes captures undo BEFORE mutation with descriptive 'Cissoid Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,2500}_captureUndoState\s*\(\s*`Cissoid Notes/.test(tSrc), 'undo capture with descriptive label');
+});
+
+TestRunner.test("Day 748 - cissoidNotes clamps all parameters to CISSOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,1500}CISSOID_NOTES_MIN_LENGTH[\s\S]{0,200}CISSOID_NOTES_MAX_LENGTH/.test(tSrc), 'length clamp');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,1500}CISSOID_NOTES_MIN_A[\s\S]{0,200}CISSOID_NOTES_MAX_A/.test(tSrc), 'a clamp');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,1500}CISSOID_NOTES_MIN_VELOCITY_DECAY[\s\S]{0,200}CISSOID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'velocityDecay clamp');
+});
+
+TestRunner.test("Day 748 - cissoidNotes validates shape with CISSOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,1500}CISSOID_NOTES_SHAPES\.includes\s*\(\s*shape\s*\)/.test(tSrc), 'shape validation');
+});
+
+TestRunner.test("Day 748 - cissoidNotes uses Diocles ~180 BC parametric x = 2a*sin^2(t)*cos(t) and y = 2a*sin^3(t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,3000}const\s+x\s*=\s*2\s*\*\s*a\s*\*\s*sinT\s*\*\s*sinT\s*\*\s*cosT/.test(tSrc), 'Diocles x formula');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,3000}const\s+y\s*=\s*2\s*\*\s*a\s*\*\s*sinT\s*\*\s*sinT\s*\*\s*sinT/.test(tSrc), 'Diocles y formula');
+});
+
+TestRunner.test("Day 748 - cissoidNotes skips |cosT| < 1e-9 (singular point at t = ±π/2, the asymptote)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,3000}Math\.abs\s*\(\s*cosT\s*\)\s*<\s*1e-9/.test(tSrc), 'cosT guard');
+});
+
+TestRunner.test("Day 748 - cissoidNotes uses newNotes collection pattern (collect then apply)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,4000}newNotes\.push[\s\S]{0,2000}for\s*\(\s*const\s+note\s+of\s+newNotes/.test(tSrc), 'newNotes pattern');
+});
+
+TestRunner.test("Day 748 - cissoidNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,5000}probability:\s*stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 748 - cissoidNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,5000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(tSrc), 'row bounds');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,5000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(tSrc), 'col bounds');
+});
+
+TestRunner.test("Day 748 - cissoidNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,5000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(tSrc), 'self-reference skip');
+});
+
+TestRunner.test("Day 748 - cissoidNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,5000}if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(tSrc), 'skip non-active cells');
+});
+
+TestRunner.test("Day 748 - cissoidNotes uses Math.pow for velocity decay", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,5000}Math\.pow\s*\(\s*clampedDecay\s*,\s*i\s*\)/.test(tSrc), 'Math.pow velocity decay');
+});
+
+TestRunner.test("Day 748 - cissoidNotes uses Math.floor for length and scale", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,300}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor length');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,300}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor scale');
+});
+
+TestRunner.test("Day 748 - cissoidNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,5000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'rounds velocity');
+});
+
+TestRunner.test("Day 748 - cissoidNotes returns count of cissoid notes (cissoidCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,6000}return\s+cissoidCount/.test(tSrc), 'returns cissoidCount');
+});
+
+TestRunner.test("Day 748 - cissoidNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,5000}skipOccupied\s*&&/.test(tSrc), 'skipOccupied option');
+});
+
+TestRunner.test("Day 748 - cissoidNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/CISSOID_NOTES_DEFAULT_T_MIN[\s\S]{0,200}CISSOID_NOTES_DEFAULT_T_MAX/.test(tSrc), 'standard t-range');
+    t.assertTruthy(/CISSOID_NOTES_INVERTED_T_MIN[\s\S]{0,200}CISSOID_NOTES_INVERTED_T_MAX/.test(tSrc), 'inverted t-range');
+    t.assertTruthy(/CISSOID_NOTES_UPPER_T_MIN[\s\S]{0,200}CISSOID_NOTES_UPPER_T_MAX/.test(tSrc), 'upper t-range');
+    t.assertTruthy(/CISSOID_NOTES_TIGHT_T_MIN[\s\S]{0,200}CISSOID_NOTES_TIGHT_T_MAX/.test(tSrc), 'tight t-range');
+});
+
+TestRunner.test("Day 748 - cissoidNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,2500}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 748 - cissoidNotes uses Math.sin and Math.cos for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,2500}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin');
+    t.assertTruthy(/cissoidNotes[\s\S]{0,2500}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos');
+});
+
+TestRunner.test("Day 748 - All 21 CISSOID_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/CISSOID_NOTES_MIN_LENGTH\s*=/.test(cSrc), 'CISSOID_NOTES_MIN_LENGTH defined');
+    t.assertTruthy(/CISSOID_NOTES_MAX_LENGTH\s*=/.test(cSrc), 'CISSOID_NOTES_MAX_LENGTH defined');
+    t.assertTruthy(/CISSOID_NOTES_DEFAULT_LENGTH\s*=/.test(cSrc), 'CISSOID_NOTES_DEFAULT_LENGTH defined');
+    t.assertTruthy(/CISSOID_NOTES_MIN_A\s*=/.test(cSrc), 'CISSOID_NOTES_MIN_A defined');
+    t.assertTruthy(/CISSOID_NOTES_MAX_A\s*=/.test(cSrc), 'CISSOID_NOTES_MAX_A defined');
+    t.assertTruthy(/CISSOID_NOTES_DEFAULT_A\s*=/.test(cSrc), 'CISSOID_NOTES_DEFAULT_A defined');
+    t.assertTruthy(/CISSOID_NOTES_MIN_VELOCITY_DECAY\s*=/.test(cSrc), 'CISSOID_NOTES_MIN_VELOCITY_DECAY defined');
+    t.assertTruthy(/CISSOID_NOTES_MAX_VELOCITY_DECAY\s*=/.test(cSrc), 'CISSOID_NOTES_MAX_VELOCITY_DECAY defined');
+    t.assertTruthy(/CISSOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(cSrc), 'CISSOID_NOTES_DEFAULT_VELOCITY_DECAY defined');
+    t.assertTruthy(/CISSOID_NOTES_DEFAULT_T_MIN\s*=/.test(cSrc), 'CISSOID_NOTES_DEFAULT_T_MIN defined');
+    t.assertTruthy(/CISSOID_NOTES_DEFAULT_T_MAX\s*=/.test(cSrc), 'CISSOID_NOTES_DEFAULT_T_MAX defined');
+    t.assertTruthy(/CISSOID_NOTES_INVERTED_T_MIN\s*=/.test(cSrc), 'CISSOID_NOTES_INVERTED_T_MIN defined');
+    t.assertTruthy(/CISSOID_NOTES_INVERTED_T_MAX\s*=/.test(cSrc), 'CISSOID_NOTES_INVERTED_T_MAX defined');
+    t.assertTruthy(/CISSOID_NOTES_UPPER_T_MIN\s*=/.test(cSrc), 'CISSOID_NOTES_UPPER_T_MIN defined');
+    t.assertTruthy(/CISSOID_NOTES_UPPER_T_MAX\s*=/.test(cSrc), 'CISSOID_NOTES_UPPER_T_MAX defined');
+    t.assertTruthy(/CISSOID_NOTES_TIGHT_T_MIN\s*=/.test(cSrc), 'CISSOID_NOTES_TIGHT_T_MIN defined');
+    t.assertTruthy(/CISSOID_NOTES_TIGHT_T_MAX\s*=/.test(cSrc), 'CISSOID_NOTES_TIGHT_T_MAX defined');
+    t.assertTruthy(/CISSOID_NOTES_SHAPE_STANDARD\s*=/.test(cSrc), 'CISSOID_NOTES_SHAPE_STANDARD defined');
+    t.assertTruthy(/CISSOID_NOTES_SHAPE_INVERTED\s*=/.test(cSrc), 'CISSOID_NOTES_SHAPE_INVERTED defined');
+    t.assertTruthy(/CISSOID_NOTES_SHAPE_UPPER\s*=/.test(cSrc), 'CISSOID_NOTES_SHAPE_UPPER defined');
+    t.assertTruthy(/CISSOID_NOTES_SHAPE_TIGHT\s*=/.test(cSrc), 'CISSOID_NOTES_SHAPE_TIGHT defined');
+    t.assertTruthy(/CISSOID_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'CISSOID_NOTES_SHAPES array defined');
+});
+
+TestRunner.test("Day 748 - CISSOID_NOTES_SHAPES includes all 4 shape variants (standard, inverted, upper, tight)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const arrayMatch = cSrc.match(/CISSOID_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(arrayMatch, 'SHAPES array present');
+    const contents = arrayMatch[1];
+    t.assertTruthy(/CISSOID_NOTES_SHAPE_STANDARD/.test(contents), 'STANDARD in array');
+    t.assertTruthy(/CISSOID_NOTES_SHAPE_INVERTED/.test(contents), 'INVERTED in array');
+    t.assertTruthy(/CISSOID_NOTES_SHAPE_UPPER/.test(contents), 'UPPER in array');
+    t.assertTruthy(/CISSOID_NOTES_SHAPE_TIGHT/.test(contents), 'TIGHT in array');
+});
+
+TestRunner.test("Day 748 - ui.js has 4 Cissoid of Diocles Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Cissoid of Diocles Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, '4 Cissoid menu items');
+});
+
+TestRunner.test("Day 748 - Cissoid Notes menu items call track.cissoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.cissoidNotes/g) || [];
+    t.assertEqual(matches.length, 4, '4 calls to track.cissoidNotes');
+});
+
+TestRunner.test("Day 748 - Cissoid Notes menu items call recreateToneSequence after cissoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.cissoidNotes[\s\S]{0,300}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 recreateToneSequence after cissoidNotes');
+});
+
+TestRunner.test("Day 748 - Cissoid Notes menu items show 'Cissoid\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy((uSrc.match(/Cissoid'd \$\{result\} note/g) || []).length >= 1, 'Cissoid notification present');
+});
+
+TestRunner.test("Day 748 - Cissoid Notes menu items include all 4 shape variants (standard, inverted, upper, tight)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Cissoid of Diocles Notes \(Standard/.test(uSrc), 'Standard shape menu item');
+    t.assertTruthy(/Cissoid of Diocles Notes \(Inverted/.test(uSrc), 'Inverted shape menu item');
+    t.assertTruthy(/Cissoid of Diocles Notes \(Upper/.test(uSrc), 'Upper shape menu item');
+    t.assertTruthy(/Cissoid of Diocles Notes \(Tight/.test(uSrc), 'Tight shape menu item');
+});
+
+TestRunner.test("Day 748 - Cissoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/cissoidNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 748 - APP_VERSION validation (>= 2.398 for Day 748)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.398\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.398.0');
+});

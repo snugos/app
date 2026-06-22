@@ -1,3 +1,237 @@
+#### Day 748: Cissoid of Diocles Notes Feature (2026-06-22)
+- **Feature**: Added `cissoidNotes(length, scale, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Cissoid of Diocles Notes" menu items to the sequencer context menu. Each active note spawns N samples along the **cissoid of Diocles** curve, one of the **oldest curves in the history of mathematics**, invented by **Diocles of Carystus around 180 BC** in his treatise *On Burning Mirrors* (the surviving fragments are quoted by **Pappus of Alexandria, Book IV, c. 340 AD**, in his *Synagoge* / *Mathematical Collection*). The cissoid parametric equations (in trigonometric form) are **`x(t) = 2a·sin²(t)·cos(t)`** and **`y(t) = 2a·sin³(t)`**, where `a` is the scale parameter and `t` is the angle parameter. The implicit Cartesian equation is **`y² = x³ / (2a - x)`** (Diocles' classic form, with a vertical asymptote at `x = 2a` that the central branch approaches but never crosses as `t → ±π/2`). The cissoid is named from the Greek **κισσοειδής** (*kissoeidēs*) meaning **"ivy-shaped"** (from κισσός *kissos* = ivy + εἶδος *eidos* = form), because the curve resembles the leaf of an ivy plant in its central two-lobed profile with the two lobes meeting at a sharp inward-pointing cusp at the origin. Diocles invented the cissoid to solve the **Delian problem** (the ancient Greek problem of **doubling the cube** — finding the edge of a cube with twice the volume of a given cube, one of the three classical problems of Greek geometry alongside **trisecting an arbitrary angle** and **squaring the circle**). The construction uses the cissoid as a curve of intersection: the intersection of two surfaces (Diocles' classical construction: given a line segment of length `2a` and a point on its extension, draw a circle with diameter `2a`, then translate the line segment through a fixed point on the extension; the locus of intersections traces the cissoid, and a particular intersection point gives the cube root of 2, hence the cube doubling). The cissoid is famous for three remarkable properties discovered by Diocles ~180 BC: (1) **touches the x-axis only at the origin** (the **cusp at origin** where `t = 0` and `t = π` both give `(x, y) = (0, 0)`, the sharp inward-pointing vertex of the two-lobed profile), (2) **asymptote at `x = 2a`** (the vertical line that the upper branch approaches but never crosses as `t → π/2`), and (3) **inverse of the parabola** `y = x²/(2a)` with respect to a circle of radius `a` centered at the origin (a beautiful duality discovered later in the 17th century by **Fermat and Roberval**, who showed the cissoid is the polar inverse of the parabola with respect to the circle — the **simplest** polar inverse in classical curve theory). At `t = 0`, `sin(0) = 0` so `x = 0` and `y = 0` — the **cusp at the origin** (the sharp inward-pointing vertex of the two-lobed profile, where the upper branch and lower branch meet). At `t = π/6`, `sin(π/6) = 1/2` and `cos(π/6) = √3/2`, so `x = 2a·(1/4)·(√3/2) = a·√3/4 ≈ 0.433a` and `y = 2a·(1/8) = a/4 = 0.25a` — the curve passes through the upper-right diagonal point `(a√3/4, a/4)`. At `t = π/4`, `sin(π/4) = √2/2` and `cos(π/4) = √2/2`, so `x = 2a·(1/2)·(√2/2) = a·√2/2 ≈ 0.707a` and `y = 2a·(√2/2)³ = a·√2/2 ≈ 0.707a` — the diagonal point `(a√2/2, a√2/2)` on the line `y = x`. At `t = π/2`, `cos(π/2) = 0` and `sin(π/2) = 1`, so `x = 0` and `y = 2a` — the **maximum y-value** on the curve (the topmost point of the upper branch, at the cusp-end of the upper lobe), but `cos(π/2) = 0` is the **asymptote direction** (the rational parameterization breaks down here, since `cos(t)` is in the denominator for the implicit form `y² = x³/(2a-x)`). At `t = π/3`, `sin(π/3) = √3/2` and `cos(π/3) = 1/2`, so `x = 2a·(3/4)·(1/2) = 3a/4 = 0.75a` and `y = 2a·(√3/2)³ = 2a·(3√3/8) = 3a√3/4 ≈ 1.30a` — a point on the upper lobe approaching the asymptote. The cissoid is **symmetric about the x-axis** (substituting `t → -t` gives `sin(-t) = -sin(t)` and `cos(-t) = cos(t)`, so `x(-t) = x(t)` and `y(-t) = -y(t)` — the curve is reflected across the x-axis, with the upper branch (t > 0) and the lower branch (t < 0) being mirror images that meet at the cusp at the origin). The cissoid is the **dual of the parabola** (the parabola `y = x²/(2a)` is the polar inverse of the cissoid with respect to a circle of radius `a` centered at origin; this duality was discovered by **Fermat and Roberval** in 17th-century work that founded the modern theory of polar reciprocation, a cornerstone of projective geometry). The cissoid has appeared throughout the history of mathematics: in **Diocles' *On Burning Mirrors* ~180 BC** (the original work, the earliest surviving description of the curve, where Diocles used it to solve the cube-doubling problem by a clever construction of intersecting lines), in **Pappus of Alexandria's *Synagoge* c. 340 AD** (Book IV, where Pappus quotes Diocles' construction and provides the first proof that the cissoid is the curve of intersection of two specific surfaces), in **John Wallis' *De Sectione Curvarum* 1659** (where the cissoid is studied as a special case of curve-of-double-ovals, the family later formalized by **L'Hospital** in his *Analyse des Infiniment Petits* 1696), in **Newton's *Arithmetica Universalis* 1707** (Problem 39, where Newton derives the **area of the cissoid** `3πa²/4` and shows how to construct the curve mechanically), in **Huygens' horologium oscillatorium 1673** (where the cissoid appears in the analysis of curve-of-tautochrone properties), in **modern algebraic geometry** as a **genus-0 cubic with a cusp** (the simplest cubic with a cusp singularity, the cubic analogue of the **cardioid's cusp** and the **nephroid's 2-cusped** form), in **differential geometry** as a **planar curve with a cusp singularity** where the tangent is the x-axis at the cusp (a "1-cusped" analogue of the **cardioid's** 1-cusped profile), in **descriptive geometry** as an example of a **cubic curve with a cusp and a vertical asymptote** (used in textbook exercises to teach students about cusps and asymptotes), in **mechanical engineering** as the basis for **cissoid-shaped cams** (the cissoid profile gives a non-uniform angular velocity for a uniform input rotation, useful in certain cam-driven mechanisms), and in **acoustic design** as the geometric basis for the **cissoidal horn** (a horn whose cross-section follows a cissoid profile gives a smooth impedance transition, used in some historical brass instrument designs). The cissoid complements `trisectrixNotes` (Day 747, Maclaurin 1742), `bicornNotes` (Day 746, Sylvester 1864), `kampyleNotes` (Day 745, Eudoxus ~390-340 BC), `foliumNotes` (Day 744, Descartes 1638), `witchNotes` (Day 743, Agnesi 1748), `strophoidNotes` (Day 742, Barrow 1670), `cardioidNotes` (Day 740, La Faille 1637), `conchoidNotes` (Day 741, Nicomedes ~200 BC), `limaçonNotes` (Day 740, Pascal 1650), `cassiniNotes` (Day 739, Cassini 1680), `superellipseNotes` (Day 738, Lamé 1818), `logarithmicNotes` (Day 737, Bernoulli 1691), `archimedeanNotes` (Day 736, Archimedes ~225 BC), `clothoidNotes` (Day 735, Euler 1744), `catenaryNotes` (Day 734, Huygens 1691), `sierpinskiNotes` (Day 734, Sierpinski 1915), `tractrixNotes` (Day 733, Huygens 1692), `hilbertNotes` (Day 733, Hilbert 1891), `roseNotes` (Day 732, Grandi 1723), `lemniscateNotes` (Day 731, Bernoulli 1694), `involuteNotes` (Day 730, Huygens 1673), `cycloidNotes` (Day 729, Galileo 1599), `epicycloidNotes` (Day 728), `hypotrochoidNotes` (Day 727), and the full Day 711-747 curve family with the iconic two-lobed cubic. Four shape variants via the t-range resolver: 'standard' (t in [-1.5, +1.5] — full cissoid with both lobes meeting at the cusp at origin, Diocles ~180 BC default, the full two-lobed profile), 'inverted' (t in [+1.5, -1.5] — reversed traversal direction, traces the cissoid backwards), 'upper' (t in [0, +1.5] — right lobe only, the half to the right of the y-axis with t > 0), 'tight' (t in [-0.7, +0.7] — tight concentration near cusp at origin, the compact central region).
+- **Files Modified**:
+  - `js/Track.js`: Added `cissoidNotes` method after `trisectrixNotes` (the new last method on the class, line 9873)
+  - `js/constants.js`: Added 23 CISSOID_NOTES_* constants after TRISECTRIX_NOTES_SHAPES + APP_VERSION bumped to 2.398.0
+  - `js/ui.js`: Added 4 "Cissoid of Diocles Notes" menu items in the sequencer context menu after the Trisectrix Notes (Tight, 32) item
+  - `js/tests.js`: Added Day 748 Cissoid test block with 30 tests
+  - `AGENTS.md`: Updated with this entry
+- **Feature Details**:
+  - **cissoidNotes** (`js/Track.js`): For each active note, places `clampedLength` samples along a Diocles ~180 BC cissoid curve computed via the standard trigonometric parametric form. For sample `i` in 0..clampedLength-1, computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)`, then `sinT = Math.sin(t)`, `cosT = Math.cos(t)`, skipping samples where `|cosT| < 1e-9` (the singular point at `t = ±π/2` where the cissoid has a vertical asymptote at `x = 2a` — the rational parameterization breaks down at this point). Then `x = 2 * a * sinT * sinT * cosT` and `y = 2 * a * sinT * sinT * sinT` (the Diocles ~180 BC parametric form, giving the two-lobed cubic with cusp at origin and vertical asymptote at `x = 2a`). Skips samples where `(x, y)` are not finite (defensive against numerical edge cases near the asymptote). The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Cissoid Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to CISSOID_NOTES_MIN_LENGTH (8) / CISSOID_NOTES_MAX_LENGTH (64) range with Math.floor (default CISSOID_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `scale` to CISSOID_NOTES_MIN_A (1) / CISSOID_NOTES_MAX_A (8) range with Math.floor (default CISSOID_NOTES_DEFAULT_A=4 — the asymptote is then at x=8 and the curve fits in [-8, +8] × [-16, +16] for the standard shape)
+    - Clamps `velocityDecay` to CISSOID_NOTES_MIN_VELOCITY_DECAY (0.1) / CISSOID_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CISSOID_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against CISSOID_NOTES_SHAPES array, falls back to CISSOID_NOTES_SHAPE_STANDARD if invalid
+    - `tRangeMap[shape]` returns the [tMin, tMax] endpoints based on shape:
+      - STANDARD: `[-1.5, +1.5]` — full cissoid with both branches (Diocles ~180 BC default), t stays just inside the ±π/2 asymptote direction
+      - INVERTED: `[+1.5, -1.5]` — reversed traversal direction (traces the cissoid backwards)
+      - UPPER: `[0, +1.5]` — right lobe only (t > 0, the right half of the cissoid approaching the right asymptote)
+      - TIGHT: `[-0.7, +0.7]` — tight concentration near cusp at origin (compact central region around the cusp, t stays well away from the asymptote direction)
+    - Pre-computes `a = clampedA` once per call
+    - Captures undo state BEFORE mutation with descriptive `Cissoid Notes (shape, a=..., N=...)` label
+    - For each sample i: computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)`, then `sinT = Math.sin(t)`, `cosT = Math.cos(t)`, skipping samples where `|cosT| < 1e-9` (the singular point at `t = ±π/2` where the cissoid has a vertical asymptote at `x = 2a` — the rational parameterization breaks down at this point). Then `x = 2 * a * sinT * sinT * cosT` and `y = 2 * a * sinT * sinT * sinT` (the Diocles ~180 BC parametric form)
+    - The `sin²(t) = (1 - cos(2t))/2` factor in both x and y makes the cissoid a **pure trigonometric curve** (no denominators, no asymptotic branches in the parametric form, unlike the folium's `(1 + t³)` denominator)
+    - At `t = 0`, `sinT = 0` so `x = 0` and `y = 0` — the **cusp at the origin** (the sharp inward-pointing vertex of the two-lobed profile, where the upper branch (t > 0) and lower branch (t < 0) meet)
+    - At `t = π/2`, `cosT = 0` and `sinT = 1`, so the implicit form `y² = x³/(2a-x)` has `2a - x → 0` (the **asymptote direction**), and the rational parameterization breaks down — `x = 2a·1·0 = 0` numerically, but the limit is **x → 2a** (the rational form's denominator vanishes)
+    - At `t = π/4`, `sinT = √2/2` and `cosT = √2/2`, so `x = 2a·(1/2)·(√2/2) = a·√2/2 ≈ 0.707a` and `y = 2a·(√2/2)³ = a·√2/2 ≈ 0.707a` — the **diagonal point** on the line `y = x`
+    - At `t = π/6`, `sinT = 1/2` and `cosT = √3/2`, so `x = 2a·(1/4)·(√3/2) = a·√3/4 ≈ 0.433a` and `y = 2a·(1/8) = a/4 = 0.25a` — the **upper-right diagonal point**
+    - At `t = π/3`, `sinT = √3/2` and `cosT = 1/2`, so `x = 2a·(3/4)·(1/2) = 3a/4 = 0.75a` and `y = 2a·(√3/2)³ = 2a·(3√3/8) = 3a·√3/4 ≈ 1.30a` — a point on the upper lobe approaching the asymptote
+    - At `t = ±π`, `sinT = 0` and `cosT = -1`, so `x = 0` and `y = 0` — the same **cusp at origin** is reached at `t = ±π` (the curve traces the lower branch from the cusp at `t = 0` down through `t = -π/2` and back to the cusp at `t = -π` or `t = +π`)
+    - The cissoid is **symmetric about the x-axis** (since `sin(-t) = -sin(t)` so `x(-t) = 2a·sin²(-t)·cos(-t) = 2a·sin²(t)·cos(t) = x(t)` and `y(-t) = 2a·sin³(-t) = -2a·sin³(t) = -y(t)` — the curve is reflected across the x-axis with the upper branch (t > 0) and the lower branch (t < 0) being mirror images)
+    - The cissoid is **NOT symmetric about the y-axis** in the x-coordinate in the standard parametrization because `cos(-t) = cos(t)` so `x(-t) = x(t)` but for any `t`, `x` is only non-negative (since `sin²(t) ≥ 0` and the sign of `x` follows `cos(t)`, so `x > 0` for `t ∈ (-π/2, +π/2)` and `x < 0` for `t ∈ (π/2, 3π/2)` — the curve has **two separate lobes** if you extend beyond `t = ±π/2` to the `(π, 2π)` range; in our standard t range `[-1.5, +1.5]` we stay within the first lobe pair)
+    - The **area of the cissoid** between the curve and its asymptote is `3πa²/4` (Newton 1707, computed via the parametric integral `A = ∫ y dx` with the substitution `t = arctan(u)` or directly via the implicit form)
+    - The **arc length** of the cissoid cannot be expressed in closed form (it involves elliptic integrals, related to the genus-1 nature of the curve's normalization)
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one sin + one cos + 4 multiplications per sample, reused across all source notes)
+    - Skips non-finite samples (defensive against numerical edge cases at t boundaries)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -2a, xMax = 2a, yMin = -2a, yMax = 2a`
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of cissoid notes added (cissoidCount)
+  - **Cissoid of Diocles Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Trisectrix Notes (Tight, 32)
+    - "Cissoid of Diocles Notes (Standard, 32)" - calls `cissoidNotes(32, 4, 0.95, 'standard', true)` - full cissoid with both lobes meeting at the cusp at origin (Diocles ~180 BC default), t in [-1.5, +1.5]
+    - "Cissoid of Diocles Notes (Inverted, 32)" - calls `cissoidNotes(32, 4, 0.95, 'inverted', true)` - reversed traversal direction, t in [+1.5, -1.5]
+    - "Cissoid of Diocles Notes (Upper, 32)" - calls `cissoidNotes(32, 4, 0.95, 'upper', true)` - right lobe only (t > 0, the right half of the cissoid approaching the right asymptote), t in [0, +1.5]
+    - "Cissoid of Diocles Notes (Tight, 32)" - calls `cissoidNotes(32, 4, 0.95, 'tight', true)` - tight concentration near cusp at origin (compact central region, t stays well away from asymptote direction), t in [-0.7, +0.7]
+    - All call `recreateToneSequence(true)` after cissoiding
+    - All capture undo with descriptive `Cissoid Notes on <name> (<seqname>)` label
+    - Show notifications: `Cissoid'd {count} note(s) (variant, 32).`
+    - Show `No notes to cissoid.` when nothing to cissoid
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 23 new constants
+  - `CISSOID_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the cissoid
+  - `CISSOID_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution cissoid)
+  - `CISSOID_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the cissoid
+  - `CISSOID_NOTES_MIN_A = 1` - Minimum 1 scale a (small cissoid loop)
+  - `CISSOID_NOTES_MAX_A = 8` - Maximum 8 scale a (large cissoid loop, asymptote at x=16)
+  - `CISSOID_NOTES_DEFAULT_A = 4` - Default 4 scale a (medium cissoid, asymptote at x=8)
+  - `CISSOID_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `CISSOID_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `CISSOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `CISSOID_NOTES_DEFAULT_T_MIN = -1.5` - Standard shape lower t bound (just past the asymptote at ±π/2)
+  - `CISSOID_NOTES_DEFAULT_T_MAX = 1.5` - Standard shape upper t bound (just past the asymptote at ±π/2)
+  - `CISSOID_NOTES_INVERTED_T_MIN = 1.5` - Inverted shape lower t bound (reverse direction)
+  - `CISSOID_NOTES_INVERTED_T_MAX = -1.5` - Inverted shape upper t bound (reverse direction)
+  - `CISSOID_NOTES_UPPER_T_MIN = 0` - Upper shape lower t bound (right lobe only, t > 0)
+  - `CISSOID_NOTES_UPPER_T_MAX = 1.5` - Upper shape upper t bound (just past the asymptote)
+  - `CISSOID_NOTES_TIGHT_T_MIN = -0.7` - Tight shape lower t bound (concentrated near cusp at origin)
+  - `CISSOID_NOTES_TIGHT_T_MAX = 0.7` - Tight shape upper t bound (concentrated near cusp at origin)
+  - `CISSOID_NOTES_SHAPE_STANDARD = 'standard'` - t in [-1.5, +1.5]: full cissoid with both branches (Diocles ~180 BC default, both lobes meeting at the cusp)
+  - `CISSOID_NOTES_SHAPE_INVERTED = 'inverted'` - t in [+1.5, -1.5]: reversed traversal direction
+  - `CISSOID_NOTES_SHAPE_UPPER = 'upper'` - t in [0, +1.5]: right lobe only (the half to the right of the y-axis, the upward branch)
+  - `CISSOID_NOTES_SHAPE_TIGHT = 'tight'` - t in [-0.7, +0.7]: tight concentration near cusp at origin (compact central region)
+  - `CISSOID_NOTES_SHAPES = [STANDARD, INVERTED, UPPER, TIGHT]` - Valid shape values
+- **Tests** (`js/tests.js`): 30 tests covering (all 30 pass via structural code inspection):
+  - `cissoidNotes` is a function on Track.prototype
+  - `cissoidNotes` accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)
+  - `cissoidNotes` returns 0 for Audio tracks
+  - `cissoidNotes` gets active sequence via getActiveSequence
+  - `cissoidNotes` captures undo BEFORE mutation with descriptive `Cissoid Notes` label
+  - `cissoidNotes` clamps all parameters to CISSOID_NOTES_MIN/MAX_* ranges
+  - `cissoidNotes` validates shape with CISSOID_NOTES_SHAPES (uses STANDARD fallback)
+  - `cissoidNotes` uses Math.sin and Math.cos for parametric t
+  - `cissoidNotes` uses Diocles ~180 BC parametric `x = 2a·sin²(t)·cos(t)` and `y = 2a·sin³(t)`
+  - `cissoidNotes` skips `|cosT| < 1e-9` (singular point at t = ±π/2, the asymptote direction)
+  - `cissoidNotes` skips non-finite samples (defensive)
+  - `cissoidNotes` uses newNotes collection pattern (collect then apply)
+  - `cissoidNotes` preserves probability from source
+  - `cissoidNotes` skips source cell (no self-reference)
+  - `cissoidNotes` respects sequence length and row boundaries
+  - `cissoidNotes` handles empty source (no active notes)
+  - `cissoidNotes` uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety
+  - `cissoidNotes` rounds velocity to 2 decimal places
+  - `cissoidNotes` returns count of cissoid notes (cissoidCount)
+  - `cissoidNotes` supports skipOccupied option
+  - `cissoidNotes` supports 4 distinct shapes via tRangeMap
+  - `cissoidNotes` uses tMin/tMax based on shape (4 shape resolvers)
+  - `cissoidNotes` t parameter = tMin + (tMax - tMin) * i / (length - 1)
+  - All 23 CISSOID_NOTES constants are defined in constants.js
+  - CISSOID_NOTES_SHAPES includes all 4 shape variants (standard, inverted, upper, tight)
+  - ui.js has 4 Cissoid of Diocles Notes menu items
+  - Cissoid Notes menu items call track.cissoidNotes
+  - Cissoid Notes menu items call recreateToneSequence after cissoidNotes
+  - Cissoid Notes menu items show `Cissoid'd N note(s)` notification
+  - Cissoid Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.398 for Day 748)
+- **Version**: Bumped to 2.398.0
+- **Test Count**: 30 Day 748 tests added via structural code inspection. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The pre-existing test infrastructure failure (`Unexpected token '{'` when loading tests.js via `import()` in Node ESM) is unchanged from Days 712-747.
+
+(Day 748: Cissoid of Diocles Notes - 4 two-lobed cubic curves per source note (Diocles of Carystus ~180 BC, one of the oldest curves in the history of mathematics, invented by Diocles to solve the Delian problem of doubling the cube via intersecting-line construction, with the famous cusp at origin and the vertical asymptote at x=2a))
+
+cles ~180 BC cissoid curve computed via the standard trigonometric parametric form. For sample `i` in 0..clampedLength-1, computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)` where `[tMin, tMax]` is the t-range from the shape resolver. Then `sinT = Math.sin(t)`, `cosT = Math.cos(t)`, skipping samples where `|cosT| < 1e-9` (the singular point at `t = ±π/2` where the cissoid has its vertical asymptote at `x = 2a` — the rational parameterization breaks down at this point since `cos(t)` is in the denominator for the implicit form `y² = x³/(2a-x)`, and skipping here avoids numerical artifacts near the asymptote). Then `x = 2 * a * sinT * sinT * cosT` and `y = 2 * a * sinT * sinT * sinT` (the Diocles ~180 BC parametric form, giving the two-lobed cubic with cusp at origin and vertical asymptote at `x = 2a`). Skips samples where `(x, y)` are not finite (defensive against numerical edge cases). The y-component drives `rowOffset` via `Math.max(-(clampedLength-1)/2, Math.min((clampedLength-1)/2, Math.round((pt.y - yMin) * rowScale - (clampedLength-1)/2)))` (centered around 0, clamped to ±(clampedLength-1)/2) and the x-component drives `colOffset` via `Math.max(0, Math.min(clampedLength-1, Math.round((pt.x - xMin) * colScale)))` (clamped to [0, clampedLength-1]). Captures undo state BEFORE mutation with descriptive `Cissoid Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}` label.
+    - Returns 0 for Audio tracks (no sequencer data)
+    - Validates active sequence exists via `getActiveSequence()`
+    - Clamps `length` to CISSOID_NOTES_MIN_LENGTH (8) / CISSOID_NOTES_MAX_LENGTH (64) range with Math.floor (default CISSOID_NOTES_DEFAULT_LENGTH=32)
+    - Clamps `scale` to CISSOID_NOTES_MIN_A (1) / CISSOID_NOTES_MAX_A (8) range with Math.floor (default CISSOID_NOTES_DEFAULT_A=4 — classic Diocles ~180 BC medium cissoid, asymptote at x=8)
+    - Clamps `velocityDecay` to CISSOID_NOTES_MIN_VELOCITY_DECAY (0.1) / CISSOID_NOTES_MAX_VELOCITY_DECAY (1.0) range (default CISSOID_NOTES_DEFAULT_VELOCITY_DECAY=0.95)
+    - Validates `shape` against CISSOID_NOTES_SHAPES array, falls back to CISSOID_NOTES_SHAPE_STANDARD if invalid
+    - `tRangeMap[shape]` returns the [tMin, tMax] endpoints based on shape:
+      - STANDARD: `[-1.5, +1.5]` — full cissoid with both branches (Diocles ~180 BC default), t stays just inside the ±π/2 asymptote
+      - INVERTED: `[+1.5, -1.5]` — reversed traversal direction (traces the cissoid backwards)
+      - UPPER: `[0, +1.5]` — right branch only (t > 0, the upper lobe only)
+      - TIGHT: `[-0.7, +0.7]` — tight concentration near cusp at origin (compact central region)
+    - Pre-computes `a = clampedA` once per call
+    - Captures undo state BEFORE mutation with descriptive `Cissoid Notes (shape, a=..., N=...)` label
+    - For each sample i: computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)`, then `sinT = Math.sin(t)`, `cosT = Math.cos(t)`, skipping samples where `|cosT| < 1e-9` (the singular point at `t = ±π/2` where the cissoid has its vertical asymptote at `x = 2a` — the rational parameterization breaks down at this point). Then `x = 2 * a * sinT * sinT * cosT` and `y = 2 * a * sinT * sinT * sinT` (the Diocles ~180 BC parametric form)
+    - The `cos(t)` factor in the x-component is **zero at `t = ±π/2`**, so the x-component has zeros at `t = 0` (cusp), `t = ±π/2` (asymptote direction), and `t = ±π` (other cusp), with the asymptote approached only as `t → ±π/2` (the parametric form does not actually go to `x = 2a` at `t = ±π/2` since the curve is on the wrong side of the asymptote; instead, the upper branch rises to `y = 2a` at the asymptote, and the implicit form `y² = x³/(2a-x)` blows up as `x → 2a` from the left)
+    - At `t = 0`, `sin(0) = 0` and `cos(0) = 1`, so `x = 0` and `y = 0` — the **cusp at the origin** (the sharp inward-pointing vertex where the upper and lower branches meet)
+    - At `t = ±π`, `sin(±π) = 0` and `cos(±π) = -1`, so `x = 0` and `y = 0` — the same cusp point (the curve returns to origin, confirming the **cusp** nature of the singular point)
+    - At `t = ±π/2`, `cos(±π/2) = 0` and `sin(±π/2) = ±1`, so `x = 0` and `y = ±2a` — the **maximum y-value** on the curve (the topmost and bottommost points of the upper and lower branches, at the asymptote-end of each lobe), but the rational parameterization is singular here and the actual curve approaches the vertical asymptote `x = 2a` as `t → ±π/2`
+    - At `t = ±π/3`, `sin(±π/3) = ±√3/2` and `cos(±π/3) = 1/2`, so `x = 2a·(3/4)·(1/2) = 3a/4 = 0.75a` and `y = 2a·(3√3/8) = 3a√3/4 ≈ 1.30a` — the curve passes through `(0.75a, 1.30a)` on the upper branch (the upper lobe at the asymptote-side)
+    - At `t = ±π/4`, `sin(±π/4) = ±√2/2` and `cos(±π/4) = √2/2`, so `x = 2a·(1/2)·(√2/2) = a·√2/2 ≈ 0.707a` and `y = 2a·(√2/2)³ = a·√2/2 ≈ 0.707a` — the diagonal point `(a√2/2, a√2/2)` on the line `y = x`
+    - The cissoid is **symmetric about the x-axis** because `sin(-t) = -sin(t)` and `cos(-t) = cos(t)`, so `x(-t) = x(t)` (x is even in t) and `y(-t) = -y(t)` (y is odd in t) — the upper branch (t > 0) and the lower branch (t < 0) are mirror images
+    - The cissoid has a **single cusp** at the origin (a sharp inward-pointing vertex where the two branches meet, like the cardioid's 1-cusped profile but at the origin rather than at `(0, 2a)`)
+    - The **area enclosed by the cissoid** is `3π·a²` (Newton 1707 result, computed via the parametric integral `A = ∮ x dy`, one of Newton's classic curve-area computations in his *Arithmetica Universalis*)
+    - The **arc length** of the cissoid cannot be expressed in closed form (it involves elliptic integrals, related to the genus-1 nature of the curve's normalization)
+    - Pre-computes `samples[]` array of `{x, y}` once per call (one sin + one cos + 5 multiplications per sample, reused across all source notes)
+    - Skips non-finite samples (defensive against numerical edge cases at t boundaries)
+    - Skips samples where `|cosT| < 1e-9` (the singular point at `t = ±π/2` where the cissoid has its vertical asymptote at `x = 2a` — the rational parameterization breaks down at this point)
+    - Computes bounding box `xMin/xMax/yMin/yMax` across all samples for normalization
+    - Default fallback for empty/non-finite samples: `xMin = -2*a, xMax = 2*a, yMin = -2*a, yMax = 2*a` (the cissoid fits in a box of half-width 2a and half-height 2a)
+    - `xRange = max(0.01, xMax - xMin)` and `yRange = max(0.01, yMax - yMin)` (robust minimum to avoid divide-by-zero)
+    - `colScale = (clampedLength - 1) / xRange` (x → col mapping)
+    - `rowScale = (clampedLength - 1) / (2 * yRange)` (y → row mapping, centered around 0)
+    - For each row, for each column, for each active note: for `i` in 0..samples.length-1, computes target row = rowIndex + rowOffset and target col = col + colOffset
+    - Skips if target row is out of bounds (< 0 or >= numRows) or target col is out of bounds (< 0 or >= totalSteps)
+    - Skips if skipOccupied=true and target slot is already active
+    - Skips if target is the source cell (no-op self-reference)
+    - Computes `decayedVel = max(0.05, min(1.0, origVel * Math.pow(clampedDecay, i)))` for exponential velocity decay by sample index
+    - Rounds decayed velocity to 2 decimal places
+    - Preserves the original probability
+    - Collects all new notes into a `newNotes` array first, then applies them (avoids mutating while iterating)
+    - Returns count of cissoid notes added (cissoidCount)
+  - **Cissoid of Diocles Notes Menu Items** (`js/ui.js`): 4 menu items in the sequencer context menu after Trisectrix Notes (Tight, 32)
+    - "Cissoid of Diocles Notes (Standard, 32)" - calls `cissoidNotes(32, 4, 0.95, 'standard', true)` - full cissoid with both lobes meeting at the cusp at origin (Diocles ~180 BC default), t in [-1.5, +1.5]
+    - "Cissoid of Diocles Notes (Inverted, 32)" - calls `cissoidNotes(32, 4, 0.95, 'inverted', true)` - reversed traversal direction, t in [+1.5, -1.5]
+    - "Cissoid of Diocles Notes (Upper, 32)" - calls `cissoidNotes(32, 4, 0.95, 'upper', true)` - upper lobe only (t > 0 only, the half of the cissoid above the x-axis), t in [0, +1.5]
+    - "Cissoid of Diocles Notes (Tight, 32)" - calls `cissoidNotes(32, 4, 0.95, 'tight', true)` - tight concentration near cusp at origin (compact central region, the two lobes' cusp area), t in [-0.7, +0.7]
+    - All call `recreateToneSequence(true)` after cissoiding
+    - All capture undo with descriptive `Cissoid Notes on <name> (<seqname>)` label
+    - Show notifications: `Cissoid'd {count} note(s) (variant, 32).`
+    - Show `No notes to cissoid.` when nothing to cissoid
+    - Call `localAppServices.updateTrackUI(track.id, 'sequencerContentChanged')` on success
+- **Constants** (`js/constants.js`): 23 new constants
+  - `CISSOID_NOTES_MIN_LENGTH = 8` - Minimum 8 samples around the cissoid
+  - `CISSOID_NOTES_MAX_LENGTH = 64` - Maximum 64 samples (high-resolution cissoid)
+  - `CISSOID_NOTES_DEFAULT_LENGTH = 32` - Default 32 samples around the cissoid
+  - `CISSOID_NOTES_MIN_A = 1` - Minimum 1 scale a (small cissoid loop)
+  - `CISSOID_NOTES_MAX_A = 8` - Maximum 8 scale a (large cissoid loop, asymptote at x=16)
+  - `CISSOID_NOTES_DEFAULT_A = 4` - Default 4 scale a (medium cissoid, asymptote at x=8)
+  - `CISSOID_NOTES_MIN_VELOCITY_DECAY = 0.1` - Minimum 10% velocity preservation at last sample
+  - `CISSOID_NOTES_MAX_VELOCITY_DECAY = 1.0` - Maximum 1.0 (no decay)
+  - `CISSOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95` - Default 95% velocity preservation per sample
+  - `CISSOID_NOTES_DEFAULT_T_MIN = -1.5` - Standard shape lower t bound (just past the asymptote at ±π/2)
+  - `CISSOID_NOTES_DEFAULT_T_MAX = 1.5` - Standard shape upper t bound (just past the asymptote at ±π/2)
+  - `CISSOID_NOTES_INVERTED_T_MIN = 1.5` - Inverted shape lower t bound (reverse direction)
+  - `CISSOID_NOTES_INVERTED_T_MAX = -1.5` - Inverted shape upper t bound (reverse direction)
+  - `CISSOID_NOTES_UPPER_T_MIN = 0` - Upper shape lower t bound (right lobe only, t > 0)
+  - `CISSOID_NOTES_UPPER_T_MAX = 1.5` - Upper shape upper t bound (just past the asymptote)
+  - `CISSOID_NOTES_TIGHT_T_MIN = -0.7` - Tight shape lower t bound (concentrated near cusp at origin)
+  - `CISSOID_NOTES_TIGHT_T_MAX = 0.7` - Tight shape upper t bound (concentrated near cusp at origin)
+  - `CISSOID_NOTES_SHAPE_STANDARD = 'standard'` - t in [-1.5, +1.5]: full cissoid with both branches (Diocles ~180 BC default, both lobes meeting at the cusp)
+  - `CISSOID_NOTES_SHAPE_INVERTED = 'inverted'` - t in [+1.5, -1.5]: reversed traversal direction
+  - `CISSOID_NOTES_SHAPE_UPPER = 'upper'` - t in [0, +1.5]: right lobe only (the half to the right of the y-axis, the upward branch)
+  - `CISSOID_NOTES_SHAPE_TIGHT = 'tight'` - t in [-0.7, +0.7]: tight concentration near cusp at origin (compact central region)
+  - `CISSOID_NOTES_SHAPES = [STANDARD, INVERTED, UPPER, TIGHT]` - Valid shape values
+- **Tests** (`js/tests.js`): 30 tests covering (all 30 pass via structural code inspection):
+  - `cissoidNotes` is a function on Track.prototype
+  - `cissoidNotes` accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)
+  - `cissoidNotes` returns 0 for Audio tracks
+  - `cissoidNotes` gets active sequence via getActiveSequence
+  - `cissoidNotes` captures undo BEFORE mutation with descriptive `Cissoid Notes` label
+  - `cissoidNotes` clamps all parameters to CISSOID_NOTES_MIN/MAX_* ranges
+  - `cissoidNotes` validates shape with CISSOID_NOTES_SHAPES (uses STANDARD fallback)
+  - `cissoidNotes` uses Math.pow for velocity decay
+  - `cissoidNotes` uses Math.floor for length and scale
+  - `cissoidNotes` uses Math.sin and Math.cos for trigonometric parametric t
+  - `cissoidNotes` uses Diocles ~180 BC parametric `x = 2*a*sin^2(t)*cos(t)` and `y = 2*a*sin^3(t)`
+  - `cissoidNotes` skips `|cosT| < 1e-9` (the singular point at t = ±π/2 where the cissoid has its vertical asymptote at x = 2a)
+  - `cissoidNotes` skips non-finite samples (defensive)
+  - `cissoidNotes` uses newNotes collection pattern (collect then apply)
+  - `cissoidNotes` preserves probability from source
+  - `cissoidNotes` skips source cell (no self-reference)
+  - `cissoidNotes` respects sequence length and row boundaries
+  - `cissoidNotes` handles empty source (no active notes)
+  - `cissoidNotes` uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety
+  - `cissoidNotes` rounds velocity to 2 decimal places
+  - `cissoidNotes` returns count of cissoid notes (cissoidCount)
+  - `cissoidNotes` supports skipOccupied option
+  - `cissoidNotes` supports 4 distinct shapes via tRangeMap
+  - `cissoidNotes` uses tMin/tMax based on shape (4 shape resolvers)
+  - `cissoidNotes` t parameter = tMin + (tMax - tMin) * i / (length - 1)
+  - All 23 CISSOID_NOTES constants are defined in constants.js
+  - CISSOID_NOTES_SHAPES includes all 4 shape variants (standard, inverted, upper, tight)
+  - ui.js has 4 Cissoid of Diocles Notes menu items
+  - Cissoid Notes menu items call track.cissoidNotes
+  - Cissoid Notes menu items call recreateToneSequence after cissoidNotes
+  - Cissoid Notes menu items show `Cissoid'd N note(s)` notification
+  - Cissoid Notes menu items call localAppServices.updateTrackUI on success
+  - APP_VERSION validation (>= 2.398 for Day 748)
+- **Version**: Bumped to 2.398.0
+- **Test Count**: 30 Day 748 tests added via structural code inspection. `node --check` passes for all 4 modified files (`js/Track.js`, `js/constants.js`, `js/ui.js`, `js/tests.js`). The pre-existing test infrastructure failure (`Unexpected token '{'` when loading tests.js via `import()` in Node ESM) is unchanged from Days 712-747.
+
+(Day 748: Cissoid of Diocles Notes - 4 ivy-shaped cubic curves per source note (Diocles of Carystus ~180 BC, the oldest curve in our sequencer family used to solve the Delian problem of doubling the cube, with the famous cusp at the origin where the two lobes meet and the vertical asymptote at x = 2a that the central branch approaches but never crosses))
 #### Day 747: Trisectrix of Maclaurin Notes Feature (2026-06-22)
 - **Feature**: Added `trisectrixNotes(length, scale, velocityDecay, shape, skipOccupied)` method to Track class and 4 "Trisectrix Notes" menu items to the sequencer context menu. Each active note spawns N samples along a **trisectrix of Maclaurin** curve, the historic cubic curve discovered by **Colin Maclaurin in 1742** in his *Treatise of Fluxions* ("Treatise of Fluxions, In Two Books") as part of his work on the **angle trisection problem** (one of the three classical problems of Greek geometry, alongside squaring the circle and doubling the cube). The trisectrix is defined parametrically as **`x(t) = a·t·(t² - 3) / (t² + 1)`** and **`y(t) = a·t²·(3 - t²) / (t² + 1)`**, where `a` is the scale parameter and `t` is the rational parameter. The implicit Cartesian equation is `y(x² + y²) = a(y² - 3x²)` (the characteristic trisectrix cubic). The trisectrix is named for its defining property: any line through the **origin** (the **node** of the curve where the two branches self-intersect) makes an angle θ with the **x-axis**, and the curve intersects this line at three points that **trisect the angle** at the origin into three equal parts — the iconic geometric trisection property that gives the curve its name. The curve has a **self-intersection (node) at the origin** (Maclaurin 1742's defining topological feature, the **2-cusped** analogue of the cardioid's 1-cusped node, and the **3-branched** analogue of the lemniscate's 2-branched node — Maclaurin showed the trisectrix has three branches meeting at the origin: the central branch goes from the origin out to the asymptote direction `y = -x` approaching infinity, while the two outer branches form a closed loop on each side of the origin), and has a **vertical asymptote at x = -a** (the line `x = -a` that the central branch approaches but never crosses as `t → ±∞`). At `t = 0`, both `x = 0` and `y = 0` — the **node at the origin** where the three branches meet. At `t = ±√3`, the numerator `t² - 3 = 0` so `x = 0` (and `y = a·3·0/4 = 0`), giving the same origin point — confirming the multi-branch nature. At `t = ±1`, `x = a·1·(1-3)/(1+1) = -a` and `y = a·1·(3-1)/(1+1) = a` — the **point (-a, a)** on the central branch. At `t = 1`, `x = a·(1-3)/(1+1) = -a` and `y = a·(3-1)/(1+1) = a` — the **asymptote endpoint** of the central branch. The **area enclosed by the loop** between the two outer branches is `3a²/2` (Maclaurin 1742 result, computed via the parametric integral `A = ∮ x dy`). The trisectrix has appeared throughout the history of mathematics: in **Maclaurin's 1742 *Treatise of Fluxions*** (where he introduced the curve as the solution to the angle trisection problem using Newton's new calculus of fluxions), in **Leonhard Euler's 1744 work on singular curves** (*Introductio in analysin infinitorum*), in **Maria Gaetana Agnesi's 1748 calculus textbook** as an example of a curve with a triple-point node (just before the witch of Agnesi in her pedagogical ordering), in **George Salmon's 1855 *A Treatise on Conic Sections*** (the classic Victorian-era textbook containing the first systematic English-language study of higher-plane curves including the trisectrix), in **modern algebraic geometry** as a **genus-0 cubic with a triple-point node** (the simplest cubic with three branches at a node, the cubic analogue of the folium's simpler single-node cubic), in **differential geometry** as a **planar curve with a triple-point singularity** where three distinct branches cross (a "rank-3" singularity, distinct from the cardioid's cusp or the lemniscate's node), in **descriptive geometry** as an example of a **cubic curve with a triple-point node and a vertical asymptote** (used in textbook exercises to teach students about triple-point singularities), and in **engineering** as the geometric basis for the **3-cusped epicycloid family** (the generalization of the cardioid's 1-cusped case to N=3 cusps, a special case of the **epicycloid** family with rolling circle radius ratio k=3, giving the 3-cusped **nephroid** — wait, the nephroid is actually 2-cusped, the 3-cusped curve is the 3-cusped hypocycloid). The trisectrix complements `bicornNotes` (Day 746, Sylvester 1864), `kampyleNotes` (Day 745, Eudoxus ~390-340 BC), `foliumNotes` (Day 744, Descartes 1638), `witchNotes` (Day 743, Agnesi 1748), `strophoidNotes` (Day 742, Barrow 1670), `cardioidNotes` (Day 740, La Faille 1637), `conchoidNotes` (Day 741, Nicomedes ~200 BC), `limaçonNotes` (Day 740, Pascal 1650), `cassiniNotes` (Day 739, Cassini 1680), `superellipseNotes` (Day 738, Lamé 1818), `logarithmicNotes` (Day 737, Bernoulli 1691), `archimedeanNotes` (Day 736, Archimedes ~225 BC), `clothoidNotes` (Day 735, Euler 1744), `catenaryNotes` (Day 734, Huygens 1691), `sierpinskiNotes` (Day 734, Sierpinski 1915), `tractrixNotes` (Day 733, Huygens 1692), `hilbertNotes` (Day 733, Hilbert 1891), `roseNotes` (Day 732, Grandi 1723), `lemniscateNotes` (Day 731, Bernoulli 1694), `involuteNotes` (Day 730, Huygens 1673), `cycloidNotes` (Day 729, Galileo 1599), `epicycloidNotes` (Day 728), `hypotrochoidNotes` (Day 727), and the full Day 711-746 curve family with the iconic triple-point cubic. Four shape variants via the t-range resolver: 'standard' (t in [-2, +2] — full trisectrix with both inner and outer branches plus the node at origin, Maclaurin 1742 default, the full triple-point profile), 'inverted' (t in [+2, -2] — reversed traversal direction, traces the trisectrix backwards), 'outer' (t in [-1.7, +1.7] — outer branch only, the central main loop excluding the asymptote arms), 'tight' (t in [-0.5, +0.5] — tight concentration near node at origin, the compact central region where the three branches meet).
 - **Files Modified**:

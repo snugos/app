@@ -1906,4 +1906,32 @@ export const TRISECTRIX_NOTES_SHAPES = [
     TRISECTRIX_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.397.0';
+export const CISSOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the cissoid
+export const CISSOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution cissoid)
+export const CISSOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the cissoid
+export const CISSOID_NOTES_MIN_A = 1; // Minimum 1 scale a (small cissoid loop)
+export const CISSOID_NOTES_MAX_A = 8; // Maximum 8 scale a (large cissoid loop, asymptote at x=16)
+export const CISSOID_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium cissoid, asymptote at x=8)
+export const CISSOID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const CISSOID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const CISSOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const CISSOID_NOTES_DEFAULT_T_MIN = -1.5; // Standard shape lower t bound (just past the asymptote at ±π/2)
+export const CISSOID_NOTES_DEFAULT_T_MAX = 1.5; // Standard shape upper t bound (just past the asymptote at ±π/2)
+export const CISSOID_NOTES_INVERTED_T_MIN = 1.5; // Inverted shape lower t bound (reverse direction)
+export const CISSOID_NOTES_INVERTED_T_MAX = -1.5; // Inverted shape upper t bound (reverse direction)
+export const CISSOID_NOTES_UPPER_T_MIN = 0; // Upper shape lower t bound (right lobe only, t > 0)
+export const CISSOID_NOTES_UPPER_T_MAX = 1.5; // Upper shape upper t bound (just past the asymptote)
+export const CISSOID_NOTES_TIGHT_T_MIN = -0.7; // Tight shape lower t bound (concentrated near cusp at origin)
+export const CISSOID_NOTES_TIGHT_T_MAX = 0.7; // Tight shape upper t bound (concentrated near cusp at origin)
+export const CISSOID_NOTES_SHAPE_STANDARD = 'standard'; // t in [-1.5, +1.5]: full cissoid with both branches (Diocles ~180 BC default, both lobes meeting at the cusp)
+export const CISSOID_NOTES_SHAPE_INVERTED = 'inverted'; // t in [+1.5, -1.5]: reversed traversal direction
+export const CISSOID_NOTES_SHAPE_UPPER = 'upper'; // t in [0, +1.5]: right lobe only (the half to the right of the y-axis, the upward branch)
+export const CISSOID_NOTES_SHAPE_TIGHT = 'tight'; // t in [-0.7, +0.7]: tight concentration near cusp at origin (compact central region)
+export const CISSOID_NOTES_SHAPES = [
+    CISSOID_NOTES_SHAPE_STANDARD,
+    CISSOID_NOTES_SHAPE_INVERTED,
+    CISSOID_NOTES_SHAPE_UPPER,
+    CISSOID_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.398.0';
