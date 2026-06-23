@@ -1297,7 +1297,8 @@ export const MIN_RECORDING_LENGTH_SECONDS = 0.1; // Minimum 100ms recording
 
 // ============================================================
 // Track Template Constants
-// =====================================export const MAX_TRACK_TEMPLATES = 32; // Maximum number of saved track templates
+// ===========================
+export const MAX_TRACK_TEMPLATES = 32; // Maximum number of saved track templates
 export const DEFAULT_TEMPLATE_NAME_PREFIX = 'Template'; // Default name for new templates
 export const TRACK_TEMPLATE_COLORS = TRACK_COLORS; // Templates can use same color palette as tracks
 export const DEFAULT_TRACK_TEMPLATE_COLOR = '#54a0ff'; // Default template color (blue)
@@ -1335,7 +1336,8 @@ export const MIDI_IMPORT_VELOCITY_SCALE = 1 / 127; // Scale MIDI velocity (127) 
 
 // ============================================================
 // SnugWindow Window Constants
-// =====================================export const DEFAULT_WINDOW_MIN_WIDTH = 150; // Minimum window width in pixels
+// ===========================
+export const DEFAULT_WINDOW_MIN_WIDTH = 150; // Minimum window width in pixels
 export const DEFAULT_WINDOW_MIN_HEIGHT = 100; // Minimum window height in pixels
 export const DEFAULT_WINDOW_WIDTH = 350; // Default window width in pixels
 export const DEFAULT_WINDOW_HEIGHT = 250; // Default window height in pixels
@@ -1343,19 +1345,22 @@ export const TASKBAR_HEIGHT = 30; // Taskbar height in pixels
 
 // ============================================================
 // Context Menu Constants
-// =====================================export const CONTEXT_MENU_ITEM_HEIGHT = 28; // Height of each context menu item in pixels
+// ===========================
+export const CONTEXT_MENU_ITEM_HEIGHT = 28; // Height of each context menu item in pixels
 export const CONTEXT_MENU_MAX_WIDTH = 300; // Maximum width of context menu in pixels
 
 // ============================================================
 // Drop Zone Constants
-// =====================================export const DROP_ZONE_MIN_WIDTH = 80; // Minimum drop zone width in pixels
+// ===========================
+export const DROP_ZONE_MIN_WIDTH = 80; // Minimum drop zone width in pixels
 export const DROP_ZONE_MIN_HEIGHT = 60; // Minimum drop zone height in pixels
 export const DROP_ZONE_DEFAULT_HEIGHT = 50; // Default drop zone height in pixels
 export const DROP_ZONE_BORDER_RADIUS = 4; // Border radius in pixels
 
 // ============================================================
 // Sequencer Grid Constants
-// =====================================export const GRID_STEP_LABELS = {
+// ===========================
+export const GRID_STEP_LABELS = {
     labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16']
 };
 export const STEP_LABELS_SIXTEENTHS = {
@@ -1370,7 +1375,8 @@ export const MIDI_LEARN_SHORTCUT_KEY = 'k'; // Keyboard shortcut to toggle MIDI 
 
 // ============================================================
 // MIDI Learn Constants
-// =====================================export const MIDI_LEARN_MIN_CC = 0; // CC number range
+// ===========================
+export const MIDI_LEARN_MIN_CC = 0; // CC number range
 export const MIDI_LEARN_MAX_CC = 127;
 export const MIDI_LEARN_MIN_CHANNEL = 0; // 0-indexed (MIDI channel 1)
 export const MIDI_LEARN_MAX_CHANNEL = 15; // 0-indexed (MIDI channel 16)
@@ -1455,7 +1461,8 @@ export const KEYBOARD_SHORTCUT_CATEGORIES = [
 
 // ============================================================
 // Effect Preset Constants
-// =====================================export const MAX_EFFECT_PRESETS = 64; // Maximum number of saved effect presets per effect type
+// ===========================
+export const MAX_EFFECT_PRESETS = 64; // Maximum number of saved effect presets per effect type
 export const DEFAULT_PRESET_NAME_PREFIX = 'Preset'; // Default name for new presets
 export const DEFAULT_EFFECT_PRESET = {
     name: DEFAULT_PRESET_NAME_PREFIX,
@@ -2143,7 +2150,7 @@ export const OCTOID_NOTES_SHAPES = [
 // extending the 1-2-3-4-5-6-7-8-9 cusp sequence (cardioid 1, nephroid 2, deltoid 3,
 // astroid 4, pentoid 5, hexacuspid 6, heptoid 7, octoid 8, enneoid 9). 9-fold D9 dihedral symmetry.
 // Parametric: x = a*cos(t) + (a/8)*cos(8t), y = a*sin(t) - (a/8)*sin(8t).
-e
+
 export const ENNEOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the enneoid
 export const ENNEOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution enneoid)
 export const ENNEOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the enneoid
@@ -2172,32 +2179,39 @@ export const ENNEOID_NOTES_SHAPES = [
     ENNEOID_NOTES_SHAPE_TIGHT
 ];
 
-xport const ENNEOID_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the enneoid
-export const ENNEOID_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution enneoid)
-export const ENNEOID_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the enneoid
-export const ENNEOID_NOTES_MIN_A = 1; // Minimum 1 scale a (small enneoid)
-export const ENNEOID_NOTES_MAX_A = 8; // Maximum 8 scale a (large enneoid)
-export const ENNEOID_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium enneoid)
-export const ENNEOID_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
-export const ENNEOID_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
-export const ENNEOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
-export const ENNEOID_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
-export const ENNEOID_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 9 cusps visited)
-export const ENNEOID_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
-export const ENNEOID_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
-export const ENNEOID_NOTES_NONAGON_T_MIN = 0; // Nonagon shape lower t bound (ninth revolution, 1 cusp region)
-export const ENNEOID_NOTES_NONAGON_T_MAX = 2 * Math.PI / 9; // Nonagon shape upper t bound (ninth revolution, 1 cusp)
-export const ENNEOID_NOTES_TIGHT_T_MIN = -Math.PI / 9; // Tight shape lower t bound (concentrated around 1 cusp)
-export const ENNEOID_NOTES_TIGHT_T_MAX = Math.PI / 9; // Tight shape upper t bound (concentrated around 1 cusp)
-export const ENNEOID_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2π]: full enneoid with all 9 cusps (R/r=9 default)
-export const ENNEOID_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2π, 0]: reversed traversal direction
-export const ENNEOID_NOTES_SHAPE_NONAGON = 'nonagon'; // t in [0, 2π/9]: ninth revolution, just 1 cusp region
-export const ENNEOID_NOTES_SHAPE_TIGHT = 'tight'; // t in [-π/9, +π/9]: tight concentration around the right cusp region
-export const ENNEOID_NOTES_SHAPES = [
-    ENNEOID_NOTES_SHAPE_STANDARD,
-    ENNEOID_NOTES_SHAPE_INVERTED,
-    ENNEOID_NOTES_SHAPE_NONAGON,
-    ENNEOID_NOTES_SHAPE_TIGHT
+
+
+
+// Decussata (10-cusped Hypocycloid) Notes - 10-cusped hypocycloid (R/r = 10)
+// extending the 1-2-3-4-5-6-7-8-9-10 cusp sequence (cardioid 1, nephroid 2, deltoid 3,
+// astroid 4, pentoid 5, hexacuspid 6, heptoid 7, octoid 8, enneoid 9, decussata 10).
+// 10-fold D10 dihedral symmetry. Parametric: x = a*cos(t) + (a/9)*cos(9t), y = a*sin(t) - (a/9)*sin(9t).
+export const DECUSSATA_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the decussata
+export const DECUSSATA_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution decussata)
+export const DECUSSATA_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the decussata
+export const DECUSSATA_NOTES_MIN_A = 1; // Minimum 1 scale a (small decussata)
+export const DECUSSATA_NOTES_MAX_A = 8; // Maximum 8 scale a (large decussata)
+export const DECUSSATA_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium decussata)
+export const DECUSSATA_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const DECUSSATA_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const DECUSSATA_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const DECUSSATA_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const DECUSSATA_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 10 cusps visited)
+export const DECUSSATA_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const DECUSSATA_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const DECUSSATA_NOTES_DECAGON_T_MIN = 0; // Decagon shape lower t bound (tenth revolution, 1 cusp region)
+export const DECUSSATA_NOTES_DECAGON_T_MAX = 2 * Math.PI / 10; // Decagon shape upper t bound (tenth revolution, 1 cusp)
+export const DECUSSATA_NOTES_TIGHT_T_MIN = -Math.PI / 10; // Tight shape lower t bound (concentrated around 1 cusp)
+export const DECUSSATA_NOTES_TIGHT_T_MAX = Math.PI / 10; // Tight shape upper t bound (concentrated around 1 cusp)
+export const DECUSSATA_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2π]: full decussata with all 10 cusps (R/r=10 default)
+export const DECUSSATA_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2π, 0]: reversed traversal direction
+export const DECUSSATA_NOTES_SHAPE_DECAGON = 'decagon'; // t in [0, 2π/10]: tenth revolution, just 1 cusp region
+export const DECUSSATA_NOTES_SHAPE_TIGHT = 'tight'; // t in [-π/10, +π/10]: tight concentration around the right cusp region
+export const DECUSSATA_NOTES_SHAPES = [
+    DECUSSATA_NOTES_SHAPE_STANDARD,
+    DECUSSATA_NOTES_SHAPE_INVERTED,
+    DECUSSATA_NOTES_SHAPE_DECAGON,
+    DECUSSATA_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.406.0';
+export const APP_VERSION = '2.407.0';

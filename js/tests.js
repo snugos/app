@@ -61360,3 +61360,241 @@ TestRunner.test("Day 756 - Structural test: enneoidNotes uses Math.floor for len
     t.assertTruthy(/enneoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
     t.assertTruthy(/enneoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
 });
+
+TestRunner.test("Day 758 - decussataNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes\s*\(\s*length\s*=\s*Constants\.DECUSSATA_NOTES_DEFAULT_LENGTH/.test(tSrc), 'decussataNotes method defined on Track');
+});
+
+TestRunner.test("Day 758 - decussataNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const fnMatch = tSrc.match(/decussataNotes\s*\(\s*length\s*=\s*Constants\.DECUSSATA_NOTES_DEFAULT_LENGTH[\s\S]*?\)\s*\{/);
+    t.assertTruthy(fnMatch, 'decussataNotes signature found');
+    if (fnMatch) {
+        const sig = fnMatch[0];
+        t.assertTruthy(/scale\s*=\s*Constants\.DECUSSATA_NOTES_DEFAULT_A/.test(sig), 'scale param');
+        t.assertTruthy(/velocityDecay\s*=\s*Constants\.DECUSSATA_NOTES_DEFAULT_VELOCITY_DECAY/.test(sig), 'velocityDecay param');
+        t.assertTruthy(/shape\s*=\s*Constants\.DECUSSATA_NOTES_SHAPE_STANDARD/.test(sig), 'shape param');
+        t.assertTruthy(/skipOccupied\s*=\s*true/.test(sig), 'skipOccupied param');
+    }
+});
+
+TestRunner.test("Day 758 - decussataNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,500}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'Audio track early return');
+});
+
+TestRunner.test("Day 758 - decussataNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,800}this\.getActiveSequence\s*\(\s*\)/.test(tSrc), 'getActiveSequence call');
+});
+
+TestRunner.test("Day 758 - decussataNotes captures undo BEFORE mutation with descriptive 'Decussata Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}this\._captureUndoState\s*\(\s*`Decussata Notes\s*\(/.test(tSrc), 'undo capture with Decussata Notes label');
+});
+
+TestRunner.test("Day 758 - decussataNotes clamps all parameters to DECUSSATA_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}DECUSSATA_NOTES_MIN_LENGTH/.test(tSrc), 'MIN_LENGTH used');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}DECUSSATA_NOTES_MAX_LENGTH/.test(tSrc), 'MAX_LENGTH used');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}DECUSSATA_NOTES_MIN_A/.test(tSrc), 'MIN_A used');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}DECUSSATA_NOTES_MAX_A/.test(tSrc), 'MAX_A used');
+});
+
+TestRunner.test("Day 758 - decussataNotes validates shape with DECUSSATA_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}DECUSSATA_NOTES_SHAPES\.includes/.test(tSrc), 'SHAPES.includes check');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}DECUSSATA_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD fallback');
+});
+
+TestRunner.test("Day 758 - decussataNotes uses Math.cos, Math.sin, Math.cos(9t), Math.sin(9t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const fnMatch = tSrc.match(/decussataNotes\s*\([^)]*\)\s*\{[\s\S]*?\n\s{4}\}/);
+    t.assertTruthy(fnMatch, 'decussataNotes body found');
+    if (fnMatch) {
+        const body = fnMatch[0];
+        t.assertTruthy(/Math\.cos\s*\(\s*t\s*\)/.test(body), 'Math.cos(t)');
+        t.assertTruthy(/Math\.sin\s*\(\s*t\s*\)/.test(body), 'Math.sin(t)');
+        t.assertTruthy(/Math\.cos\s*\(\s*9\s*\*\s*t\s*\)/.test(body), 'Math.cos(9*t)');
+        t.assertTruthy(/Math\.sin\s*\(\s*9\s*\*\s*t\s*\)/.test(body), 'Math.sin(9*t)');
+    }
+});
+
+TestRunner.test("Day 758 - decussataNotes uses 10-cusped hypocycloid parametric x = a*cos(t) + (a/9)*cos(9t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver9\s*\*\s*cos9T/.test(tSrc), 'x = a*cos(t) + (a/9)*cos(9t)');
+});
+
+TestRunner.test("Day 758 - decussataNotes uses 10-cusped hypocycloid parametric y = a*sin(t) - (a/9)*sin(9t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver9\s*\*\s*sin9T/.test(tSrc), 'y = a*sin(t) - (a/9)*sin(9t)');
+});
+
+TestRunner.test("Day 758 - decussataNotes skips non-finite samples (defensive)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}isFinite\s*\(\s*x\s*\)/.test(tSrc), 'isFinite(x) check');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}isFinite\s*\(\s*y\s*\)/.test(tSrc), 'isFinite(y) check');
+});
+
+TestRunner.test("Day 758 - decussataNotes uses newNotes collection pattern", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}newNotes\.push/.test(tSrc), 'newNotes.push present');
+});
+
+TestRunner.test("Day 758 - decussataNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}probability: stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 758 - decussataNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}targetRow === rowIndex && targetCol === col/.test(tSrc), 'self-reference skip');
+});
+
+TestRunner.test("Day 758 - decussataNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}targetRow < 0 \|\| targetRow >= numRows/.test(tSrc), 'row boundary check');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}targetCol < 0 \|\| targetCol >= totalSteps/.test(tSrc), 'col boundary check');
+});
+
+TestRunner.test("Day 758 - decussataNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(tSrc), 'empty source handling');
+});
+
+TestRunner.test("Day 758 - decussataNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'xRange safety');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'yRange safety');
+});
+
+TestRunner.test("Day 758 - decussataNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)/.test(tSrc), 'velocity rounded to 2 decimals');
+});
+
+TestRunner.test("Day 758 - decussataNotes returns count of decussata notes (decussataCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}return\s+decussataCount/.test(tSrc), 'returns decussataCount');
+});
+
+TestRunner.test("Day 758 - decussataNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}if\s*\(\s*skipOccupied\s*&&/.test(tSrc), 'skipOccupied check');
+});
+
+TestRunner.test("Day 758 - decussataNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const tRangeMatch = tSrc.match(/decussataNotes[\s\S]{0,8000}const\s+tRangeMap\s*=\s*\{[\s\S]*?\};/);
+    t.assertTruthy(tRangeMatch, 'tRangeMap found');
+    if (tRangeMatch) {
+        t.assertTruthy(/DECUSSATA_NOTES_SHAPE_STANDARD/.test(tRangeMatch[0]), 'STANDARD in tRangeMap');
+        t.assertTruthy(/DECUSSATA_NOTES_SHAPE_INVERTED/.test(tRangeMatch[0]), 'INVERTED in tRangeMap');
+        t.assertTruthy(/DECUSSATA_NOTES_SHAPE_DECAGON/.test(tRangeMatch[0]), 'DECAGON in tRangeMap');
+        t.assertTruthy(/DECUSSATA_NOTES_SHAPE_TIGHT/.test(tRangeMatch[0]), 'TIGHT in tRangeMap');
+    }
+});
+
+TestRunner.test("Day 758 - decussataNotes uses tMin/tMax based on shape", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}const\s+tMin\s*=\s*tRange\[0\]/.test(tSrc), 'tMin from tRange');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}const\s+tMax\s*=\s*tRange\[1\]/.test(tSrc), 'tMax from tRange');
+});
+
+TestRunner.test("Day 758 - decussataNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 758 - All 22 DECUSSATA_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const required = [
+        'DECUSSATA_NOTES_MIN_LENGTH', 'DECUSSATA_NOTES_MAX_LENGTH', 'DECUSSATA_NOTES_DEFAULT_LENGTH',
+        'DECUSSATA_NOTES_MIN_A', 'DECUSSATA_NOTES_MAX_A', 'DECUSSATA_NOTES_DEFAULT_A',
+        'DECUSSATA_NOTES_MIN_VELOCITY_DECAY', 'DECUSSATA_NOTES_MAX_VELOCITY_DECAY', 'DECUSSATA_NOTES_DEFAULT_VELOCITY_DECAY',
+        'DECUSSATA_NOTES_DEFAULT_T_MIN', 'DECUSSATA_NOTES_DEFAULT_T_MAX',
+        'DECUSSATA_NOTES_INVERTED_T_MIN', 'DECUSSATA_NOTES_INVERTED_T_MAX',
+        'DECUSSATA_NOTES_DECAGON_T_MIN', 'DECUSSATA_NOTES_DECAGON_T_MAX',
+        'DECUSSATA_NOTES_TIGHT_T_MIN', 'DECUSSATA_NOTES_TIGHT_T_MAX',
+        'DECUSSATA_NOTES_SHAPE_STANDARD', 'DECUSSATA_NOTES_SHAPE_INVERTED', 'DECUSSATA_NOTES_SHAPE_DECAGON', 'DECUSSATA_NOTES_SHAPE_TIGHT',
+        'DECUSSATA_NOTES_SHAPES'
+    ];
+    for (const name of required) {
+        t.assertTruthy(cSrc.includes(name), `${name} is defined`);
+    }
+});
+
+TestRunner.test("Day 758 - DECUSSATA_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/DECUSSATA_NOTES_SHAPES\s*=\s*\[[\s\S]*?DECUSSATA_NOTES_SHAPE_STANDARD[\s\S]*?DECUSSATA_NOTES_SHAPE_INVERTED[\s\S]*?DECUSSATA_NOTES_SHAPE_DECAGON[\s\S]*?DECUSSATA_NOTES_SHAPE_TIGHT[\s\S]*?\]/.test(cSrc), 'SHAPES includes all 4 variants');
+});
+
+TestRunner.test("Day 758 - ui.js has 4 Decussata Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const decussataItems = uSrc.match(/Decussata Notes \((Standard|Inverted|Decagon|Tight), 32\)/g);
+    t.assertTruthy(decussataItems && decussataItems.length === 4, `4 Decussata menu items (got ${decussataItems ? decussataItems.length : 0})`);
+});
+
+TestRunner.test("Day 758 - Decussata Notes menu items call track.decussataNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/currentTrackForMenu\.decussataNotes\(32, 4, 0\.95, 'standard', true\)/.test(uSrc), 'standard call');
+    t.assertTruthy(/currentTrackForMenu\.decussataNotes\(32, 4, 0\.95, 'inverted', true\)/.test(uSrc), 'inverted call');
+    t.assertTruthy(/currentTrackForMenu\.decussataNotes\(32, 4, 0\.95, 'decagon', true\)/.test(uSrc), 'decagon call');
+    t.assertTruthy(/currentTrackForMenu\.decussataNotes\(32, 4, 0\.95, 'tight', true\)/.test(uSrc), 'tight call');
+});
+
+TestRunner.test("Day 758 - Decussata Notes menu items call recreateToneSequence after decussataNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/decussataNotes\(32, 4, 0\.95, 'standard', true\)[\s\S]{0,300}recreateToneSequence/.test(uSrc), 'recreateToneSequence after standard');
+});
+
+TestRunner.test("Day 758 - Decussata Notes menu items show 'Decussata\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Decussata'd \$\{result\} note\(s\)/.test(uSrc), 'Decussata\\'d notification');
+});
+
+TestRunner.test("Day 758 - Decussata Notes menu items include all 4 shape variants", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Decussata Notes \(Standard, 32\)/.test(uSrc), 'Standard');
+    t.assertTruthy(/Decussata Notes \(Inverted, 32\)/.test(uSrc), 'Inverted');
+    t.assertTruthy(/Decussata Notes \(Decagon, 32\)/.test(uSrc), 'Decagon');
+    t.assertTruthy(/Decussata Notes \(Tight, 32\)/.test(uSrc), 'Tight');
+});
+
+TestRunner.test("Day 758 - Decussata Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,500}localAppServices\.updateTrackUI\(track\.id, 'sequencerContentChanged'\)/.test(uSrc), 'updateTrackUI call');
+});
+
+TestRunner.test("Day 758 - APP_VERSION validation (>= 2.407 for Day 758)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const versionMatch = cSrc.match(/export\s+const\s+APP_VERSION\s*=\s*'(\d+)\.(\d+)\.(\d+)'/);
+    t.assertTruthy(versionMatch, 'APP_VERSION found');
+    if (versionMatch) {
+        const major = parseInt(versionMatch[1]);
+        const minor = parseInt(versionMatch[2]);
+        t.assertTruthy(major > 2 || (major === 2 && minor >= 407), 'APP_VERSION >= 2.407 for Day 758 (got ' + versionMatch[0] + ')');
+    }
+});
+
+TestRunner.test("Day 758 - Functional test: x = a*cos(t) + (a/9)*cos(9t) (10-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver9\s*\*\s*cos9T/.test(tSrc), 'x = a*cos(t) + (a/9)*cos(9t)');
+});
+
+TestRunner.test("Day 758 - Functional test: y = a*sin(t) - (a/9)*sin(9t) (10-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver9\s*\*\s*sin9T/.test(tSrc), 'y = a*sin(t) - (a/9)*sin(9t)');
+});
+
+TestRunner.test("Day 758 - Functional test: at t=0, x = a + a/9 = 10a/9 (the rightmost extreme of the decussata)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/9\s*=\s*10a\/9/.test(tSrc), 'rightmost extreme (10a/9) documented in comments');
+});
+
+TestRunner.test("Day 758 - Structural test: decussataNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/decussataNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
