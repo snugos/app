@@ -60588,3 +60588,263 @@ TestRunner.test("Day 754 - Structural test: heptoidNotes uses Math.floor for len
     t.assertTruthy(/heptoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
     t.assertTruthy(/heptoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
 });
+
+TestRunner.test("Day 755 - octoidNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes\s*\(\s*length\s*=\s*Constants\.OCTOID_NOTES_DEFAULT_LENGTH/.test(tSrc), 'octoidNotes method defined on Track');
+});
+
+TestRunner.test("Day 755 - octoidNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const fnMatch = tSrc.match(/octoidNotes\s*\(\s*length\s*=\s*Constants\.OCTOID_NOTES_DEFAULT_LENGTH[\s\S]*?\)\s*\{/);
+    t.assertTruthy(fnMatch, 'octoidNotes signature found');
+    if (fnMatch) {
+        const sig = fnMatch[0];
+        t.assertTruthy(/scale\s*=\s*Constants\.OCTOID_NOTES_DEFAULT_A/.test(sig), 'scale param');
+        t.assertTruthy(/velocityDecay\s*=\s*Constants\.OCTOID_NOTES_DEFAULT_VELOCITY_DECAY/.test(sig), 'velocityDecay param');
+        t.assertTruthy(/shape\s*=\s*Constants\.OCTOID_NOTES_SHAPE_STANDARD/.test(sig), 'shape param');
+        t.assertTruthy(/skipOccupied\s*=\s*true/.test(sig), 'skipOccupied param');
+    }
+});
+
+TestRunner.test("Day 755 - octoidNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,500}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'Audio track early return');
+});
+
+TestRunner.test("Day 755 - octoidNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,800}this\.getActiveSequence\s*\(\s*\)/.test(tSrc), 'getActiveSequence call');
+});
+
+TestRunner.test("Day 755 - octoidNotes captures undo BEFORE mutation with descriptive 'Octoid Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,2000}this\._captureUndoState\s*\(\s*`Octoid Notes\s*\(/.test(tSrc), 'undo capture with Octoid Notes label');
+    const undoIdx = tSrc.search(/octoidNotes[\s\S]{0,2000}this\._captureUndoState/);
+    const mutationIdx = tSrc.indexOf('activeSeq.data[note.rowIndex][note.col]', undoIdx);
+    t.assertTruthy(undoIdx > 0 && mutationIdx > undoIdx, 'undo captured before mutation');
+});
+
+TestRunner.test("Day 755 - octoidNotes clamps all parameters to OCTOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1000}OCTOID_NOTES_MIN_LENGTH/.test(tSrc), 'MIN_LENGTH used');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1000}OCTOID_NOTES_MAX_LENGTH/.test(tSrc), 'MAX_LENGTH used');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1000}OCTOID_NOTES_MIN_A/.test(tSrc), 'MIN_A used');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1000}OCTOID_NOTES_MAX_A/.test(tSrc), 'MAX_A used');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1000}OCTOID_NOTES_MIN_VELOCITY_DECAY/.test(tSrc), 'MIN_VELOCITY_DECAY used');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1000}OCTOID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'MAX_VELOCITY_DECAY used');
+});
+
+TestRunner.test("Day 755 - octoidNotes validates shape with OCTOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1000}OCTOID_NOTES_SHAPES\.includes/.test(tSrc), 'SHAPES.includes check');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1000}OCTOID_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD fallback');
+});
+
+TestRunner.test("Day 755 - octoidNotes uses Math.cos, Math.sin, Math.cos(7t), Math.sin(7t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const fnMatch = tSrc.match(/octoidNotes\s*\([^)]*\)\s*\{[\s\S]*?\n\s{4}\}/);
+    t.assertTruthy(fnMatch, 'octoidNotes body found');
+    if (fnMatch) {
+        const body = fnMatch[0];
+        t.assertTruthy(/Math\.cos\s*\(\s*t\s*\)/.test(body), 'Math.cos(t)');
+        t.assertTruthy(/Math\.sin\s*\(\s*t\s*\)/.test(body), 'Math.sin(t)');
+        t.assertTruthy(/Math\.cos\s*\(\s*7\s*\*\s*t\s*\)/.test(body), 'Math.cos(7*t)');
+        t.assertTruthy(/Math\.sin\s*\(\s*7\s*\*\s*t\s*\)/.test(body), 'Math.sin(7*t)');
+    }
+});
+
+TestRunner.test("Day 755 - octoidNotes uses 8-cusped hypocycloid parametric x = a*cos(t) + (a/7)*cos(7t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver7\s*\*\s*cos7T/.test(tSrc), 'x = a*cos(t) + (a/7)*cos(7t)');
+});
+
+TestRunner.test("Day 755 - octoidNotes uses 8-cusped hypocycloid parametric y = a*sin(t) - (a/7)*sin(7t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver7\s*\*\s*sin7T/.test(tSrc), 'y = a*sin(t) - (a/7)*sin(7t)');
+});
+
+TestRunner.test("Day 755 - octoidNotes skips non-finite samples (defensive)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,3000}isFinite\s*\(\s*x\s*\)/.test(tSrc), 'isFinite(x) check');
+    t.assertTruthy(/octoidNotes[\s\S]{0,3000}isFinite\s*\(\s*y\s*\)/.test(tSrc), 'isFinite(y) check');
+});
+
+TestRunner.test("Day 755 - octoidNotes uses newNotes collection pattern", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,3000}newNotes\.push/.test(tSrc), 'newNotes.push present');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(tSrc), 'applies notes from newNotes array');
+});
+
+TestRunner.test("Day 755 - octoidNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}probability:\s*stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 755 - octoidNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col\s*\)\s*continue/.test(tSrc), 'self-reference skip');
+});
+
+TestRunner.test("Day 755 - octoidNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(tSrc), 'row boundary check');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(tSrc), 'col boundary check');
+});
+
+TestRunner.test("Day 755 - octoidNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(tSrc), 'skip inactive stepData');
+});
+
+TestRunner.test("Day 755 - octoidNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange safety');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange safety');
+});
+
+TestRunner.test("Day 755 - octoidNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity rounded to 2 decimals');
+});
+
+TestRunner.test("Day 755 - octoidNotes returns count of octoid notes (octoidCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}return\s+octoidCount/.test(tSrc), 'returns octoidCount');
+});
+
+TestRunner.test("Day 755 - octoidNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,5000}skipOccupied\s*&&/.test(tSrc), 'skipOccupied branch used');
+});
+
+TestRunner.test("Day 755 - octoidNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const tRangeMatch = tSrc.match(/octoidNotes[\s\S]{0,2000}const\s+tRangeMap\s*=\s*\{[\s\S]*?\};/);
+    t.assertTruthy(tRangeMatch, 'tRangeMap defined');
+    if (tRangeMatch) {
+        const map = tRangeMatch[0];
+        t.assertTruthy(/OCTOID_NOTES_SHAPE_STANDARD/.test(map), 'STANDARD shape in tRangeMap');
+        t.assertTruthy(/OCTOID_NOTES_SHAPE_INVERTED/.test(map), 'INVERTED shape in tRangeMap');
+        t.assertTruthy(/OCTOID_NOTES_SHAPE_OCTAGON/.test(map), 'OCTAGON shape in tRangeMap');
+        t.assertTruthy(/OCTOID_NOTES_SHAPE_TIGHT/.test(map), 'TIGHT shape in tRangeMap');
+    }
+});
+
+TestRunner.test("Day 755 - octoidNotes uses tMin/tMax based on shape", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,2500}const\s+tMin\s*=\s*tRange\[0\]/.test(tSrc), 'tMin from tRange');
+    t.assertTruthy(/octoidNotes[\s\S]{0,2500}const\s+tMax\s*=\s*tRange\[1\]/.test(tSrc), 'tMax from tRange');
+});
+
+TestRunner.test("Day 755 - octoidNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,2500}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 755 - All 22 OCTOID_NOTES_* constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/OCTOID_NOTES_MIN_LENGTH\s*=\s*8/.test(cSrc), 'OCTOID_NOTES_MIN_LENGTH = 8');
+    t.assertTruthy(/OCTOID_NOTES_MAX_LENGTH\s*=\s*64/.test(cSrc), 'OCTOID_NOTES_MAX_LENGTH = 64');
+    t.assertTruthy(/OCTOID_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'OCTOID_NOTES_DEFAULT_LENGTH = 32');
+    t.assertTruthy(/OCTOID_NOTES_MIN_A\s*=\s*1/.test(cSrc), 'OCTOID_NOTES_MIN_A = 1');
+    t.assertTruthy(/OCTOID_NOTES_MAX_A\s*=\s*8/.test(cSrc), 'OCTOID_NOTES_MAX_A = 8');
+    t.assertTruthy(/OCTOID_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'OCTOID_NOTES_DEFAULT_A = 4');
+    t.assertTruthy(/OCTOID_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(cSrc), 'OCTOID_NOTES_MIN_VELOCITY_DECAY = 0.1');
+    t.assertTruthy(/OCTOID_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(cSrc), 'OCTOID_NOTES_MAX_VELOCITY_DECAY = 1.0');
+    t.assertTruthy(/OCTOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'OCTOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/OCTOID_NOTES_DEFAULT_T_MIN\s*=\s*0/.test(cSrc), 'OCTOID_NOTES_DEFAULT_T_MIN = 0');
+    t.assertTruthy(/OCTOID_NOTES_DEFAULT_T_MAX\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'OCTOID_NOTES_DEFAULT_T_MAX = 2*PI');
+    t.assertTruthy(/OCTOID_NOTES_INVERTED_T_MIN\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'OCTOID_NOTES_INVERTED_T_MIN = 2*PI');
+    t.assertTruthy(/OCTOID_NOTES_INVERTED_T_MAX\s*=\s*0/.test(cSrc), 'OCTOID_NOTES_INVERTED_T_MAX = 0');
+    t.assertTruthy(/OCTOID_NOTES_OCTAGON_T_MIN\s*=\s*0/.test(cSrc), 'OCTOID_NOTES_OCTAGON_T_MIN = 0');
+    t.assertTruthy(/OCTOID_NOTES_OCTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*8/.test(cSrc), 'OCTOID_NOTES_OCTAGON_T_MAX = 2*PI/8');
+    t.assertTruthy(/OCTOID_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*8/.test(cSrc), 'OCTOID_NOTES_TIGHT_T_MIN = -PI/8');
+    t.assertTruthy(/OCTOID_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*8/.test(cSrc), 'OCTOID_NOTES_TIGHT_T_MAX = PI/8');
+    t.assertTruthy(/OCTOID_NOTES_SHAPE_STANDARD\s*=\s*'standard'/.test(cSrc), 'OCTOID_NOTES_SHAPE_STANDARD');
+    t.assertTruthy(/OCTOID_NOTES_SHAPE_INVERTED\s*=\s*'inverted'/.test(cSrc), 'OCTOID_NOTES_SHAPE_INVERTED');
+    t.assertTruthy(/OCTOID_NOTES_SHAPE_OCTAGON\s*=\s*'octagon'/.test(cSrc), 'OCTOID_NOTES_SHAPE_OCTAGON');
+    t.assertTruthy(/OCTOID_NOTES_SHAPE_TIGHT\s*=\s*'tight'/.test(cSrc), 'OCTOID_NOTES_SHAPE_TIGHT');
+});
+
+TestRunner.test("Day 755 - OCTOID_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = cSrc.match(/export\s+const\s+OCTOID_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(shapes, 'SHAPES array exists');
+    if (shapes) {
+        t.assertTruthy(shapes[1].includes('OCTOID_NOTES_SHAPE_STANDARD'), 'STANDARD');
+        t.assertTruthy(shapes[1].includes('OCTOID_NOTES_SHAPE_INVERTED'), 'INVERTED');
+        t.assertTruthy(shapes[1].includes('OCTOID_NOTES_SHAPE_OCTAGON'), 'OCTAGON');
+        t.assertTruthy(shapes[1].includes('OCTOID_NOTES_SHAPE_TIGHT'), 'TIGHT');
+    }
+});
+
+TestRunner.test("Day 755 - ui.js has 4 Octoid Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const standard = /label:\s*`Octoid Notes \(Standard, 32\)`/.test(uSrc);
+    const inverted = /label:\s*`Octoid Notes \(Inverted, 32\)`/.test(uSrc);
+    const octagon = /label:\s*`Octoid Notes \(Octagon, 32\)`/.test(uSrc);
+    const tight = /label:\s*`Octoid Notes \(Tight, 32\)`/.test(uSrc);
+    t.assertTruthy(standard, 'Standard menu item');
+    t.assertTruthy(inverted, 'Inverted menu item');
+    t.assertTruthy(octagon, 'Octagon menu item');
+    t.assertTruthy(tight, 'Tight menu item');
+});
+
+TestRunner.test("Day 755 - Octoid Notes menu items call track.octoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.octoidNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 octoidNotes calls');
+});
+
+TestRunner.test("Day 755 - Octoid Notes menu items call recreateToneSequence after octoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/octoidNotes[\s\S]{0,400}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 recreateToneSequence calls');
+});
+
+TestRunner.test("Day 755 - Octoid Notes menu items show 'Octoid'd N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Octoid'd\s+\$\{result\}\s+note\(s\)/g) || [];
+    t.assertEqual(matches.length, 4, "4 Octoid'd notifications");
+});
+
+TestRunner.test("Day 755 - Octoid Notes menu items include all 4 shape variants", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/octoidNotes\(32,\s*4,\s*0\.95,\s*'standard',\s*true\)/.test(uSrc), 'standard');
+    t.assertTruthy(/octoidNotes\(32,\s*4,\s*0\.95,\s*'inverted',\s*true\)/.test(uSrc), 'inverted');
+    t.assertTruthy(/octoidNotes\(32,\s*4,\s*0\.95,\s*'octagon',\s*true\)/.test(uSrc), 'octagon');
+    t.assertTruthy(/octoidNotes\(32,\s*4,\s*0\.95,\s*'tight',\s*true\)/.test(uSrc), 'tight');
+});
+
+TestRunner.test("Day 755 - Octoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/octoidNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 755 - APP_VERSION validation (>= 2.405 for Day 755)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.405\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.405.0');
+});
+
+TestRunner.test("Day 755 - Functional test: octoid parametric x = a*cos(t) + (a/7)*cos(7t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver7\s*\*\s*cos7T/.test(tSrc), 'x = a*cos(t) + (a/7)*cos(7t)');
+});
+
+TestRunner.test("Day 755 - Functional test: octoid parametric y = a*sin(t) - (a/7)*sin(7t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver7\s*\*\s*sin7T/.test(tSrc), 'y = a*sin(t) - (a/7)*sin(7t)');
+});
+
+TestRunner.test("Day 755 - Functional test: at t=0, x=8a/7 and y=0 (the rightmost extreme of the octoid)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,3000}At\s+t\s*=\s*0[\s\S]{0,200}\(8a\/7,\s*0\)/.test(tSrc), 'rightmost extreme (8a/7, 0) documented in comments');
+});
+
+TestRunner.test("Day 755 - Structural test: octoidNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/octoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
