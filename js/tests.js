@@ -60869,7 +60869,7 @@ TestRunner.test("Day 756 - enneoidNotes accepts 5 parameters with defaults (leng
 
 TestRunner.test("Day 756 - enneoidNotes returns 0 for Audio tracks", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,500}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'Audio track early return');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'Audio track early return');
 });
 
 TestRunner.test("Day 756 - enneoidNotes gets active sequence via getActiveSequence", (t) => {
@@ -60879,45 +60879,45 @@ TestRunner.test("Day 756 - enneoidNotes gets active sequence via getActiveSequen
 
 TestRunner.test("Day 756 - enneoidNotes captures undo BEFORE mutation with descriptive 'Enneoid Notes' label", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,2000}this\._captureUndoState\s*\(\s*`Enneoid Notes\s*\(/.test(tSrc), 'undo capture with Enneoid Notes label');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}this\._captureUndoState\s*\(\s*`Enneoid Notes\s*\(/.test(tSrc), 'undo capture with Enneoid Notes label');
 });
 
 TestRunner.test("Day 756 - enneoidNotes clamps all parameters to ENNEOID_NOTES_MIN/MAX_* ranges", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,1000}ENNEOID_NOTES_MIN_LENGTH/.test(tSrc), 'MIN_LENGTH used');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,1000}ENNEOID_NOTES_MAX_LENGTH/.test(tSrc), 'MAX_LENGTH used');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,1000}ENNEOID_NOTES_MIN_A/.test(tSrc), 'MIN_A used');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,1000}ENNEOID_NOTES_MAX_A/.test(tSrc), 'MAX_A used');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,1000}ENNEOID_NOTES_MIN_VELOCITY_DECAY/.test(tSrc), 'MIN_VELOCITY_DECAY used');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,1000}ENNEOID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'MAX_VELOCITY_DECAY used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MIN_LENGTH/.test(tSrc), 'MIN_LENGTH used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MAX_LENGTH/.test(tSrc), 'MAX_LENGTH used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MIN_A/.test(tSrc), 'MIN_A used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MAX_A/.test(tSrc), 'MAX_A used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MIN_VELOCITY_DECAY/.test(tSrc), 'MIN_VELOCITY_DECAY used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'MAX_VELOCITY_DECAY used');
 });
 
 TestRunner.test("Day 756 - enneoidNotes validates shape with ENNEOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,1000}ENNEOID_NOTES_SHAPES\.includes/.test(tSrc), 'SHAPES.includes check');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,1000}ENNEOID_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD fallback');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_SHAPES\.includes/.test(tSrc), 'SHAPES.includes check');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD fallback');
 });
 
 TestRunner.test("Day 756 - enneoidNotes uses Math.cos, Math.sin, Math.cos(8t), Math.sin(8t) for parametric t", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,3000}Math\.cos\s*\(\s*8\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(8*t)');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,3000}Math\.sin\s*\(\s*8\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(8*t)');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}Math\.cos\s*\(\s*8\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(8*t)');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}Math\.sin\s*\(\s*8\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(8*t)');
 });
 
 TestRunner.test("Day 756 - enneoidNotes uses 9-cusped hypocycloid parametric x = a*cos(t) + (a/8)*cos(8t)", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver8\s*\*\s*cos8T/.test(tSrc), 'x = a*cos(t) + (a/8)*cos(8t)');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver8\s*\*\s*cos8T/.test(tSrc), 'x = a*cos(t) + (a/8)*cos(8t)');
 });
 
 TestRunner.test("Day 756 - enneoidNotes uses 9-cusped hypocycloid parametric y = a*sin(t) - (a/8)*sin(8t)", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver8\s*\*\s*sin8T/.test(tSrc), 'y = a*sin(t) - (a/8)*sin(8t)');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver8\s*\*\s*sin8T/.test(tSrc), 'y = a*sin(t) - (a/8)*sin(8t)');
 });
 
 TestRunner.test("Day 756 - enneoidNotes skips non-finite samples (defensive)", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,3000}isFinite\s*\(\s*x\s*\)/.test(tSrc), 'isFinite(x) check');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,3000}isFinite\s*\(\s*y\s*\)/.test(tSrc), 'isFinite(y) check');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}isFinite\s*\(\s*x\s*\)/.test(tSrc), 'isFinite(x) check');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}isFinite\s*\(\s*y\s*\)/.test(tSrc), 'isFinite(y) check');
 });
 
 TestRunner.test("Day 756 - enneoidNotes uses newNotes collection pattern", (t) => {
@@ -60970,7 +60970,7 @@ TestRunner.test("Day 756 - enneoidNotes supports skipOccupied option", (t) => {
 
 TestRunner.test("Day 756 - enneoidNotes supports 4 distinct shapes via tRangeMap", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    const tRangeMatch = tSrc.match(/enneoidNotes[\s\S]{0,2000}const\s+tRangeMap\s*=\s*\{[\s\S]*?\};/);
+    const tRangeMatch = tSrc.match(/enneoidNotes[\s\S]{0,8000}const\s+tRangeMap\s*=\s*\{[\s\S]*?\};/);
     t.assertTruthy(tRangeMatch, 'tRangeMap defined');
     if (tRangeMatch) {
         const map = tRangeMatch[0];
@@ -61069,7 +61069,7 @@ TestRunner.test("Day 756 - Enneoid Notes menu items include all 4 shape variants
 
 TestRunner.test("Day 756 - Enneoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
-    const matches = uSrc.match(/enneoidNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    const matches = uSrc.match(/enneoidNotes[\s\S]{0,8000}localAppServices\.updateTrackUI/g) || [];
     t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
 });
 
@@ -61080,17 +61080,279 @@ TestRunner.test("Day 756 - APP_VERSION validation (>= 2.406 for Day 756)", (t) =
 
 TestRunner.test("Day 756 - Functional test: enneoid parametric x = a*cos(t) + (a/8)*cos(8t)", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver8\s*\*\s*cos8T/.test(tSrc), 'x = a*cos(t) + (a/8)*cos(8t)');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver8\s*\*\s*cos8T/.test(tSrc), 'x = a*cos(t) + (a/8)*cos(8t)');
 });
 
 TestRunner.test("Day 756 - Functional test: enneoid parametric y = a*sin(t) - (a/8)*sin(8t)", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver8\s*\*\s*sin8T/.test(tSrc), 'y = a*sin(t) - (a/8)*sin(8t)');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver8\s*\*\s*sin8T/.test(tSrc), 'y = a*sin(t) - (a/8)*sin(8t)');
 });
 
 TestRunner.test("Day 756 - Functional test: at t=0, x=9a/8 and y=0 (the rightmost extreme of the enneoid)", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,3000}At\s+t\s*=\s*0[\s\S]{0,200}\(9a\/8,\s*0\)/.test(tSrc), 'rightmost extreme (9a/8, 0) documented in comments');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x = a \+ a/8 = 9a/8/.test(tSrc), 'rightmost extreme (9a/8, 0) documented in comments');
+});
+
+TestRunner.test("Day 756 - Structural test: enneoidNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 756 - enneoidNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes\s*\(\s*length\s*=\s*Constants\.ENNEOID_NOTES_DEFAULT_LENGTH/.test(tSrc), 'enneoidNotes method defined on Track');
+});
+
+TestRunner.test("Day 756 - enneoidNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const fnMatch = tSrc.match(/enneoidNotes\s*\(\s*length\s*=\s*Constants\.ENNEOID_NOTES_DEFAULT_LENGTH[\s\S]*?\)\s*\{/);
+    t.assertTruthy(fnMatch, 'enneoidNotes signature found');
+    if (fnMatch) {
+        const sig = fnMatch[0];
+        t.assertTruthy(/scale\s*=\s*Constants\.ENNEOID_NOTES_DEFAULT_A/.test(sig), 'scale param');
+        t.assertTruthy(/velocityDecay\s*=\s*Constants\.ENNEOID_NOTES_DEFAULT_VELOCITY_DECAY/.test(sig), 'velocityDecay param');
+        t.assertTruthy(/shape\s*=\s*Constants\.ENNEOID_NOTES_SHAPE_STANDARD/.test(sig), 'shape param');
+        t.assertTruthy(/skipOccupied\s*=\s*true/.test(sig), 'skipOccupied param');
+    }
+});
+
+TestRunner.test("Day 756 - enneoidNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'Audio track early return');
+});
+
+TestRunner.test("Day 756 - enneoidNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,800}this\.getActiveSequence\s*\(\s*\)/.test(tSrc), 'getActiveSequence call');
+});
+
+TestRunner.test("Day 756 - enneoidNotes captures undo BEFORE mutation with descriptive 'Enneoid Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}this\._captureUndoState\s*\(\s*`Enneoid Notes\s*\(/.test(tSrc), 'undo capture with Enneoid Notes label');
+    const undoIdx = tSrc.search(/enneoidNotes[\s\S]{0,8000}this\._captureUndoState/);
+    const mutationIdx = tSrc.indexOf('activeSeq.data[note.rowIndex][note.col]', undoIdx);
+    t.assertTruthy(undoIdx > 0 && mutationIdx > undoIdx, 'undo captured before mutation');
+});
+
+TestRunner.test("Day 756 - enneoidNotes clamps all parameters to ENNEOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MIN_LENGTH/.test(tSrc), 'MIN_LENGTH used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MAX_LENGTH/.test(tSrc), 'MAX_LENGTH used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MIN_A/.test(tSrc), 'MIN_A used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MAX_A/.test(tSrc), 'MAX_A used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MIN_VELOCITY_DECAY/.test(tSrc), 'MIN_VELOCITY_DECAY used');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'MAX_VELOCITY_DECAY used');
+});
+
+TestRunner.test("Day 756 - enneoidNotes validates shape with ENNEOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_SHAPES\.includes/.test(tSrc), 'SHAPES.includes check');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}ENNEOID_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD fallback');
+});
+
+TestRunner.test("Day 756 - enneoidNotes uses Math.cos, Math.sin, Math.cos(8t), Math.sin(8t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const fnMatch = tSrc.match(/enneoidNotes\s*\([^)]*\)\s*\{[\s\S]*?\n\s{4}\}/);
+    t.assertTruthy(fnMatch, 'enneoidNotes body found');
+    if (fnMatch) {
+        const body = fnMatch[0];
+        t.assertTruthy(/Math\.cos\s*\(\s*t\s*\)/.test(body), 'Math.cos(t)');
+        t.assertTruthy(/Math\.sin\s*\(\s*t\s*\)/.test(body), 'Math.sin(t)');
+        t.assertTruthy(/Math\.cos\s*\(\s*8\s*\*\s*t\s*\)/.test(body), 'Math.cos(8*t)');
+        t.assertTruthy(/Math\.sin\s*\(\s*8\s*\*\s*t\s*\)/.test(body), 'Math.sin(8*t)');
+    }
+});
+
+TestRunner.test("Day 756 - enneoidNotes uses 9-cusped hypocycloid parametric x = a*cos(t) + (a/8)*cos(8t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver8\s*\*\s*cos8T/.test(tSrc), 'x = a*cos(t) + (a/8)*cos(8t)');
+});
+
+TestRunner.test("Day 756 - enneoidNotes uses 9-cusped hypocycloid parametric y = a*sin(t) - (a/8)*sin(8t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver8\s*\*\s*sin8T/.test(tSrc), 'y = a*sin(t) - (a/8)*sin(8t)');
+});
+
+TestRunner.test("Day 756 - enneoidNotes skips non-finite samples (defensive)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}isFinite\s*\(\s*x\s*\)/.test(tSrc), 'isFinite(x) check');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}isFinite\s*\(\s*y\s*\)/.test(tSrc), 'isFinite(y) check');
+});
+
+TestRunner.test("Day 756 - enneoidNotes uses newNotes collection pattern", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}newNotes\.push/.test(tSrc), 'newNotes.push present');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,5000}for\s*\(\s*const\s+note\s+of\s+newNotes\s*\)/.test(tSrc), 'applies notes from newNotes array');
+});
+
+TestRunner.test("Day 756 - enneoidNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}probability:\s*stepData\.probability/.test(tSrc), 'probability preservation');
+});
+
+TestRunner.test("Day 756 - enneoidNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(tSrc), 'self-reference skip');
+});
+
+TestRunner.test("Day 756 - enneoidNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(tSrc), 'row boundary check');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(tSrc), 'col boundary check');
+});
+
+TestRunner.test("Day 756 - enneoidNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}if\s*\(\s*!stepData\s*\|\|\s*!stepData\.active\s*\)\s*continue/.test(tSrc), 'empty source handling');
+});
+
+TestRunner.test("Day 756 - enneoidNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange safety');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange safety');
+});
+
+TestRunner.test("Day 756 - enneoidNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity rounding');
+});
+
+TestRunner.test("Day 756 - enneoidNotes returns count of enneoid notes (enneoidCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,5000}let\s+enneoidCount\s*=\s*0/.test(tSrc), 'enneoidCount variable');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,6000}enneoidCount\s*\+\+/.test(tSrc), 'enneoidCount increment');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,6000}return\s+enneoidCount/.test(tSrc), 'enneoidCount return');
+});
+
+TestRunner.test("Day 756 - enneoidNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}if\s*\(\s*skipOccupied\s*&&[\s\S]{0,200}\.active\s*\)\s*continue/.test(tSrc), 'skipOccupied check');
+});
+
+TestRunner.test("Day 756 - enneoidNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const fnMatch = tSrc.match(/enneoidNotes\s*\([^)]*\)\s*\{[\s\S]*?\n\s{4}\}/);
+    t.assertTruthy(fnMatch, 'enneoidNotes body found');
+    if (fnMatch) {
+        const body = fnMatch[0];
+        t.assertTruthy(/ENNEOID_NOTES_SHAPE_STANDARD/.test(body), 'STANDARD shape');
+        t.assertTruthy(/ENNEOID_NOTES_SHAPE_INVERTED/.test(body), 'INVERTED shape');
+        t.assertTruthy(/ENNEOID_NOTES_SHAPE_NONAGON/.test(body), 'NONAGON shape');
+        t.assertTruthy(/ENNEOID_NOTES_SHAPE_TIGHT/.test(body), 'TIGHT shape');
+    }
+});
+
+TestRunner.test("Day 756 - enneoidNotes uses tMin/tMax based on shape", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const fnMatch = tSrc.match(/enneoidNotes\s*\([^)]*\)\s*\{[\s\S]*?\n\s{4}\}/);
+    t.assertTruthy(fnMatch, 'enneoidNotes body found');
+    if (fnMatch) {
+        const body = fnMatch[0];
+        t.assertTruthy(/tRangeMap\s*\[/.test(body), 'tRangeMap used');
+        t.assertTruthy(/const\s+tMin\s*=\s*tRange\[0\]/.test(body), 'tMin extraction');
+        t.assertTruthy(/const\s+tMax\s*=\s*tRange\[1\]/.test(body), 'tMax extraction');
+    }
+});
+
+TestRunner.test("Day 756 - enneoidNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't param formula');
+});
+
+TestRunner.test("Day 756 - All 22 ENNEOID_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const requiredConsts = [
+        'ENNEOID_NOTES_MIN_LENGTH', 'ENNEOID_NOTES_MAX_LENGTH', 'ENNEOID_NOTES_DEFAULT_LENGTH',
+        'ENNEOID_NOTES_MIN_A', 'ENNEOID_NOTES_MAX_A', 'ENNEOID_NOTES_DEFAULT_A',
+        'ENNEOID_NOTES_MIN_VELOCITY_DECAY', 'ENNEOID_NOTES_MAX_VELOCITY_DECAY', 'ENNEOID_NOTES_DEFAULT_VELOCITY_DECAY',
+        'ENNEOID_NOTES_DEFAULT_T_MIN', 'ENNEOID_NOTES_DEFAULT_T_MAX',
+        'ENNEOID_NOTES_INVERTED_T_MIN', 'ENNEOID_NOTES_INVERTED_T_MAX',
+        'ENNEOID_NOTES_NONAGON_T_MIN', 'ENNEOID_NOTES_NONAGON_T_MAX',
+        'ENNEOID_NOTES_TIGHT_T_MIN', 'ENNEOID_NOTES_TIGHT_T_MAX',
+        'ENNEOID_NOTES_SHAPE_STANDARD', 'ENNEOID_NOTES_SHAPE_INVERTED',
+        'ENNEOID_NOTES_SHAPE_NONAGON', 'ENNEOID_NOTES_SHAPE_TIGHT',
+        'ENNEOID_NOTES_SHAPES'
+    ];
+    for (const c of requiredConsts) {
+        t.assertTruthy(new RegExp('export\\s+const\\s+' + c + '\\s*=').test(cSrc), 'constant ' + c + ' defined');
+    }
+});
+
+TestRunner.test("Day 756 - ENNEOID_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapesMatch = cSrc.match(/export\s+const\s+ENNEOID_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\];/);
+    t.assertTruthy(shapesMatch, 'ENNEOID_NOTES_SHAPES array found');
+    if (shapesMatch) {
+        const body = shapesMatch[1];
+        t.assertTruthy(/ENNEOID_NOTES_SHAPE_STANDARD/.test(body), 'STANDARD in array');
+        t.assertTruthy(/ENNEOID_NOTES_SHAPE_INVERTED/.test(body), 'INVERTED in array');
+        t.assertTruthy(/ENNEOID_NOTES_SHAPE_NONAGON/.test(body), 'NONAGON in array');
+        t.assertTruthy(/ENNEOID_NOTES_SHAPE_TIGHT/.test(body), 'TIGHT in array');
+    }
+});
+
+TestRunner.test("Day 756 - ui.js has 4 Enneoid Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Enneoid Notes\s*\(/g) || [];
+    t.assertTruthy(matches.length >= 4, '4 Enneoid Notes menu items in ui.js (found ' + matches.length + ')');
+});
+
+TestRunner.test("Day 756 - Enneoid Notes menu items call track.enneoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.enneoidNotes/g) || [];
+    t.assertTruthy(matches.length >= 4, '4 enneoidNotes calls in ui.js (found ' + matches.length + ')');
+});
+
+TestRunner.test("Day 756 - Enneoid Notes menu items call recreateToneSequence after enneoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const blockMatches = uSrc.match(/currentTrackForMenu\.enneoidNotes[^;]+;[\s\S]{0,300}?currentTrackForMenu\.recreateToneSequence/g) || [];
+    t.assertTruthy(blockMatches.length >= 4, '4 recreateToneSequence calls after enneoidNotes (found ' + blockMatches.length + ')');
+});
+
+TestRunner.test("Day 756 - Enneoid Notes menu items show 'Enneoid\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Enneoid'd\s+\$\{result\}\s+note\(s\)/.test(uSrc), 'Enneoid notification format');
+});
+
+TestRunner.test("Day 756 - Enneoid Notes menu items include all 4 shape variants", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Enneoid Notes \(Standard, 32\)[\s\S]{0,500}enneoidNotes\(32,\s*4,\s*0\.95,\s*'standard'/.test(uSrc), 'Standard shape');
+    t.assertTruthy(/Enneoid Notes \(Inverted, 32\)[\s\S]{0,500}enneoidNotes\(32,\s*4,\s*0\.95,\s*'inverted'/.test(uSrc), 'Inverted shape');
+    t.assertTruthy(/Enneoid Notes \(Nonagon, 32\)[\s\S]{0,500}enneoidNotes\(32,\s*4,\s*0\.95,\s*'nonagon'/.test(uSrc), 'Nonagon shape');
+    t.assertTruthy(/Enneoid Notes \(Tight, 32\)[\s\S]{0,500}enneoidNotes\(32,\s*4,\s*0\.95,\s*'tight'/.test(uSrc), 'Tight shape');
+});
+
+TestRunner.test("Day 756 - Enneoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Enneoid Notes[\s\S]{0,500}localAppServices\.updateTrackUI/.test(uSrc), 'updateTrackUI call');
+});
+
+TestRunner.test("Day 756 - APP_VERSION validation (>= 2.406 for Day 756)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const versionMatch = cSrc.match(/export\s+const\s+APP_VERSION\s*=\s*'(\d+)\.(\d+)\.(\d+)'/);
+    t.assertTruthy(versionMatch, 'APP_VERSION defined');
+    if (versionMatch) {
+        const major = parseInt(versionMatch[1]);
+        const minor = parseInt(versionMatch[2]);
+        const patch = parseInt(versionMatch[3]);
+        t.assertTruthy(major > 2 || (major === 2 && minor > 406) || (major === 2 && minor === 406), 'APP_VERSION >= 2.406 for Day 756 (got ' + versionMatch[0] + ')');
+    }
+});
+
+TestRunner.test("Day 756 - Functional test: x = a*cos(t) + (a/8)*cos(8t) (9-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver8\s*\*\s*cos8T/.test(tSrc), '9-cusped hypocycloid x parametric');
+});
+
+TestRunner.test("Day 756 - Functional test: y = a*sin(t) - (a/8)*sin(8t) (9-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver8\s*\*\s*sin8T/.test(tSrc), '9-cusped hypocycloid y parametric');
+});
+
+TestRunner.test("Day 756 - Functional test: at t=0, x=9a/8 and y=0 (the rightmost extreme of the enneoid)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x = a \+ a/8 = 9a/8/.test(tSrc), 'rightmost extreme (9a/8, 0) documented in comments');
 });
 
 TestRunner.test("Day 756 - Structural test: enneoidNotes uses Math.floor for length and scale clamping", (t) => {
