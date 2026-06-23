@@ -61832,3 +61832,267 @@ TestRunner.test("Day 760 - Functional test: at t=0, x = a + a/11 = 12a/11 (the r
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/11\s*=\s*12a\/11/.test(tSrc), 'rightmost extreme (12a/11) documented in comments');
 });
+
+// Day 761: Tridecagon (13-cusped Hypocycloid) Notes test block - 13-fold D13 symmetric hypocycloid (R/r=13)
+TestRunner.test("Day 761 - tridecagonNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes\s*\(length\s*=\s*Constants\.TRIDECAGON_NOTES_DEFAULT_LENGTH[\s\S]{0,200}\{[\s\S]{0,50}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'tridecagonNotes method defined');
+});
+TestRunner.test("Day 761 - tridecagonNotes captures undo BEFORE mutation with descriptive Tridecagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,3000}this\._captureUndoState\(`Tridecagon Notes \$\{useShape\}/.test(tSrc), 'undo capture with Tridecagon Notes label');
+});
+TestRunner.test("Day 761 - tridecagonNotes clamps length to TRIDECAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,3000}Math\.max\(Constants\.TRIDECAGON_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.TRIDECAGON_NOTES_MAX_LENGTH,\s*Math\.floor\(length\)\)\)/.test(tSrc), 'length clamping');
+});
+TestRunner.test("Day 761 - tridecagonNotes uses Math.cos, Math.sin, Math.cos(12t), Math.sin(12t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}cos12T\s*=\s*Math\.cos\(\s*12\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(12*t)');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}sin12T\s*=\s*Math\.sin\(\s*12\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(12*t)');
+});
+TestRunner.test("Day 761 - tridecagonNotes uses 13-cusped hypocycloid parametric x = a*cos(t) + (a/12)*cos(12t) and y = a*sin(t) - (a/12)*sin(12t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver12\s*\*\s*cos12T/.test(tSrc), 'x = a*cos(t) + (a/12)*cos(12t)');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver12\s*\*\s*sin12T/.test(tSrc), 'y = a*sin(t) - (a/12)*sin(12t)');
+});
+TestRunner.test("Day 761 - tridecagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'xRange guard');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'yRange guard');
+});
+TestRunner.test("Day 761 - tridecagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tRangeMap\s*=\s*\{[\s\S]{0,500}Constants\.TRIDECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}Constants\.TRIDECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}Constants\.TRIDECAGON_NOTES_SHAPE_TRIDECAGON[\s\S]{0,500}Constants\.TRIDECAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 shape tRangeMap');
+});
+TestRunner.test("Day 761 - tridecagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(tSrc), 't parameterization');
+});
+TestRunner.test("Day 761 - tridecagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(tSrc), 'velocity 2-decimal rounding');
+});
+TestRunner.test("Day 761 - tridecagonNotes returns count of tridecagon notes (tridecagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let\s+tridecagonCount\s*=\s*0/.test(tSrc), 'tridecagonCount variable');
+    t.assertTruthy(/return\s+tridecagonCount/.test(tSrc), 'return tridecagonCount');
+});
+TestRunner.test("Day 761 - All 24 TRIDECAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const requiredConstants = [
+        'TRIDECAGON_NOTES_MIN_LENGTH', 'TRIDECAGON_NOTES_MAX_LENGTH', 'TRIDECAGON_NOTES_DEFAULT_LENGTH',
+        'TRIDECAGON_NOTES_MIN_A', 'TRIDECAGON_NOTES_MAX_A', 'TRIDECAGON_NOTES_DEFAULT_A',
+        'TRIDECAGON_NOTES_MIN_VELOCITY_DECAY', 'TRIDECAGON_NOTES_MAX_VELOCITY_DECAY', 'TRIDECAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'TRIDECAGON_NOTES_DEFAULT_T_MIN', 'TRIDECAGON_NOTES_DEFAULT_T_MAX',
+        'TRIDECAGON_NOTES_INVERTED_T_MIN', 'TRIDECAGON_NOTES_INVERTED_T_MAX',
+        'TRIDECAGON_NOTES_TRIDECAGON_T_MIN', 'TRIDECAGON_NOTES_TRIDECAGON_T_MAX',
+        'TRIDECAGON_NOTES_TIGHT_T_MIN', 'TRIDECAGON_NOTES_TIGHT_T_MAX',
+        'TRIDECAGON_NOTES_SHAPE_STANDARD', 'TRIDECAGON_NOTES_SHAPE_INVERTED', 'TRIDECAGON_NOTES_SHAPE_TRIDECAGON', 'TRIDECAGON_NOTES_SHAPE_TIGHT',
+        'TRIDECAGON_NOTES_SHAPES'
+    ];
+    let count = 0;
+    for (const c of requiredConstants) {
+        if (new RegExp(`export\\s+const\\s+${c}\\b`).test(cSrc)) count++;
+    }
+    t.assertEqual(count, requiredConstants.length, `Expected ${requiredConstants.length} TRIDECAGON_NOTES constants, found ${count}`);
+});
+TestRunner.test("Day 761 - TRIDECAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/TRIDECAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}TRIDECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,200}TRIDECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,200}TRIDECAGON_NOTES_SHAPE_TRIDECAGON[\s\S]{0,200}TRIDECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TRIDECAGON_NOTES_SHAPES');
+});
+TestRunner.test("Day 761 - ui.js has 4 Tridecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/label: `Tridecagon Notes \(Standard, 32\)`/.test(uSrc), 'Tridecagon Standard');
+    t.assertTruthy(/label: `Tridecagon Notes \(Inverted, 32\)`/.test(uSrc), 'Tridecagon Inverted');
+    t.assertTruthy(/label: `Tridecagon Notes \(Tridecagon, 32\)`/.test(uSrc), 'Tridecagon Tridecagon');
+    t.assertTruthy(/label: `Tridecagon Notes \(Tight, 32\)`/.test(uSrc), 'Tridecagon Tight');
+});
+TestRunner.test("Day 761 - Tridecagon Notes menu items call track.tridecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.tridecagonNotes\(/g);
+    t.assertTruthy(matches && matches.length === 4, 'Expected 4 tridecagonNotes calls, got ' + (matches?.length || 0));
+});
+TestRunner.test("Day 761 - Tridecagon Notes menu items call recreateToneSequence after tridecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,500}recreateToneSequence\(true\)/.test(uSrc), 'recreateToneSequence call');
+});
+TestRunner.test("Day 761 - Tridecagon Notes menu items show 'Tridecagon\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Tridecagon'd \$\{result\} note\(s\)/.test(uSrc), 'Tridecagon\\'d notification');
+});
+TestRunner.test("Day 761 - APP_VERSION validation (>= 2.410 for Day 761)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const versionMatch = cSrc.match(/export\s+const\s+APP_VERSION\s*=\s*'(\d+)\.(\d+)\.(\d+)'/);
+    t.assertTruthy(versionMatch, 'APP_VERSION found');
+    if (versionMatch) {
+        const major = parseInt(versionMatch[1]);
+        const minor = parseInt(versionMatch[2]);
+        t.assertTruthy(major > 2 || (major === 2 && minor >= 410), 'APP_VERSION >= 2.410 for Day 761 (got ' + versionMatch[0] + ')');
+    }
+});
+TestRunner.test("Day 761 - Functional test: x = a*cos(t) + (a/12)*cos(12t) (13-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver12\s*\*\s*cos12T/.test(tSrc), 'x = a*cos(t) + (a/12)*cos(12t)');
+});
+TestRunner.test("Day 761 - Functional test: y = a*sin(t) - (a/12)*sin(12t) (13-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver12\s*\*\s*sin12T/.test(tSrc), 'y = a*sin(t) - (a/12)*sin(12t)');
+});
+TestRunner.test("Day 761 - Structural test: tridecagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+TestRunner.test("Day 761 - Functional test: at t=0, x = a + a/12 = 13a/12 (the rightmost extreme of the tridecagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/12\s*=\s*13a\/12/.test(tSrc), 'rightmost extreme (13a/12) documented in comments');
+});
+TestRunner.test("Day 761 - Track.js critical line 4047 Math.abs syntax still correct", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const lines = tSrc.split('\n');
+    t.assertTruthy(/Math\.abs\(data\[i\]\);/.test(lines[4046]), 'Line 4047 Math.abs has proper closing paren and semicolon');
+});
+
+
+// ============================================================
+// Day 761: Tridecagon (13-cusped Hypocycloid) Notes Tests
+// ============================================================
+TestRunner.test("Day 761 - tridecagonNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes\s*\(/.test(tSrc), 'tridecagonNotes method defined');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}_captureUndoState\s*\(\s*`Tridecagon Notes \(/.test(tSrc), 'undo capture with descriptive Tridecagon Notes label');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes clamps length to TRIDECAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}TRIDECAGON_NOTES_MIN_LENGTH[\s\S]{0,200}TRIDECAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'length clamp with Math.floor');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes uses Math.cos, Math.sin, Math.cos(12t), Math.sin(12t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*12\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(12*t)');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*12\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(12*t)');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes uses 13-cusped hypocycloid parametric x = a*cos(t) + (a/12)*cos(12t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver12\s*\*\s*cos12T/.test(tSrc), 'x = a*cos(t) + (a/12)*cos(12t)');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes uses 13-cusped hypocycloid parametric y = a*sin(t) - (a/12)*sin(12t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver12\s*\*\s*sin12T/.test(tSrc), 'y = a*sin(t) - (a/12)*sin(12t)');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange Math.max(0.01, ...)');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}tRangeMap[\s\S]{0,1500}TRIDECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,300}TRIDECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,300}TRIDECAGON_NOTES_SHAPE_TRIDECAGON[\s\S]{0,300}TRIDECAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tRangeMap with 4 shape variants');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't interpolation formula');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}velocity\s*:\s*Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity rounded to 2 decimals');
+});
+
+TestRunner.test("Day 761 - tridecagonNotes returns count of tridecagon notes (tridecagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}let\s+tridecagonCount\s*=\s*0[\s\S]{0,8000}return\s+tridecagonCount/.test(tSrc), 'tridecagonCount return');
+});
+
+TestRunner.test("Day 761 - All 22 TRIDECAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/TRIDECAGON_NOTES_MIN_LENGTH\s*=/.test(cSrc), 'TRIDECAGON_NOTES_MIN_LENGTH');
+    t.assertTruthy(/TRIDECAGON_NOTES_MAX_LENGTH\s*=/.test(cSrc), 'TRIDECAGON_NOTES_MAX_LENGTH');
+    t.assertTruthy(/TRIDECAGON_NOTES_DEFAULT_LENGTH\s*=/.test(cSrc), 'TRIDECAGON_NOTES_DEFAULT_LENGTH');
+    t.assertTruthy(/TRIDECAGON_NOTES_MIN_A\s*=/.test(cSrc), 'TRIDECAGON_NOTES_MIN_A');
+    t.assertTruthy(/TRIDECAGON_NOTES_MAX_A\s*=/.test(cSrc), 'TRIDECAGON_NOTES_MAX_A');
+    t.assertTruthy(/TRIDECAGON_NOTES_DEFAULT_A\s*=/.test(cSrc), 'TRIDECAGON_NOTES_DEFAULT_A');
+    t.assertTruthy(/TRIDECAGON_NOTES_MIN_VELOCITY_DECAY\s*=/.test(cSrc), 'TRIDECAGON_NOTES_MIN_VELOCITY_DECAY');
+    t.assertTruthy(/TRIDECAGON_NOTES_MAX_VELOCITY_DECAY\s*=/.test(cSrc), 'TRIDECAGON_NOTES_MAX_VELOCITY_DECAY');
+    t.assertTruthy(/TRIDECAGON_NOTES_DEFAULT_VELOCITY_DECAY\s*=/.test(cSrc), 'TRIDECAGON_NOTES_DEFAULT_VELOCITY_DECAY');
+    t.assertTruthy(/TRIDECAGON_NOTES_DEFAULT_T_MIN\s*=/.test(cSrc), 'TRIDECAGON_NOTES_DEFAULT_T_MIN');
+    t.assertTruthy(/TRIDECAGON_NOTES_DEFAULT_T_MAX\s*=/.test(cSrc), 'TRIDECAGON_NOTES_DEFAULT_T_MAX');
+    t.assertTruthy(/TRIDECAGON_NOTES_INVERTED_T_MIN\s*=/.test(cSrc), 'TRIDECAGON_NOTES_INVERTED_T_MIN');
+    t.assertTruthy(/TRIDECAGON_NOTES_INVERTED_T_MAX\s*=/.test(cSrc), 'TRIDECAGON_NOTES_INVERTED_T_MAX');
+    t.assertTruthy(/TRIDECAGON_NOTES_TRIDECAGON_T_MIN\s*=/.test(cSrc), 'TRIDECAGON_NOTES_TRIDECAGON_T_MIN');
+    t.assertTruthy(/TRIDECAGON_NOTES_TRIDECAGON_T_MAX\s*=/.test(cSrc), 'TRIDECAGON_NOTES_TRIDECAGON_T_MAX');
+    t.assertTruthy(/TRIDECAGON_NOTES_TIGHT_T_MIN\s*=/.test(cSrc), 'TRIDECAGON_NOTES_TIGHT_T_MIN');
+    t.assertTruthy(/TRIDECAGON_NOTES_TIGHT_T_MAX\s*=/.test(cSrc), 'TRIDECAGON_NOTES_TIGHT_T_MAX');
+    t.assertTruthy(/TRIDECAGON_NOTES_SHAPE_STANDARD\s*=/.test(cSrc), 'TRIDECAGON_NOTES_SHAPE_STANDARD');
+    t.assertTruthy(/TRIDECAGON_NOTES_SHAPE_INVERTED\s*=/.test(cSrc), 'TRIDECAGON_NOTES_SHAPE_INVERTED');
+    t.assertTruthy(/TRIDECAGON_NOTES_SHAPE_TRIDECAGON\s*=/.test(cSrc), 'TRIDECAGON_NOTES_SHAPE_TRIDECAGON');
+    t.assertTruthy(/TRIDECAGON_NOTES_SHAPE_TIGHT\s*=/.test(cSrc), 'TRIDECAGON_NOTES_SHAPE_TIGHT');
+    t.assertTruthy(/TRIDECAGON_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'TRIDECAGON_NOTES_SHAPES');
+});
+
+TestRunner.test("Day 761 - TRIDECAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/TRIDECAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}TRIDECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,200}TRIDECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,200}TRIDECAGON_NOTES_SHAPE_TRIDECAGON[\s\S]{0,200}TRIDECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TRIDECAGON_NOTES_SHAPES has all 4 shape variants');
+});
+
+TestRunner.test("Day 761 - ui.js has 4 Tridecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/label:\s*`Tridecagon Notes \(Standard, 32\)`/.test(uSrc), 'Tridecagon Standard');
+    t.assertTruthy(/label:\s*`Tridecagon Notes \(Inverted, 32\)`/.test(uSrc), 'Tridecagon Inverted');
+    t.assertTruthy(/label:\s*`Tridecagon Notes \(Tridecagon, 32\)`/.test(uSrc), 'Tridecagon Tridecagon');
+    t.assertTruthy(/label:\s*`Tridecagon Notes \(Tight, 32\)`/.test(uSrc), 'Tridecagon Tight');
+});
+
+TestRunner.test("Day 761 - Tridecagon Notes menu items call track.tridecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.tridecagonNotes\(/g);
+    t.assertTruthy(matches && matches.length === 4, 'Expected 4 tridecagonNotes calls, got ' + (matches?.length || 0));
+});
+
+TestRunner.test("Day 761 - Tridecagon Notes menu items call recreateToneSequence after tridecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,500}recreateToneSequence\(true\)/.test(uSrc), 'recreateToneSequence call');
+});
+
+TestRunner.test("Day 761 - APP_VERSION validation (>= 2.410 for Day 761)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const versionMatch = cSrc.match(/export\s+const\s+APP_VERSION\s*=\s*'(\d+)\.(\d+)\.(\d+)'/);
+    t.assertTruthy(versionMatch, 'APP_VERSION found');
+    if (versionMatch) {
+        const major = parseInt(versionMatch[1]);
+        const minor = parseInt(versionMatch[2]);
+        t.assertTruthy(major > 2 || (major === 2 && minor >= 410), 'APP_VERSION >= 2.410 for Day 761 (got ' + versionMatch[0] + ')');
+    }
+});
+
+TestRunner.test("Day 761 - Functional test: x = a*cos(t) + (a/12)*cos(12t) (13-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver12\s*\*\s*cos12T/.test(tSrc), 'x = a*cos(t) + (a/12)*cos(12t)');
+});
+
+TestRunner.test("Day 761 - Functional test: y = a*sin(t) - (a/12)*sin(12t) (13-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver12\s*\*\s*sin12T/.test(tSrc), 'y = a*sin(t) - (a/12)*sin(12t)');
+});
+
+TestRunner.test("Day 761 - Structural test: tridecagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 761 - Functional test: at t=0, x = a + a/12 = 13a/12 (the rightmost extreme of the tridecagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tridecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/12\s*=\s*13a\/12/.test(tSrc), 'rightmost extreme (13a/12) documented in comments');
+});
