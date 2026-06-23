@@ -60356,3 +60356,235 @@ TestRunner.test("Day 753 - Structural test: hexacuspidNotes uses Math.floor for 
     t.assertTruthy(/hexacuspidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
     t.assertTruthy(/hexacuspidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
 });
+
+TestRunner.test("Day 754 - heptoidNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes\s*\(.*?\}\s*\{/.test(tSrc), 'heptoidNotes method defined');
+});
+
+TestRunner.test("Day 754 - heptoidNotes accepts 5 parameters with defaults (length, scale, velocityDecay, shape, skipOccupied)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes\s*\(\s*length\s*=\s*Constants\.HEPTOID_NOTES_DEFAULT_LENGTH/.test(tSrc), 'length default');
+    t.assertTruthy(/scale\s*=\s*Constants\.HEPTOID_NOTES_DEFAULT_A/.test(tSrc), 'scale default');
+    t.assertTruthy(/velocityDecay\s*=\s*Constants\.HEPTOID_NOTES_DEFAULT_VELOCITY_DECAY/.test(tSrc), 'velocityDecay default');
+    t.assertTruthy(/shape\s*=\s*Constants\.HEPTOID_NOTES_SHAPE_STANDARD/.test(tSrc), 'shape default');
+    t.assertTruthy(/skipOccupied\s*=\s*true/.test(tSrc), 'skipOccupied default');
+});
+
+TestRunner.test("Day 754 - heptoidNotes returns 0 for Audio tracks", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,500}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'Audio type guard');
+});
+
+TestRunner.test("Day 754 - heptoidNotes gets active sequence via getActiveSequence", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,500}getActiveSequence/.test(tSrc), 'getActiveSequence call');
+});
+
+TestRunner.test("Day 754 - heptoidNotes captures undo BEFORE mutation with descriptive 'Heptoid Notes' label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1500}_captureUndoState\s*\(\s*`Heptoid Notes/.test(tSrc), 'undo captured with Heptoid label');
+});
+
+TestRunner.test("Day 754 - heptoidNotes clamps all parameters to HEPTOID_NOTES_MIN/MAX_* ranges", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1000}HEPTOID_NOTES_MIN_LENGTH/.test(tSrc), 'MIN_LENGTH used');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1000}HEPTOID_NOTES_MAX_LENGTH/.test(tSrc), 'MAX_LENGTH used');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1000}HEPTOID_NOTES_MIN_A/.test(tSrc), 'MIN_A used');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1000}HEPTOID_NOTES_MAX_A/.test(tSrc), 'MAX_A used');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1000}HEPTOID_NOTES_MIN_VELOCITY_DECAY/.test(tSrc), 'MIN_VELOCITY_DECAY used');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1000}HEPTOID_NOTES_MAX_VELOCITY_DECAY/.test(tSrc), 'MAX_VELOCITY_DECAY used');
+});
+
+TestRunner.test("Day 754 - heptoidNotes validates shape with HEPTOID_NOTES_SHAPES (uses STANDARD fallback)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1000}HEPTOID_NOTES_SHAPES\.includes\s*\(\s*shape\s*\)/.test(tSrc), 'shape validation');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1000}HEPTOID_NOTES_SHAPE_STANDARD\s*:/.test(tSrc), 'STANDARD fallback in ternary');
+});
+
+TestRunner.test("Day 754 - heptoidNotes uses Math.cos, Math.sin, Math.cos(6t), Math.sin(6t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t) used');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t) used');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}Math\.cos\s*\(\s*6\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(6*t) used');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}Math\.sin\s*\(\s*6\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(6*t) used');
+});
+
+TestRunner.test("Day 754 - heptoidNotes uses 7-cusped hypocycloid parametric x = a*cos(t) + (a/6)*cos(6t) and y = a*sin(t) - (a/6)*sin(6t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver6\s*\*\s*cos6T/.test(tSrc), 'x = a*cos(t) + (a/6)*cos(6t)');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver6\s*\*\s*sin6T/.test(tSrc), 'y = a*sin(t) - (a/6)*sin(6t)');
+});
+
+TestRunner.test("Day 754 - heptoidNotes skips non-finite samples (defensive)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}!isFinite\s*\(\s*x\s*\)\s*\|\|\s*!isFinite\s*\(\s*y\s*\)/.test(tSrc), 'non-finite skip');
+});
+
+TestRunner.test("Day 754 - heptoidNotes uses newNotes collection pattern", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,5000}const\s+newNotes\s*=\s*\[\]/.test(tSrc), 'newNotes array init');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,5000}newNotes\.push\s*\(/.test(tSrc), 'newNotes.push used');
+});
+
+TestRunner.test("Day 754 - heptoidNotes preserves probability from source", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,5000}probability:\s*stepData\.probability/.test(tSrc), 'probability preserved');
+});
+
+TestRunner.test("Day 754 - heptoidNotes skips source cell (no self-reference)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,5000}targetRow\s*===\s*rowIndex\s*&&\s*targetCol\s*===\s*col/.test(tSrc), 'source cell skip');
+});
+
+TestRunner.test("Day 754 - heptoidNotes respects sequence length and row boundaries", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,5000}targetRow\s*<\s*0\s*\|\|\s*targetRow\s*>=\s*numRows/.test(tSrc), 'row bounds');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,5000}targetCol\s*<\s*0\s*\|\|\s*targetCol\s*>=\s*totalSteps/.test(tSrc), 'col bounds');
+});
+
+TestRunner.test("Day 754 - heptoidNotes handles empty source (no active notes)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,5000}stepData\s*\|\|\s*!stepData\.active/.test(tSrc), 'empty source guard');
+});
+
+TestRunner.test("Day 754 - heptoidNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange guard');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange guard');
+});
+
+TestRunner.test("Day 754 - heptoidNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,5000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity 2-decimal rounding');
+});
+
+TestRunner.test("Day 754 - heptoidNotes returns count of heptoid notes (heptoidCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let\s+heptoidCount\s*=\s*0/.test(tSrc), 'heptoidCount initialized');
+    t.assertTruthy(/return\s+heptoidCount/.test(tSrc), 'returns heptoidCount');
+});
+
+TestRunner.test("Day 754 - heptoidNotes supports skipOccupied option", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,5000}skipOccupied\s*&&/.test(tSrc), 'skipOccupied used');
+});
+
+TestRunner.test("Day 754 - heptoidNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}HEPTOID_NOTES_SHAPE_STANDARD/.test(tSrc), 'STANDARD shape');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}HEPTOID_NOTES_SHAPE_INVERTED/.test(tSrc), 'INVERTED shape');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}HEPTOID_NOTES_SHAPE_HEPTAGON/.test(tSrc), 'HEPTAGON shape');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}HEPTOID_NOTES_SHAPE_TIGHT/.test(tSrc), 'TIGHT shape');
+});
+
+TestRunner.test("Day 754 - heptoidNotes uses tMin/tMax based on shape (4 shape resolvers)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}tRangeMap/.test(tSrc), 'tRangeMap exists');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}const\s+tMin\s*=\s*tRange\[0\]/.test(tSrc), 'tMin extracted');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}const\s+tMax\s*=\s*tRange\[1\]/.test(tSrc), 'tMax extracted');
+});
+
+TestRunner.test("Day 754 - heptoidNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}const\s+t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 754 - All 22 HEPTOID_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTOID_NOTES_MIN_LENGTH\s*=\s*8/.test(cSrc), 'HEPTOID_NOTES_MIN_LENGTH = 8');
+    t.assertTruthy(/HEPTOID_NOTES_MAX_LENGTH\s*=\s*64/.test(cSrc), 'HEPTOID_NOTES_MAX_LENGTH = 64');
+    t.assertTruthy(/HEPTOID_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'HEPTOID_NOTES_DEFAULT_LENGTH = 32');
+    t.assertTruthy(/HEPTOID_NOTES_MIN_A\s*=\s*1/.test(cSrc), 'HEPTOID_NOTES_MIN_A = 1');
+    t.assertTruthy(/HEPTOID_NOTES_MAX_A\s*=\s*8/.test(cSrc), 'HEPTOID_NOTES_MAX_A = 8');
+    t.assertTruthy(/HEPTOID_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'HEPTOID_NOTES_DEFAULT_A = 4');
+    t.assertTruthy(/HEPTOID_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(cSrc), 'HEPTOID_NOTES_MIN_VELOCITY_DECAY = 0.1');
+    t.assertTruthy(/HEPTOID_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(cSrc), 'HEPTOID_NOTES_MAX_VELOCITY_DECAY = 1.0');
+    t.assertTruthy(/HEPTOID_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'HEPTOID_NOTES_DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/HEPTOID_NOTES_DEFAULT_T_MIN\s*=\s*0/.test(cSrc), 'HEPTOID_NOTES_DEFAULT_T_MIN = 0');
+    t.assertTruthy(/HEPTOID_NOTES_DEFAULT_T_MAX\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'HEPTOID_NOTES_DEFAULT_T_MAX = 2*PI');
+    t.assertTruthy(/HEPTOID_NOTES_INVERTED_T_MIN\s*=\s*2\s*\*\s*Math\.PI/.test(cSrc), 'HEPTOID_NOTES_INVERTED_T_MIN = 2*PI');
+    t.assertTruthy(/HEPTOID_NOTES_INVERTED_T_MAX\s*=\s*0/.test(cSrc), 'HEPTOID_NOTES_INVERTED_T_MAX = 0');
+    t.assertTruthy(/HEPTOID_NOTES_HEPTAGON_T_MIN\s*=\s*0/.test(cSrc), 'HEPTOID_NOTES_HEPTAGON_T_MIN = 0');
+    t.assertTruthy(/HEPTOID_NOTES_HEPTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*7/.test(cSrc), 'HEPTOID_NOTES_HEPTAGON_T_MAX = 2*PI/7');
+    t.assertTruthy(/HEPTOID_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*7/.test(cSrc), 'HEPTOID_NOTES_TIGHT_T_MIN = -PI/7');
+    t.assertTruthy(/HEPTOID_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*7/.test(cSrc), 'HEPTOID_NOTES_TIGHT_T_MAX = PI/7');
+    t.assertTruthy(/HEPTOID_NOTES_SHAPE_STANDARD\s*=\s*'standard'/.test(cSrc), 'SHAPE_STANDARD');
+    t.assertTruthy(/HEPTOID_NOTES_SHAPE_INVERTED\s*=\s*'inverted'/.test(cSrc), 'SHAPE_INVERTED');
+    t.assertTruthy(/HEPTOID_NOTES_SHAPE_HEPTAGON\s*=\s*'heptagon'/.test(cSrc), 'SHAPE_HEPTAGON');
+    t.assertTruthy(/HEPTOID_NOTES_SHAPE_TIGHT\s*=\s*'tight'/.test(cSrc), 'SHAPE_TIGHT');
+});
+
+TestRunner.test("Day 754 - HEPTOID_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = cSrc.match(/export\s+const\s+HEPTOID_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(shapes, 'SHAPES array exists');
+    if (shapes) {
+        t.assertTruthy(shapes[1].includes('HEPTOID_NOTES_SHAPE_STANDARD'), 'STANDARD');
+        t.assertTruthy(shapes[1].includes('HEPTOID_NOTES_SHAPE_INVERTED'), 'INVERTED');
+        t.assertTruthy(shapes[1].includes('HEPTOID_NOTES_SHAPE_HEPTAGON'), 'HEPTAGON');
+        t.assertTruthy(shapes[1].includes('HEPTOID_NOTES_SHAPE_TIGHT'), 'TIGHT');
+    }
+});
+
+TestRunner.test("Day 754 - ui.js has 4 Heptoid Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const standard = /label:\s*`Heptoid Notes \(Standard, 32\)`/.test(uSrc);
+    const inverted = /label:\s*`Heptoid Notes \(Inverted, 32\)`/.test(uSrc);
+    const heptagon = /label:\s*`Heptoid Notes \(Heptagon, 32\)`/.test(uSrc);
+    const tight = /label:\s*`Heptoid Notes \(Tight, 32\)`/.test(uSrc);
+    t.assertTruthy(standard, 'Standard menu item');
+    t.assertTruthy(inverted, 'Inverted menu item');
+    t.assertTruthy(heptagon, 'Heptagon menu item');
+    t.assertTruthy(tight, 'Tight menu item');
+});
+
+TestRunner.test("Day 754 - Heptoid Notes menu items call track.heptoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.heptoidNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 heptoidNotes calls');
+});
+
+TestRunner.test("Day 754 - Heptoid Notes menu items call recreateToneSequence after heptoidNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/heptoidNotes[\s\S]{0,400}recreateToneSequence/g) || [];
+    t.assertEqual(matches.length, 4, '4 recreateToneSequence calls');
+});
+
+TestRunner.test("Day 754 - Heptoid Notes menu items show 'Heptoid'd N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Heptoid'd\s+\$\{result\}\s+note\(s\)/g) || [];
+    t.assertEqual(matches.length, 4, "4 Heptoid'd notifications");
+});
+
+TestRunner.test("Day 754 - Heptoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/heptoidNotes[\s\S]{0,500}localAppServices\.updateTrackUI/g) || [];
+    t.assertEqual(matches.length, 4, '4 updateTrackUI calls');
+});
+
+TestRunner.test("Day 754 - APP_VERSION validation (>= 2.404 for Day 754)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.404\.0['"]/.test(cSrc), 'APP_VERSION bumped to 2.404.0');
+});
+
+TestRunner.test("Day 754 - Functional test: heptoid parametric x = a*cos(t) + (a/6)*cos(6t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}const\s+x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver6\s*\*\s*cos6T/.test(tSrc), 'x = a*cos(t) + (a/6)*cos(6t)');
+});
+
+TestRunner.test("Day 754 - Functional test: heptoid parametric y = a*sin(t) - (a/6)*sin(6t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}const\s+y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver6\s*\*\s*sin6T/.test(tSrc), 'y = a*sin(t) - (a/6)*sin(6t)');
+});
+
+TestRunner.test("Day 754 - Functional test: at t=0, x=7a/6 and y=0 (the rightmost extreme of the heptoid)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,3000}At\s+t\s*=\s*0[\s\S]{0,200}\(7a\/6,\s*0\)/.test(tSrc), 'rightmost extreme (7a/6, 0) documented in comments');
+});
+
+TestRunner.test("Day 754 - Structural test: heptoidNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/heptoidNotes[\s\S]{0,1500}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
