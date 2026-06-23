@@ -2207,11 +2207,35 @@ export const DECUSSATA_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2π]: full
 export const DECUSSATA_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2π, 0]: reversed traversal direction
 export const DECUSSATA_NOTES_SHAPE_DECAGON = 'decagon'; // t in [0, 2π/10]: tenth revolution, just 1 cusp region
 export const DECUSSATA_NOTES_SHAPE_TIGHT = 'tight'; // t in [-π/10, +π/10]: tight concentration around the right cusp region
-export const DECUSSATA_NOTES_SHAPES = [
-    DECUSSATA_NOTES_SHAPE_STANDARD,
-    DECUSSATA_NOTES_SHAPE_INVERTED,
-    DECUSSATA_NOTES_SHAPE_DECAGON,
-    DECUSSATA_NOTES_SHAPE_TIGHT
+
+// Day 759: Hendecagon (11-cusped Hypocycloid) Notes constants - the 11-cusped hypocycloid (R/r=11)
+// 11-fold D11 dihedral symmetry. Parametric: x = a*cos(t) + (a/10)*cos(10t), y = a*sin(t) - (a/10)*sin(10t).
+export const HENDECA_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the hendecagon
+export const HENDECA_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution hendecagon)
+export const HENDECA_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the hendecagon
+export const HENDECA_NOTES_MIN_A = 1; // Minimum 1 scale a (small hendecagon)
+export const HENDECA_NOTES_MAX_A = 8; // Maximum 8 scale a (large hendecagon)
+export const HENDECA_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium hendecagon, classic R/r=11)
+export const HENDECA_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const HENDECA_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const HENDECA_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const HENDECA_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const HENDECA_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 11 cusps visited)
+export const HENDECA_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const HENDECA_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const HENDECA_NOTES_HENDECAGON_T_MIN = 0; // Hendecagon shape lower t bound (eleventh revolution, 1 cusp region)
+export const HENDECA_NOTES_HENDECAGON_T_MAX = 2 * Math.PI / 11; // Hendecagon shape upper t bound (eleventh revolution, 1 cusp)
+export const HENDECA_NOTES_TIGHT_T_MIN = -Math.PI / 11; // Tight shape lower t bound (concentrated around 1 cusp)
+export const HENDECA_NOTES_TIGHT_T_MAX = Math.PI / 11; // Tight shape upper t bound (concentrated around 1 cusp)
+export const HENDECA_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2π]: full hendecagon with all 11 cusps (R/r=11 default)
+export const HENDECA_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2π, 0]: reversed traversal direction
+export const HENDECA_NOTES_SHAPE_HENDECAGON = 'hendecagon'; // t in [0, 2π/11]: eleventh revolution, just 1 cusp region
+export const HENDECA_NOTES_SHAPE_TIGHT = 'tight'; // t in [-π/11, +π/11]: tight concentration around the right cusp region
+export const HENDECA_NOTES_SHAPES = [
+    HENDECA_NOTES_SHAPE_STANDARD,
+    HENDECA_NOTES_SHAPE_INVERTED,
+    HENDECA_NOTES_SHAPE_HENDECAGON,
+    HENDECA_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.407.0';
+export const APP_VERSION = '2.408.0';

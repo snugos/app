@@ -61598,3 +61598,121 @@ TestRunner.test("Day 758 - Structural test: decussataNotes uses Math.floor for l
     t.assertTruthy(/decussataNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
     t.assertTruthy(/decussataNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
 });
+
+
+// Day 759: Hendecagon (11-cusped Hypocycloid) Notes test block - 11-fold D11 symmetric hypocycloid (R/r=11)
+TestRunner.test("Day 759 - hendecaNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes\s*\(length\s*=\s*Constants\.HENDECA_NOTES_DEFAULT_LENGTH[\s\S]{0,200}\{[\s\S]{0,50}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'hendecaNotes method defined');
+});
+TestRunner.test("Day 759 - hendecaNotes captures undo BEFORE mutation with descriptive Hendeca Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,3000}this\._captureUndoState\(\`Hendeca Notes \$\{useShape\}/.test(tSrc), 'undo capture with Hendeca Notes label');
+});
+TestRunner.test("Day 759 - hendecaNotes clamps length to HENDECA_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,3000}Math\.max\(Constants\.HENDECA_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.HENDECA_NOTES_MAX_LENGTH,\s*Math\.floor\(length\)\)\)/.test(tSrc), 'length clamping');
+});
+TestRunner.test("Day 759 - hendecaNotes uses Math.cos, Math.sin, Math.cos(10t), Math.sin(10t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}cos10T\s*=\s*Math\.cos\(\s*10\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(10*t)');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}sin10T\s*=\s*Math\.sin\(\s*10\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(10*t)');
+});
+TestRunner.test("Day 759 - hendecaNotes uses 11-cusped hypocycloid parametric x = a*cos(t) + (a/10)*cos(10t) and y = a*sin(t) - (a/10)*sin(10t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver10\s*\*\s*cos10T/.test(tSrc), 'x = a*cos(t) + (a/10)*cos(10t)');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver10\s*\*\s*sin10T/.test(tSrc), 'y = a*sin(t) - (a/10)*sin(10t)');
+});
+TestRunner.test("Day 759 - hendecaNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'xRange guard');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'yRange guard');
+});
+TestRunner.test("Day 759 - hendecaNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tRangeMap\s*=\s*\{[\s\S]{0,500}Constants\.HENDECA_NOTES_SHAPE_STANDARD[\s\S]{0,500}Constants\.HENDECA_NOTES_SHAPE_INVERTED[\s\S]{0,500}Constants\.HENDECA_NOTES_SHAPE_HENDECAGON[\s\S]{0,500}Constants\.HENDECA_NOTES_SHAPE_TIGHT/.test(tSrc), '4 shape tRangeMap');
+});
+TestRunner.test("Day 759 - hendecaNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(tSrc), 't parameterization');
+});
+TestRunner.test("Day 759 - hendecaNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(tSrc), 'velocity 2-decimal rounding');
+});
+TestRunner.test("Day 759 - hendecaNotes returns count of hendeca notes (hendecaCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let\s+hendecaCount\s*=\s*0/.test(tSrc), 'hendecaCount variable');
+    t.assertTruthy(/return\s+hendecaCount/.test(tSrc), 'return hendecaCount');
+});
+TestRunner.test("Day 759 - All 26 HENDECA_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const requiredConstants = [
+        'HENDECA_NOTES_MIN_LENGTH', 'HENDECA_NOTES_MAX_LENGTH', 'HENDECA_NOTES_DEFAULT_LENGTH',
+        'HENDECA_NOTES_MIN_A', 'HENDECA_NOTES_MAX_A', 'HENDECA_NOTES_DEFAULT_A',
+        'HENDECA_NOTES_MIN_VELOCITY_DECAY', 'HENDECA_NOTES_MAX_VELOCITY_DECAY', 'HENDECA_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HENDECA_NOTES_DEFAULT_T_MIN', 'HENDECA_NOTES_DEFAULT_T_MAX',
+        'HENDECA_NOTES_INVERTED_T_MIN', 'HENDECA_NOTES_INVERTED_T_MAX',
+        'HENDECA_NOTES_HENDECAGON_T_MIN', 'HENDECA_NOTES_HENDECAGON_T_MAX',
+        'HENDECA_NOTES_TIGHT_T_MIN', 'HENDECA_NOTES_TIGHT_T_MAX',
+        'HENDECA_NOTES_SHAPE_STANDARD', 'HENDECA_NOTES_SHAPE_INVERTED',
+        'HENDECA_NOTES_SHAPE_HENDECAGON', 'HENDECA_NOTES_SHAPE_TIGHT',
+        'HENDECA_NOTES_SHAPES'
+    ];
+    let count = 0;
+    for (const c of requiredConstants) {
+        if (new RegExp(`export\\s+const\\s+${c}\\b`).test(cSrc)) count++;
+    }
+    t.assertEqual(count, requiredConstants.length, `Expected ${requiredConstants.length} HENDECA_NOTES constants, found ${count}`);
+});
+TestRunner.test("Day 759 - HENDECA_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HENDECA_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}HENDECA_NOTES_SHAPE_STANDARD[\s\S]{0,200}HENDECA_NOTES_SHAPE_INVERTED[\s\S]{0,200}HENDECA_NOTES_SHAPE_HENDECAGON[\s\S]{0,200}HENDECA_NOTES_SHAPE_TIGHT/.test(cSrc), 'HENDECA_NOTES_SHAPES');
+});
+TestRunner.test("Day 759 - ui.js has 4 Hendeca Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/label: `Hendeca Notes \(Standard, 32\)`/.test(uSrc), 'Hendeca Standard');
+    t.assertTruthy(/label: `Hendeca Notes \(Inverted, 32\)`/.test(uSrc), 'Hendeca Inverted');
+    t.assertTruthy(/label: `Hendeca Notes \(Hendecagon, 32\)`/.test(uSrc), 'Hendeca Hendecagon');
+    t.assertTruthy(/label: `Hendeca Notes \(Tight, 32\)`/.test(uSrc), 'Hendeca Tight');
+});
+TestRunner.test("Day 759 - Hendeca Notes menu items call track.hendecaNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.hendecaNotes\(/g);
+    t.assertTruthy(matches && matches.length === 4, 'Expected 4 hendecaNotes calls, got ' + (matches?.length || 0));
+});
+TestRunner.test("Day 759 - Hendeca Notes menu items call recreateToneSequence after hendecaNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,500}recreateToneSequence\(true\)/.test(uSrc), 'recreateToneSequence call');
+});
+TestRunner.test("Day 759 - Hendeca Notes menu items show 'Hendeca\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Hendeca'd \$\{result\} note\(s\)/.test(uSrc), 'Hendeca\\'d notification');
+});
+TestRunner.test("Day 759 - APP_VERSION validation (>= 2.408 for Day 759)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const versionMatch = cSrc.match(/export\s+const\s+APP_VERSION\s*=\s*'(\d+)\.(\d+)\.(\d+)'/);
+    t.assertTruthy(versionMatch, 'APP_VERSION found');
+    if (versionMatch) {
+        const major = parseInt(versionMatch[1]);
+        const minor = parseInt(versionMatch[2]);
+        t.assertTruthy(major > 2 || (major === 2 && minor >= 408), 'APP_VERSION >= 2.408 for Day 759 (got ' + versionMatch[0] + ')');
+    }
+});
+TestRunner.test("Day 759 - Functional test: x = a*cos(t) + (a/10)*cos(10t) (11-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver10\s*\*\s*cos10T/.test(tSrc), 'x = a*cos(t) + (a/10)*cos(10t)');
+});
+TestRunner.test("Day 759 - Functional test: y = a*sin(t) - (a/10)*sin(10t) (11-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver10\s*\*\s*sin10T/.test(tSrc), 'y = a*sin(t) - (a/10)*sin(10t)');
+});
+TestRunner.test("Day 759 - Functional test: at t=0, x = a + a/10 = 11a/10 (the rightmost extreme of the hendecagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/10\s*=\s*11a\/10/.test(tSrc), 'rightmost extreme (11a/10) documented in comments');
+});
+TestRunner.test("Day 759 - Structural test: hendecaNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/hendecaNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
