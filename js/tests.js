@@ -61716,3 +61716,119 @@ TestRunner.test("Day 759 - Structural test: hendecaNotes uses Math.floor for len
     t.assertTruthy(/hendecaNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
     t.assertTruthy(/hendecaNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
 });
+
+// Day 760: Dodecagon (12-cusped Hypocycloid) Notes test block - 12-fold D12 symmetric hypocycloid (R/r=12)
+TestRunner.test("Day 760 - dodecagonNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes\s*\(length\s*=\s*Constants\.DODECAGON_NOTES_DEFAULT_LENGTH[\s\S]{0,200}\{[\s\S]{0,50}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'dodecagonNotes method defined');
+});
+TestRunner.test("Day 760 - dodecagonNotes captures undo BEFORE mutation with descriptive Dodecagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,3000}this\._captureUndoState\(`Dodecagon Notes \$\{useShape\}/.test(tSrc), 'undo capture with Dodecagon Notes label');
+});
+TestRunner.test("Day 760 - dodecagonNotes clamps length to DODECAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,3000}Math\.max\(Constants\.DODECAGON_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.DODECAGON_NOTES_MAX_LENGTH,\s*Math\.floor\(length\)\)\)/.test(tSrc), 'length clamping');
+});
+TestRunner.test("Day 760 - dodecagonNotes uses Math.cos, Math.sin, Math.cos(11t), Math.sin(11t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}cos11T\s*=\s*Math\.cos\(\s*11\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(11*t)');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}sin11T\s*=\s*Math\.sin\(\s*11\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(11*t)');
+});
+TestRunner.test("Day 760 - dodecagonNotes uses 12-cusped hypocycloid parametric x = a*cos(t) + (a/11)*cos(11t) and y = a*sin(t) - (a/11)*sin(11t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver11\s*\*\s*cos11T/.test(tSrc), 'x = a*cos(t) + (a/11)*cos(11t)');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver11\s*\*\s*sin11T/.test(tSrc), 'y = a*sin(t) - (a/11)*sin(11t)');
+});
+TestRunner.test("Day 760 - dodecagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'xRange guard');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'yRange guard');
+});
+TestRunner.test("Day 760 - dodecagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tRangeMap\s*=\s*\{[\s\S]{0,500}Constants\.DODECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}Constants\.DODECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}Constants\.DODECAGON_NOTES_SHAPE_DODECAGON[\s\S]{0,500}Constants\.DODECAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 shape tRangeMap');
+});
+TestRunner.test("Day 760 - dodecagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(tSrc), 't parameterization');
+});
+TestRunner.test("Day 760 - dodecagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(tSrc), 'velocity 2-decimal rounding');
+});
+TestRunner.test("Day 760 - dodecagonNotes returns count of dodecagon notes (dodecagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let\s+dodecagonCount\s*=\s*0/.test(tSrc), 'dodecagonCount variable');
+    t.assertTruthy(/return\s+dodecagonCount/.test(tSrc), 'return dodecagonCount');
+});
+TestRunner.test("Day 760 - All 26 DODECAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const requiredConstants = [
+        'DODECAGON_NOTES_MIN_LENGTH', 'DODECAGON_NOTES_MAX_LENGTH', 'DODECAGON_NOTES_DEFAULT_LENGTH',
+        'DODECAGON_NOTES_MIN_A', 'DODECAGON_NOTES_MAX_A', 'DODECAGON_NOTES_DEFAULT_A',
+        'DODECAGON_NOTES_MIN_VELOCITY_DECAY', 'DODECAGON_NOTES_MAX_VELOCITY_DECAY', 'DODECAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'DODECAGON_NOTES_DEFAULT_T_MIN', 'DODECAGON_NOTES_DEFAULT_T_MAX',
+        'DODECAGON_NOTES_INVERTED_T_MIN', 'DODECAGON_NOTES_INVERTED_T_MAX',
+        'DODECAGON_NOTES_DODECAGON_T_MIN', 'DODECAGON_NOTES_DODECAGON_T_MAX',
+        'DODECAGON_NOTES_TIGHT_T_MIN', 'DODECAGON_NOTES_TIGHT_T_MAX',
+        'DODECAGON_NOTES_SHAPE_STANDARD', 'DODECAGON_NOTES_SHAPE_INVERTED', 'DODECAGON_NOTES_SHAPE_DODECAGON', 'DODECAGON_NOTES_SHAPE_TIGHT',
+        'DODECAGON_NOTES_SHAPES'
+    ];
+    let count = 0;
+    for (const c of requiredConstants) {
+        if (new RegExp(`export\\s+const\\s+${c}\\b`).test(cSrc)) count++;
+    }
+    t.assertEqual(count, requiredConstants.length, `Expected ${requiredConstants.length} DODECAGON_NOTES constants, found ${count}`);
+});
+TestRunner.test("Day 760 - DODECAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/DODECAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}DODECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,200}DODECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,200}DODECAGON_NOTES_SHAPE_DODECAGON[\s\S]{0,200}DODECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'DODECAGON_NOTES_SHAPES');
+});
+TestRunner.test("Day 760 - ui.js has 4 Dodecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/label: `Dodecagon Notes \(Standard, 32\)`/.test(uSrc), 'Dodecagon Standard');
+    t.assertTruthy(/label: `Dodecagon Notes \(Inverted, 32\)`/.test(uSrc), 'Dodecagon Inverted');
+    t.assertTruthy(/label: `Dodecagon Notes \(Dodecagon, 32\)`/.test(uSrc), 'Dodecagon Dodecagon');
+    t.assertTruthy(/label: `Dodecagon Notes \(Tight, 32\)`/.test(uSrc), 'Dodecagon Tight');
+});
+TestRunner.test("Day 760 - Dodecagon Notes menu items call track.dodecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.dodecagonNotes\(/g);
+    t.assertTruthy(matches && matches.length === 4, 'Expected 4 dodecagonNotes calls, got ' + (matches?.length || 0));
+});
+TestRunner.test("Day 760 - Dodecagon Notes menu items call recreateToneSequence after dodecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,500}recreateToneSequence\(true\)/.test(uSrc), 'recreateToneSequence call');
+});
+TestRunner.test("Day 760 - Dodecagon Notes menu items show 'Dodecagon\\'d N note(s)' notification", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Dodecagon'd \$\{result\} note\(s\)/.test(uSrc), 'Dodecagon\\'d notification');
+});
+TestRunner.test("Day 760 - APP_VERSION validation (>= 2.409 for Day 760)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const versionMatch = cSrc.match(/export\s+const\s+APP_VERSION\s*=\s*'(\d+)\.(\d+)\.(\d+)'/);
+    t.assertTruthy(versionMatch, 'APP_VERSION found');
+    if (versionMatch) {
+        const major = parseInt(versionMatch[1]);
+        const minor = parseInt(versionMatch[2]);
+        t.assertTruthy(major > 2 || (major === 2 && minor >= 409), 'APP_VERSION >= 2.409 for Day 760 (got ' + versionMatch[0] + ')');
+    }
+});
+TestRunner.test("Day 760 - Functional test: x = a*cos(t) + (a/11)*cos(11t) (12-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver11\s*\*\s*cos11T/.test(tSrc), 'x = a*cos(t) + (a/11)*cos(11t)');
+});
+TestRunner.test("Day 760 - Functional test: y = a*sin(t) - (a/11)*sin(11t) (12-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver11\s*\*\s*sin11T/.test(tSrc), 'y = a*sin(t) - (a/11)*sin(11t)');
+});
+TestRunner.test("Day 760 - Structural test: dodecagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+TestRunner.test("Day 760 - Functional test: at t=0, x = a + a/11 = 12a/11 (the rightmost extreme of the dodecagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dodecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/11\s*=\s*12a\/11/.test(tSrc), 'rightmost extreme (12a/11) documented in comments');
+});

@@ -2238,4 +2238,44 @@ export const HENDECA_NOTES_SHAPES = [
     HENDECA_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.408.0';
+// Day 760: Dodecagon (12-cusped Hypocycloid) Notes constants - 12-fold D12 symmetric hypocycloid (R/r=12)
+// The 12-cusped hypocycloid, the natural 12-cusped cousin of the cardioid (1 cusp), nephroid (2 cusps),
+// deltoid (3 cusps), astroid (4 cusps), pentoid (5 cusps), hexacuspid (6 cusps), heptoid (7 cusps),
+// octoid (8 cusps), enneoid (9 cusps), decussata (10 cusps), and hendecagon (11 cusps), extending the
+// 1-2-3-4-5-6-7-8-9-10-11-12 cusp hypocycloid sequence. 12 = 2^2 * 3 is a product of distinct
+// Fermat primes (3) times a power of 2, so the regular dodecagon IS constructible by compass and
+// straightedge (Gauss-Wantzel 1837), the natural upper limit of the constructible regular polygons
+// before the 15-gon (3*5, also constructible) and the 17-gon (a Fermat prime itself, constructible
+// via Gauss's 1796 discovery). 12-fold rotational symmetry appears throughout nature: 12 hours on
+// a clock, 12 months in a year, 12 chromatic semitones in an octave, 12 zodiac signs, 12 edges of
+// a cube, 12 pentagons on a regular dodecahedron, etc. The 12-cusped hypocycloid has D12 dihedral
+// symmetry. Parametric: x = a*cos(t) + (a/11)*cos(11t), y = a*sin(t) - (a/11)*sin(11t).
+export const DODECAGON_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the dodecagon
+export const DODECAGON_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution dodecagon)
+export const DODECAGON_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the dodecagon
+export const DODECAGON_NOTES_MIN_A = 1; // Minimum 1 scale a (small dodecagon)
+export const DODECAGON_NOTES_MAX_A = 8; // Maximum 8 scale a (large dodecagon)
+export const DODECAGON_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium dodecagon, classic R/r=12)
+export const DODECAGON_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const DODECAGON_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const DODECAGON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const DODECAGON_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const DODECAGON_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 12 cusps)
+export const DODECAGON_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const DODECAGON_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const DODECAGON_NOTES_DODECAGON_T_MIN = 0; // Dodecagon shape lower t bound (twelfth revolution, 1 cusp)
+export const DODECAGON_NOTES_DODECAGON_T_MAX = 2 * Math.PI / 12; // Dodecagon shape upper t bound (twelfth revolution)
+export const DODECAGON_NOTES_TIGHT_T_MIN = -Math.PI / 12; // Tight shape lower t bound (concentrated around 1 cusp)
+export const DODECAGON_NOTES_TIGHT_T_MAX = Math.PI / 12; // Tight shape upper t bound (concentrated around 1 cusp)
+export const DODECAGON_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2*PI]: full dodecagon with all 12 cusps (R/r=12)
+export const DODECAGON_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2*PI, 0]: reversed traversal direction
+export const DODECAGON_NOTES_SHAPE_DODECAGON = 'dodecagon'; // t in [0, 2*PI/12]: twelfth revolution, 1 cusp region
+export const DODECAGON_NOTES_SHAPE_TIGHT = 'tight'; // t in [-PI/12, +PI/12]: tight around the right cusp region
+export const DODECAGON_NOTES_SHAPES = [
+    DODECAGON_NOTES_SHAPE_STANDARD,
+    DODECAGON_NOTES_SHAPE_INVERTED,
+    DODECAGON_NOTES_SHAPE_DODECAGON,
+    DODECAGON_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.409.0';
