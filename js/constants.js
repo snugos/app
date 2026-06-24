@@ -2410,4 +2410,33 @@ export const HEXADECAGON_NOTES_SHAPES = [
     HEXADECAGON_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.413.0';
+export const HEPTADECAGON_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the heptadecagon
+export const HEPTADECAGON_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution heptadecagon)
+export const HEPTADECAGON_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the heptadecagon
+export const HEPTADECAGON_NOTES_MIN_A = 1; // Minimum 1 scale a (small heptadecagon)
+export const HEPTADECAGON_NOTES_MAX_A = 8; // Maximum 8 scale a (large heptadecagon)
+export const HEPTADECAGON_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium heptadecagon, classic R/r=17)
+export const HEPTADECAGON_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const HEPTADECAGON_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const HEPTADECAGON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const HEPTADECAGON_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const HEPTADECAGON_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 17 cusps)
+export const HEPTADECAGON_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const HEPTADECAGON_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const HEPTADECAGON_NOTES_HEPTADECAGON_T_MIN = 0; // Heptadecagon shape lower t bound (seventeenth revolution, 1 cusp)
+export const HEPTADECAGON_NOTES_HEPTADECAGON_T_MAX = 2 * Math.PI / 17; // Heptadecagon shape upper t bound (seventeenth revolution)
+export const HEPTADECAGON_NOTES_TIGHT_T_MIN = -Math.PI / 17; // Tight shape lower t bound (concentrated around 1 cusp)
+export const HEPTADECAGON_NOTES_TIGHT_T_MAX = Math.PI / 17; // Tight shape upper t bound (concentrated around 1 cusp)
+export const HEPTADECAGON_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2*PI]: full heptadecagon with all 17 cusps (R/r=17)
+export const HEPTADECAGON_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2*PI, 0]: reversed traversal direction
+export const HEPTADECAGON_NOTES_SHAPE_HEPTADECAGON = 'heptadecagon'; // t in [0, 2*PI/17]: seventeenth revolution, 1 cusp region
+export const HEPTADECAGON_NOTES_SHAPE_TIGHT = 'tight'; // t in [-PI/17, +PI/17]: tight around the right cusp region
+export const HEPTADECAGON_NOTES_SHAPES = [
+    HEPTADECAGON_NOTES_SHAPE_STANDARD,
+    HEPTADECAGON_NOTES_SHAPE_INVERTED,
+    HEPTADECAGON_NOTES_SHAPE_HEPTADECAGON,
+    HEPTADECAGON_NOTES_SHAPE_TIGHT
+];
+
+
+export const APP_VERSION = '2.414.0';
