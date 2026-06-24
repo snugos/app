@@ -62856,3 +62856,139 @@ TestRunner.test("Day 769 - Functional test: at t=0, x = a + a/19 = 20a/19 (the r
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/icosagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/19\s*=\s*20a\/19/.test(tSrc), 'rightmost extreme (20a/19) documented in comments');
 });
+
+
+// Day 770: Icosikaihenagon (21-cusped Hypocycloid) Notes test block - 21-fold D21 symmetric hypocycloid (R/r=21)
+TestRunner.test("Day 770 - icosikaihenagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.icosikaihenagonNotes, 'function', 'icosikaihenagonNotes should be a function');
+});
+
+TestRunner.test("Day 770 - icosikaihenagonNotes captures undo BEFORE mutation with descriptive Icosikaihenagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,3000}_captureUndoState\s*\(\s*`Icosikaihenagon Notes \(/.test(tSrc), 'icosikaihenagonNotes should call _captureUndoState with Icosikaihenagon Notes label');
+});
+
+TestRunner.test("Day 770 - icosikaihenagonNotes clamps length to ICOSIKAIHENAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*length\s*\)[\s\S]{0,500}ICOSIKAIHENAGON_NOTES_MIN_LENGTH[\s\S]{0,500}ICOSIKAIHENAGON_NOTES_MAX_LENGTH/.test(tSrc), 'length clamping with Math.floor');
+});
+
+TestRunner.test("Day 770 - icosikaihenagonNotes uses Math.cos, Math.sin, Math.cos(20t), Math.sin(20t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*20\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(20*t)');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*20\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(20*t)');
+});
+
+TestRunner.test("Day 770 - icosikaihenagonNotes uses 21-cusped hypocycloid parametric x = a*cos(t) + (a/20)*cos(20t) and y = a*sin(t) - (a/20)*sin(20t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver20\s*\*\s*cos20T/.test(tSrc), 'x = a*cos(t) + (a/20)*cos(20t)');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver20\s*\*\s*sin20T/.test(tSrc), 'y = a*sin(t) - (a/20)*sin(20t)');
+});
+
+TestRunner.test("Day 770 - icosikaihenagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange safety');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange safety');
+});
+
+TestRunner.test("Day 770 - icosikaihenagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,5000}tRangeMap\s*=\s*\{[\s\S]{0,3000}ICOSIKAIHENAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}ICOSIKAIHENAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}ICOSIKAIHENAGON_NOTES_SHAPE_ICOSIKAIHENAGON[\s\S]{0,500}ICOSIKAIHENAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tRangeMap with 4 shapes');
+});
+
+TestRunner.test("Day 770 - icosikaihenagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 770 - icosikaihenagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity rounding to 2 decimals');
+});
+
+TestRunner.test("Day 770 - icosikaihenagonNotes returns count of icosikaihenagon notes (icosikaihenagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,10000}icosikaihenagonCount\+\+/.test(tSrc), 'icosikaihenagonCount++');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,10000}return\s+icosikaihenagonCount/.test(tSrc), 'return icosikaihenagonCount');
+});
+
+TestRunner.test("Day 770 - All 22 ICOSIKAIHENAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConsts = [
+        'ICOSIKAIHENAGON_NOTES_MIN_LENGTH', 'ICOSIKAIHENAGON_NOTES_MAX_LENGTH', 'ICOSIKAIHENAGON_NOTES_DEFAULT_LENGTH',
+        'ICOSIKAIHENAGON_NOTES_MIN_A', 'ICOSIKAIHENAGON_NOTES_MAX_A', 'ICOSIKAIHENAGON_NOTES_DEFAULT_A',
+        'ICOSIKAIHENAGON_NOTES_MIN_VELOCITY_DECAY', 'ICOSIKAIHENAGON_NOTES_MAX_VELOCITY_DECAY', 'ICOSIKAIHENAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'ICOSIKAIHENAGON_NOTES_DEFAULT_T_MIN', 'ICOSIKAIHENAGON_NOTES_DEFAULT_T_MAX',
+        'ICOSIKAIHENAGON_NOTES_INVERTED_T_MIN', 'ICOSIKAIHENAGON_NOTES_INVERTED_T_MAX',
+        'ICOSIKAIHENAGON_NOTES_ICOSIKAIHENAGON_T_MIN', 'ICOSIKAIHENAGON_NOTES_ICOSIKAIHENAGON_T_MAX',
+        'ICOSIKAIHENAGON_NOTES_TIGHT_T_MIN', 'ICOSIKAIHENAGON_NOTES_TIGHT_T_MAX',
+        'ICOSIKAIHENAGON_NOTES_SHAPE_STANDARD', 'ICOSIKAIHENAGON_NOTES_SHAPE_INVERTED',
+        'ICOSIKAIHENAGON_NOTES_SHAPE_ICOSIKAIHENAGON', 'ICOSIKAIHENAGON_NOTES_SHAPE_TIGHT',
+        'ICOSIKAIHENAGON_NOTES_SHAPES', 'APP_VERSION'
+    ];
+    for (const c of expectedConsts) {
+        t.assertTruthy(new RegExp('export const ' + c + ' ').test(cSrc), c + ' should be defined');
+    }
+});
+
+TestRunner.test("Day 770 - ICOSIKAIHENAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/ICOSIKAIHENAGON_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(!!m, 'ICOSIKAIHENAGON_NOTES_SHAPES array exists');
+    const body = m[1];
+    t.assertTruthy(body.includes('ICOSIKAIHENAGON_NOTES_SHAPE_STANDARD'), 'standard');
+    t.assertTruthy(body.includes('ICOSIKAIHENAGON_NOTES_SHAPE_INVERTED'), 'inverted');
+    t.assertTruthy(body.includes('ICOSIKAIHENAGON_NOTES_SHAPE_ICOSIKAIHENAGON'), 'icosikaihenagon');
+    t.assertTruthy(body.includes('ICOSIKAIHENAGON_NOTES_SHAPE_TIGHT'), 'tight');
+});
+
+TestRunner.test("Day 770 - ui.js has 4 Icosikaihenagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const labels = ['Standard, 32', 'Inverted, 32', 'Icosikaihenagon, 32', 'Tight, 32'];
+    for (const lbl of labels) {
+        t.assertTruthy(new RegExp('Icosikaihenagon Notes \(' + lbl + '\)').test(uSrc), 'menu item ' + lbl);
+    }
+});
+
+TestRunner.test("Day 770 - Icosikaihenagon Notes menu items call track.icosikaihenagonNotes (4 calls)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.icosikaihenagonNotes\(/g);
+    t.assertEqual(matches ? matches.length : 0, 4, '4 calls to track.icosikaihenagonNotes');
+});
+
+TestRunner.test("Day 770 - Icosikaihenagon Notes menu items call recreateToneSequence after icosikaihenagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const re = /icosikaihenagonNotes\([^)]*\);[\s\S]{0,200}recreateToneSequence/;
+    const matches = uSrc.match(new RegExp(re, 'g'));
+    t.assertEqual(matches ? matches.length : 0, 4, '4 recreateToneSequence calls after icosikaihenagonNotes');
+});
+
+TestRunner.test("Day 770 - APP_VERSION validation (>= 2.418 for Day 770)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([\d.]+)'/);
+    t.assertTruthy(!!m, 'APP_VERSION defined');
+    const v = m[1].split('.').map(Number);
+    const required = [2, 418];
+    t.assertTruthy(v[0] > required[0] || (v[0] === required[0] && v[1] >= required[1]), 'APP_VERSION >= 2.418');
+});
+
+TestRunner.test("Day 770 - Functional test: x = a*cos(t) + (a/20)*cos(20t) (21-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver20\s*\*\s*cos20T/.test(tSrc), 'x = a*cos(t) + (a/20)*cos(20t)');
+});
+
+TestRunner.test("Day 770 - Functional test: y = a*sin(t) - (a/20)*sin(20t) (21-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver20\s*\*\s*sin20T/.test(tSrc), 'y = a*sin(t) - (a/20)*sin(20t)');
+});
+
+TestRunner.test("Day 770 - Structural test: icosikaihenagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 770 - Functional test: at t=0, x = a + a/20 = 21a/20 (the rightmost extreme of the icosikaihenagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosikaihenagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/20\s*=\s*21a\/20/.test(tSrc), 'rightmost extreme (21a/20) documented in comments');
+});
