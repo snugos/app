@@ -2347,4 +2347,33 @@ export const TETRADECAGON_NOTES_SHAPES = [
     TETRADECAGON_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.411.0';
+// Day 763: Pentadecagon (15-cusped Hypocycloid) Notes - 15-fold D15 symmetric hypocycloid (R/r=15)
+export const PENTADECAGON_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the pentadecagon
+export const PENTADECAGON_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution pentadecagon)
+export const PENTADECAGON_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the pentadecagon
+export const PENTADECAGON_NOTES_MIN_A = 1; // Minimum 1 scale a (small pentadecagon)
+export const PENTADECAGON_NOTES_MAX_A = 8; // Maximum 8 scale a (large pentadecagon)
+export const PENTADECAGON_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium pentadecagon, classic R/r=15)
+export const PENTADECAGON_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const PENTADECAGON_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const PENTADECAGON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const PENTADECAGON_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const PENTADECAGON_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 15 cusps)
+export const PENTADECAGON_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const PENTADECAGON_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const PENTADECAGON_NOTES_PENTADECAGON_T_MIN = 0; // Pentadecagon shape lower t bound (fifteenth revolution, 1 cusp)
+export const PENTADECAGON_NOTES_PENTADECAGON_T_MAX = 2 * Math.PI / 15; // Pentadecagon shape upper t bound (fifteenth revolution)
+export const PENTADECAGON_NOTES_TIGHT_T_MIN = -Math.PI / 15; // Tight shape lower t bound (concentrated around 1 cusp)
+export const PENTADECAGON_NOTES_TIGHT_T_MAX = Math.PI / 15; // Tight shape upper t bound (concentrated around 1 cusp)
+export const PENTADECAGON_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2*PI]: full pentadecagon with all 15 cusps (R/r=15)
+export const PENTADECAGON_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2*PI, 0]: reversed traversal direction
+export const PENTADECAGON_NOTES_SHAPE_PENTADECAGON = 'pentadecagon'; // t in [0, 2*PI/15]: fifteenth revolution, 1 cusp region
+export const PENTADECAGON_NOTES_SHAPE_TIGHT = 'tight'; // t in [-PI/15, +PI/15]: tight around the right cusp region
+export const PENTADECAGON_NOTES_SHAPES = [
+    PENTADECAGON_NOTES_SHAPE_STANDARD,
+    PENTADECAGON_NOTES_SHAPE_INVERTED,
+    PENTADECAGON_NOTES_SHAPE_PENTADECAGON,
+    PENTADECAGON_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.412.0';
