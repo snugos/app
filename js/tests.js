@@ -62587,3 +62587,137 @@ TestRunner.test("Day 767 - Functional test: at t=0, x = a + a/17 = 18a/17 (the r
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/17\s*=\s*18a\/17/.test(tSrc), 'rightmost extreme (18a/17) documented in comments');
 });
+
+
+// Day 768: Enneadecagon (19-cusped Hypocycloid) Notes test block - 19-fold D19 symmetric hypocycloid (R/r=19)
+TestRunner.test("Day 768 - enneadecagonNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes\s*\(\s*length\s*=/.test(tSrc), 'enneadecagonNotes method exists');
+});
+
+TestRunner.test("Day 768 - enneadecagonNotes captures undo BEFORE mutation with descriptive Enneadecagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,5000}_captureUndoState.*Enneadecagon Notes/.test(tSrc), 'captureUndoState with Enneadecagon Notes label');
+});
+
+TestRunner.test("Day 768 - enneadecagonNotes clamps length to ENNEADECAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,5000}ENNEADECAGON_NOTES_MIN_LENGTH[\s\S]{0,200}ENNEADECAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor/.test(tSrc), 'clamping logic');
+});
+
+TestRunner.test("Day 768 - enneadecagonNotes uses Math.cos, Math.sin, Math.cos(18t), Math.sin(18t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}Math\.cos\(\s*18\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(18*t)');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}Math\.sin\(\s*18\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(18*t)');
+});
+
+TestRunner.test("Day 768 - enneadecagonNotes uses 19-cusped hypocycloid parametric x = a*cos(t) + (a/18)*cos(18t) and y = a*sin(t) - (a/18)*sin(18t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver18\s*\*\s*cos18T/.test(tSrc), 'x = a*cos(t) + (a/18)*cos(18t)');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver18\s*\*\s*sin18T/.test(tSrc), 'y = a*sin(t) - (a/18)*sin(18t)');
+});
+
+TestRunner.test("Day 768 - enneadecagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}Math\.max\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange safety');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}Math\.max\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange safety');
+});
+
+TestRunner.test("Day 768 - enneadecagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,5000}ENNEADECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,3000}ENNEADECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,3000}ENNEADECAGON_NOTES_SHAPE_ENNEADECAGON[\s\S]{0,3000}ENNEADECAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 shape resolvers in tRangeMap');
+});
+
+TestRunner.test("Day 768 - enneadecagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 768 - enneadecagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}Math\.round\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'Math.round(decayedVel*100)/100');
+});
+
+TestRunner.test("Day 768 - enneadecagonNotes returns count of enneadecagon notes (enneadecagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,15000}return\s+enneadecagonCount/.test(tSrc), 'returns enneadecagonCount');
+});
+
+TestRunner.test("Day 768 - All 22 ENNEADECAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const required = [
+        'ENNEADECAGON_NOTES_MIN_LENGTH', 'ENNEADECAGON_NOTES_MAX_LENGTH', 'ENNEADECAGON_NOTES_DEFAULT_LENGTH',
+        'ENNEADECAGON_NOTES_MIN_A', 'ENNEADECAGON_NOTES_MAX_A', 'ENNEADECAGON_NOTES_DEFAULT_A',
+        'ENNEADECAGON_NOTES_MIN_VELOCITY_DECAY', 'ENNEADECAGON_NOTES_MAX_VELOCITY_DECAY', 'ENNEADECAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'ENNEADECAGON_NOTES_DEFAULT_T_MIN', 'ENNEADECAGON_NOTES_DEFAULT_T_MAX',
+        'ENNEADECAGON_NOTES_INVERTED_T_MIN', 'ENNEADECAGON_NOTES_INVERTED_T_MAX',
+        'ENNEADECAGON_NOTES_ENNEADECAGON_T_MIN', 'ENNEADECAGON_NOTES_ENNEADECAGON_T_MAX',
+        'ENNEADECAGON_NOTES_TIGHT_T_MIN', 'ENNEADECAGON_NOTES_TIGHT_T_MAX',
+        'ENNEADECAGON_NOTES_SHAPE_STANDARD', 'ENNEADECAGON_NOTES_SHAPE_INVERTED',
+        'ENNEADECAGON_NOTES_SHAPE_ENNEADECAGON', 'ENNEADECAGON_NOTES_SHAPE_TIGHT', 'ENNEADECAGON_NOTES_SHAPES'
+    ];
+    for (const c of required) {
+        t.assertTruthy(new RegExp(c).test(cSrc), c + ' defined');
+    }
+});
+
+TestRunner.test("Day 768 - ENNEADECAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/ENNEADECAGON_NOTES_SHAPES\s*=\s*\[[\s\S]*ENNEADECAGON_NOTES_SHAPE_STANDARD[\s\S]*ENNEADECAGON_NOTES_SHAPE_INVERTED[\s\S]*ENNEADECAGON_NOTES_SHAPE_ENNEADECAGON[\s\S]*ENNEADECAGON_NOTES_SHAPE_TIGHT[\s\S]*\]/.test(cSrc), 'SHAPES array has all 4 variants');
+});
+
+TestRunner.test("Day 768 - ui.js has 4 Enneadecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Enneadecagon Notes \(Standard, 32\)/g) || [];
+    t.assertEqual(matches.length, 1, '1 Enneadecagon Notes (Standard, 32) item');
+    const matches2 = uSrc.match(/Enneadecagon Notes \(Inverted, 32\)/g) || [];
+    t.assertEqual(matches2.length, 1, '1 Enneadecagon Notes (Inverted, 32) item');
+    const matches3 = uSrc.match(/Enneadecagon Notes \(Enneadecagon, 32\)/g) || [];
+    t.assertEqual(matches3.length, 1, '1 Enneadecagon Notes (Enneadecagon, 32) item');
+    const matches4 = uSrc.match(/Enneadecagon Notes \(Tight, 32\)/g) || [];
+    t.assertEqual(matches4.length, 1, '1 Enneadecagon Notes (Tight, 32) item');
+});
+
+TestRunner.test("Day 768 - Enneadecagon Notes menu items call track.enneadecagonNotes (4 calls)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    // Count the calls to currentTrackForMenu.enneadecagonNotes
+    const calls = (uSrc.match(/currentTrackForMenu\.enneadecagonNotes\(/g) || []).length;
+    t.assertEqual(calls, 4, '4 calls to track.enneadecagonNotes');
+});
+
+TestRunner.test("Day 768 - Enneadecagon Notes menu items call recreateToneSequence after enneadecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Enneadecagon Notes[\s\S]{0,500}recreateToneSequence/.test(uSrc), 'recreateToneSequence called after enneadecagon');
+});
+
+TestRunner.test("Day 768 - APP_VERSION validation (>= 2.416 for Day 768)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const versionMatch = cSrc.match(/export\s+const\s+APP_VERSION\s*=\s*'(\d+)\.(\d+)\.(\d+)'/);
+    t.assertTruthy(versionMatch, 'APP_VERSION found');
+    if (versionMatch) {
+        const major = parseInt(versionMatch[1]);
+        const minor = parseInt(versionMatch[2]);
+        t.assertTruthy(major > 2 || (major === 2 && minor >= 416), 'APP_VERSION >= 2.416 for Day 768 (got ' + versionMatch[0] + ')');
+    }
+});
+
+TestRunner.test("Day 768 - Functional test: x = a*cos(t) + (a/18)*cos(18t) (19-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver18\s*\*\s*cos18T/.test(tSrc), 'x = a*cos(t) + (a/18)*cos(18t)');
+});
+
+TestRunner.test("Day 768 - Functional test: y = a*sin(t) - (a/18)*sin(18t) (19-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver18\s*\*\s*sin18T/.test(tSrc), 'y = a*sin(t) - (a/18)*sin(18t)');
+});
+
+TestRunner.test("Day 768 - Structural test: enneadecagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 768 - Functional test: at t=0, x = a + a/18 = 19a/18 (the rightmost extreme of the enneadecagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/18\s*=\s*19a\/18/.test(tSrc), 'rightmost extreme (19a/18) documented in comments');
+});
