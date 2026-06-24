@@ -2923,10 +2923,18 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 { label: `Hexadecagon Notes (Inverted, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Hexadecagon Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.hexadecagonNotes(32, 4, 0.95, 'inverted', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Hexadecagon'd ${result} note(s) (inverted, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to hexadecagon.", 2000); } } },
                 { label: `Hexadecagon Notes (Hexadecagon, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Hexadecagon Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.hexadecagonNotes(32, 4, 0.95, 'hexadecagon', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Hexadecagon'd ${result} note(s) (hexadecagon, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to hexadecagon.", 2000); } } },
                 { label: `Hexadecagon Notes (Tight, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Hexadecagon Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.hexadecagonNotes(32, 4, 0.95, 'tight', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Hexadecagon'd ${result} note(s) (tight, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to hexadecagon.", 2000); } } },
+                { label: `Heptadecagon Notes (Standard, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Heptadecagon Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.heptadecagonNotes(32, 4, 0.95, 'standard', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Heptadecagon'd ${result} note(s) (standard, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to heptadecagon.", 2000); } } },
+                { label: `Heptadecagon Notes (Inverted, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Heptadecagon Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.heptadecagonNotes(32, 4, 0.95, 'inverted', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Heptadecagon'd ${result} note(s) (inverted, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to heptadecagon.", 2000); } } },
+                { label: `Heptadecagon Notes (Heptadecagon, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Heptadecagon Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.heptadecagonNotes(32, 4, 0.95, 'heptadecagon', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Heptadecagon'd ${result} note(s) (heptadecagon, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to heptadecagon.", 2000); } } },
+                { label: `Heptadecagon Notes (Tight, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Heptadecagon Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.heptadecagonNotes(32, 4, 0.95, 'tight', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Heptadecagon'd ${result} note(s) (tight, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to heptadecagon.", 2000); } } },
+
                 { label: `Deltoid Notes (Standard, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Deltoid Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.deltoidNotes(32, 4, 0.95, 'standard', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Deltoid'd ${result} note(s) (standard, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to deltoid.", 2000); } } },
                 { label: `Deltoid Notes (Inverted, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Deltoid Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.deltoidNotes(32, 4, 0.95, 'inverted', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Deltoid'd ${result} note(s) (inverted, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to deltoid.", 2000); } } },
                 { label: `Deltoid Notes (Upper, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Deltoid Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.deltoidNotes(32, 4, 0.95, 'upper', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Deltoid'd ${result} note(s) (upper, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to deltoid.", 2000); } } },
                 { label: `Deltoid Notes (Tight, 32)`, action: () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Deltoid Notes on ${currentTrackForMenu.name} (${currentActiveSeq.name})`); const result = currentTrackForMenu.deltoidNotes(32, 4, 0.95, 'tight', true); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Deltoid'd ${result} note(s) (tight, 32).`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to deltoid.", 2000); } } },
+
+
+
 
                 { separator: true },
                 { label: `Legato Connect (Small)`, action: () => { const result = currentTrackForMenu.connectLegato(2); if (result > 0) { currentTrackForMenu.recreateToneSequence(true); showNotification(`Connected ${result} note pair(s) with small gap.`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } else { showNotification("No notes to connect.", 2000); } } },
@@ -3512,4 +3520,1327 @@ export function renderTimeline() {
         });
 
         tracksHTML += `
-            <div class="timeline-track-lane" data-track
+            <div class="timeline-track-lane" data-track-id="${track.id}">
+                <div class="timeline-track-lane-name flex items-center gap-1">
+                    <span class="track-color-dot" style="background-color:${trackColor}"></span>
+                    <span class="truncate">${track.name}</span>
+                </div>
+                <div class="timeline-track-content" style="flex: 1; position: relative; height: 100%;">
+                    ${clipsHTML}
+                </div>
+            </div>
+        `;
+    });
+    
+    tracksArea.innerHTML = tracksHTML;
+    
+    // Attach click handlers for clip selection
+    attachClipEventHandlers();
+    
+    // Update playhead position
+    updatePlayheadPosition();
+    
+    console.log(`[UI renderTimeline] Rendered ${tracks.length} tracks with clips`);
+}
+
+function renderTimelineRuler() {
+    const rulerEl = document.getElementById('timeline-ruler');
+    if (!rulerEl) return;
+
+    // Pixels per bar: 120 * timelineZoomLevel (matches CSS background-size)
+    const PIXELS_PER_BAR = 120 * timelineZoomLevel;
+    const PIXELS_PER_BEAT = 30 * timelineZoomLevel; // 1/4 of bar (4 beats per bar)
+    const TRACK_NAME_WIDTH = 120;
+    const MAX_BARS_DISPLAY = 128;
+
+    // Get tempo for proper beat/bar rendering
+    const bpm = Tone && Tone.Transport && Tone.Transport.bpm && Tone.Transport.bpm.value ? Tone.Transport.bpm.value : 120;
+    const secondsPerBeat = 60 / bpm;
+    const secondsPerBar = secondsPerBeat * 4; // 4/4 time
+    const totalWidth = TRACK_NAME_WIDTH + (MAX_BARS_DISPLAY * PIXELS_PER_BAR);
+
+    let rulerHTML = '';
+    const markerColor = 'rgba(255,255,255,0.6)';
+    const labelColor = 'rgba(255,255,255,0.8)';
+    const fontSize = Math.max(9, Math.min(12, 10 * timelineZoomLevel));
+
+    for (let bar = 1; bar <= MAX_BARS_DISPLAY; bar++) {
+        const barLeft = TRACK_NAME_WIDTH + ((bar - 1) * PIXELS_PER_BAR);
+        // Bar number label
+        rulerHTML += `<span style="position:absolute;left:${barLeft + 2}px;top:2px;font-size:${fontSize}px;color:${labelColor};pointer-events:none;font-family:monospace;">${bar}</span>`;
+        // Bar tick (tall line)
+        rulerHTML += `<div style="position:absolute;left:${barLeft}px;top:0;width:1px;height:100%;background:${markerColor};"></div>`;
+        // Beat ticks within this bar
+        for (let beat = 1; beat < 4; beat++) {
+            const beatLeft = barLeft + (beat * PIXELS_PER_BEAT);
+            // Smaller tick for beat
+            rulerHTML += `<div style="position:absolute;left:${beatLeft}px;top:50%;width:1px;height:50%;background:${markerColor};opacity:0.5;"></div>`;
+        }
+    }
+
+    // Add marker indicators on the ruler
+    if (localAppServices.getTimelineMarkers) {
+        const markers = localAppServices.getTimelineMarkers();
+        markers.forEach(marker => {
+            const markerLeft = TRACK_NAME_WIDTH + ((marker.bar - 1) * PIXELS_PER_BAR);
+            const markerColorVal = marker.color || '#ff9f43';
+            rulerHTML += `<div style="position:absolute;left:${markerLeft - 4}px;top:0;width:8px;height:100%;background:${markerColorVal};opacity:0.7;border-radius:2px;" title="${marker.name || 'Marker'} (Bar ${marker.bar})"></div>`;
+        });
+    }
+
+    // Playhead indicator on ruler
+    const playheadBar = getPlayheadPositionInBars();
+    if (playheadBar > 0) {
+        const playheadLeft = TRACK_NAME_WIDTH + ((playheadBar - 1) * PIXELS_PER_BAR);
+        rulerHTML += `<div id="timeline-ruler-playhead" style="position:absolute;left:${playheadLeft}px;top:0;width:2px;height:100%;background:#ff6b6b;pointer-events:none;z-index:10;"></div>`;
+    }
+
+    rulerEl.innerHTML = rulerHTML;
+
+    // Double-click to add marker at clicked bar
+    rulerEl.ondblclick = (e) => {
+        const rect = rulerEl.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickedBar = Math.max(1, Math.round((clickX - TRACK_NAME_WIDTH) / PIXELS_PER_BAR) + 1);
+        if (localAppServices.addTimelineMarker) {
+            const newMarkerId = localAppServices.addTimelineMarker({
+                name: `Marker ${Date.now() % 1000}`,
+                bar: clickedBar,
+                color: Constants.DEFAULT_MARKER_COLOR || '#ff9f43'
+            });
+            showNotification(`Marker added at bar ${clickedBar}`, 1500);
+            // Refresh ruler to show new marker
+            renderTimelineRuler();
+            // Also refresh markers window if open
+            const markersWin = localAppServices.getOpenWindows?.()?.get('timelineMarkers');
+            if (markersWin && markersWin.element) {
+                const listContainer = markersWin.element.querySelector('#timelineMarkersList');
+                if (listContainer && typeof buildMarkersListHTML === 'function') {
+                    listContainer.innerHTML = buildMarkersListHTML();
+                }
+            }
+        }
+    };
+}
+
+function getPlayheadPositionInBars() {
+    // Returns current playhead position in bars (1-indexed for ruler display)
+    if (typeof Tone !== 'undefined' && Tone.Transport) {
+        const position = Tone.Transport.position || '0:0:0';
+        const parts = position.split(':');
+        if (parts.length >= 3) {
+            const bars = parseInt(parts[0], 10);
+            const beats = parseInt(parts[1], 10);
+            const sixteenths = parseInt(parts[2], 10);
+            const totalBeats = (bars * 4) + beats + (sixteenths / 4);
+            return totalBeats / 4 + 1; // Convert to 1-indexed bars
+        }
+    }
+    return 0;
+}
+
+function attachClipEventHandlers() {
+    // Clip right-click context menu
+    document.querySelectorAll('.audio-clip, .sequence-clip').forEach(clipEl => {
+        clipEl.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const clipId = clipEl.dataset.clipId;
+            const trackId = clipEl.dataset.trackId;
+            const tracks = typeof localAppServices.getTracks === 'function' ? localAppServices.getTracks() : [];
+            const track = tracks.find(t => t.id === trackId);
+            if (!track) return;
+            const clip = track.timelineClips ? track.timelineClips.find(c => c.id === clipId) : null;
+            if (!clip) return;
+            const clipName = clip.name || 'Untitled';
+
+            const menuItems = [
+                { label: `Rename Clip...`, action: () => {
+                    const newName = window.prompt(`Rename "${clipName}":`, clipName);
+                    if (newName !== null && newName.trim() !== '' && newName.trim() !== clipName) {
+                        if (track.setAudioClipName) { track.setAudioClipName(clip.id, newName.trim()); showNotification(`Renamed to "${newName.trim()}"`, 1500); }
+                    }
+                }},
+                { label: `Change Color...`, action: () => {
+                    const colors = Constants.CLIP_COLORS || ['#4a9eff', '#ff4a4a', '#4aff4a', '#ff4aff', '#ffff4a', '#4affff', '#ff9f43', '#a855f7'];
+                    const currentColor = clip.color || Constants.DEFAULT_CLIP_COLOR || '#4a9eff';
+                    const colorHex = window.prompt(`Enter hex color for "${clipName}" (e.g. #ff4a4a):`, currentColor);
+                    if (colorHex && /^#[0-9A-Fa-f]{6}$/.test(colorHex)) {
+                        if (track.setAudioClipColor) { track.setAudioClipColor(clip.id, colorHex); clipEl.style.borderColor = colorHex; showNotification(`Color set to ${colorHex}`, 1500); }
+                        else { clip.color = colorHex; clipEl.style.borderColor = colorHex; showNotification(`Color set to ${colorHex}`, 1500); }
+                    } else if (colorHex !== null) { showNotification('Invalid hex color format. Use #rrggbb.', 2000); }
+                }},
+                { separator: true },
+                { label: `Duplicate Clip`, action: () => {
+                    if (track.duplicateTimelineClip) { const newClip = track.duplicateTimelineClip(clip.id); if (newClip && localAppServices.renderTimeline) { localAppServices.renderTimeline(); showNotification(`Duplicated "${clipName}"`, 1500); } else { showNotification('Failed to duplicate clip', 2000); } }
+                    else { showNotification('Duplicate not available', 1500); }
+                }},
+                { label: `Split Clip at Playhead...`, action: () => {
+                    try { const pos = Tone.Transport.position; const [bars, beats, sixteenths] = pos.split(':').map(Number); const secondsPerBeat = 60 / Tone.Transport.bpm.value; const splitTime = (bars * 4 * secondsPerBeat) + (beats * secondsPerBeat) + (sixteenths * secondsPerBeat / 4); if (splitTime <= clip.startTime || splitTime >= clip.startTime + clip.duration) { showNotification('Playhead must be within clip to split.', 2500); return; } if (track.splitAudioClip) { const newClip = track.splitAudioClip(clip.id, splitTime); if (newClip && localAppServices.renderTimeline) { localAppServices.renderTimeline(); showNotification(`Split "${clipName}" at ${bars}:${beats}:${sixteenths}`, 1500); } else { showNotification('Failed to split clip', 2000); } } else { showNotification('Split not available', 1500); } } catch (e) { showNotification('Cannot get transport position.', 2000); }
+                }},
+                { separator: true },
+                { label: `Fade In`, submenu: () => {
+                    const currentFade = clip.fadeIn || 0;
+                    const currentCurve = track.getAudioClipFadeInCurve ? track.getAudioClipFadeInCurve(clip.id) : (clip.fadeInCurve || 'linear');
+                    return [
+                        { label: `Duration...`, action: () => {
+                            const val = window.prompt(`Enter fade in duration (seconds):`, String(currentFade));
+                            if (val === null) return;
+                            const parsed = parseFloat(val);
+                            if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
+                            if (track.setAudioClipFadeIn) { track.setAudioClipFadeIn(clip.id, parsed); showNotification(`Fade in set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('Fade not available', 1500); }
+                        }},
+                        { separator: true },
+                        { label: `Linear${currentCurve === 'linear' ? ' ✓' : ''}`, action: () => {
+                            if (track.setAudioClipFadeInCurve) { track.setAudioClipFadeInCurve(clip.id, 'linear'); showNotification(`Fade in curve set to linear for "${clipName}"`, 1500); }
+                        }},
+                        { label: `Exponential${currentCurve === 'exponential' ? ' ✓' : ''}`, action: () => {
+                            if (track.setAudioClipFadeInCurve) { track.setAudioClipFadeInCurve(clip.id, 'exponential'); showNotification(`Fade in curve set to exponential for "${clipName}"`, 1500); }
+                        }}
+                    ];
+                }},
+                { label: `Fade Out`, submenu: () => {
+                    const currentFade = clip.fadeOut || 0;
+                    const currentCurve = track.getAudioClipFadeOutCurve ? track.getAudioClipFadeOutCurve(clip.id) : (clip.fadeOutCurve || 'linear');
+                    return [
+                        { label: `Duration...`, action: () => {
+                            const val = window.prompt(`Enter fade out duration (seconds):`, String(currentFade));
+                            if (val === null) return;
+                            const parsed = parseFloat(val);
+                            if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
+                            if (track.setAudioClipFadeOut) { track.setAudioClipFadeOut(clip.id, parsed); showNotification(`Fade out set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('Fade not available', 1500); }
+                        }},
+                        { separator: true },
+                        { label: `Linear${currentCurve === 'linear' ? ' ✓' : ''}`, action: () => {
+                            if (track.setAudioClipFadeOutCurve) { track.setAudioClipFadeOutCurve(clip.id, 'linear'); showNotification(`Fade out curve set to linear for "${clipName}"`, 1500); }
+                        }},
+                        { label: `Exponential${currentCurve === 'exponential' ? ' ✓' : ''}`, action: () => {
+                            if (track.setAudioClipFadeOutCurve) { track.setAudioClipFadeOutCurve(clip.id, 'exponential'); showNotification(`Fade out curve set to exponential for "${clipName}"`, 1500); }
+                        }}
+                    ];
+                }},
+                { label: `Reverse`, action: () => {
+                    if (track.setAudioClipReverse) { track.setAudioClipReverse(clip.id, true); showNotification(`Reversed "${clipName}"`, 1500); } else { showNotification('Reverse not available', 1500); }
+                }},
+                { label: `Playback Rate...`, action: () => {
+                    const currentRate = (track.getAudioClipPlaybackRate ? track.getAudioClipPlaybackRate(clip.id) : (clip.playbackRate || 1));
+                    const val = window.prompt(`Enter playback rate (0.25 - 4.0):`, String(currentRate));
+                    if (val === null) return;
+                    const parsed = parseFloat(val);
+                    if (isNaN(parsed)) { showNotification('Enter a valid number', 2000); return; }
+                    const clamped = Math.max(0.25, Math.min(4, parsed));
+                    if (track.setAudioClipPlaybackRate) { track.setAudioClipPlaybackRate(clip.id, clamped); showNotification(`Playback rate set to ${clamped}x for "${clipName}"`, 1500); } else { showNotification('Playback rate not available', 1500); }
+                }},
+                { label: `Start Offset...`, action: () => {
+                    const currentOffset = (track.getAudioClipStartOffset ? track.getAudioClipStartOffset(clip.id) : (clip.startOffset || 0));
+                    const val = window.prompt(`Enter start offset in seconds (0 = beginning):`, String(currentOffset));
+                    if (val === null) return;
+                    const parsed = parseFloat(val);
+                    if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
+                    if (track.setAudioClipStartOffset) { track.setAudioClipStartOffset(clip.id, parsed); showNotification(`Start offset set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('Start offset not available', 1500); }
+                }},
+                { label: `End Offset...`, action: () => {
+                    const currentOffset = (track.getAudioClipEndOffset ? track.getAudioClipEndOffset(clip.id) : (clip.endOffset || 0));
+                    const val = window.prompt(`Enter end offset in seconds (0 = end):`, String(currentOffset));
+                    if (val === null) return;
+                    const parsed = parseFloat(val);
+                    if (isNaN(parsed) || parsed < 0) { showNotification('Enter a valid positive number (seconds)', 2000); return; }
+                    if (track.setAudioClipEndOffset) { track.setAudioClipEndOffset(clip.id, parsed); showNotification(`End offset set to ${parsed}s for "${clipName}"`, 1500); } else { showNotification('End offset not available', 1500); }
+                }},
+                { label: `Pitch Shift...`, action: () => {
+                    const currentPitch = clip.pitchShift || 0;
+                    const val = window.prompt(`Enter pitch shift in semitones (-24 to +24):`, String(currentPitch));
+                    if (val === null) return;
+                    const parsed = parseInt(val);
+                    if (isNaN(parsed)) { showNotification('Enter a valid integer', 2000); return; }
+                    const clamped = Math.max(-24, Math.min(24, parsed));
+                    if (track.setAudioClipPitchShift) { track.setAudioClipPitchShift(clip.id, clamped); showNotification(`Pitch shift set to ${clamped} semitones for "${clipName}"`, 1500); } else { showNotification('Pitch shift not available', 1500); }
+                }},
+                { label: `Gain...`, action: () => {
+                    const currentGain = track.getAudioClipGain ? track.getAudioClipGain(clip.id) : (clip.gain !== undefined ? clip.gain : 1);
+                    const val = window.prompt(`Enter gain (0.0 - 4.0, 1.0 = 0dB):`, String(currentGain));
+                    if (val === null) return;
+                    const parsed = parseFloat(val);
+                    if (isNaN(parsed)) { showNotification('Enter a valid number', 2000); return; }
+                    const clamped = Math.max(0, Math.min(4, parsed));
+                    if (track.setAudioClipGain) { track.setAudioClipGain(clip.id, clamped); showNotification(`Gain set to ${clamped}x for "${clipName}"`, 1500); } else { showNotification('Gain not available', 1500); }
+                }},
+                { label: `Normalize`, action: () => {
+                    if (track.normalizeAudioClip) {
+                        track.normalizeAudioClip(clip.id).then(success => {
+                            if (success && localAppServices.renderTimeline) localAppServices.renderTimeline();
+                        });
+                    } else { showNotification('Normalize not available', 1500); }
+                }},
+                { separator: true },
+                { label: `Delete Clip`, action: () => {
+                    showConfirmationDialog(`Delete Clip "${clipName}"?`, 'This will remove the clip from the timeline. This can be undone.', () => {
+                        if (track.deleteTimelineClip) { track.deleteTimelineClip(clip.id); if (localAppServices.renderTimeline) localAppServices.renderTimeline(); showNotification(`Deleted "${clipName}"`, 1500); }
+                        else { showNotification('Delete not available', 1500); }
+                    });
+                }}
+            ];
+            createContextMenu(e, menuItems, localAppServices);
+        });
+    });
+
+    // Clip click (select)
+    document.querySelectorAll('.audio-clip, .sequence-clip').forEach(clipEl => {
+        clipEl.addEventListener('click', (e) => {
+            if (e.target.classList.contains('clip-resize-handle')) return;
+            const clipId = clipEl.dataset.clipId;
+            const trackId = clipEl.dataset.trackId;
+            selectClip(trackId, clipId);
+        });
+    });
+    
+    // Clip drag (move)
+    document.querySelectorAll('.audio-clip, .sequence-clip').forEach(clipEl => {
+        clipEl.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('clip-resize-handle')) return;
+            e.preventDefault();
+            startClipDrag(e, clipEl);
+        });
+    });
+    
+    // Resize handles
+    document.querySelectorAll('.clip-resize-handle').forEach(handle => {
+        handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const clipEl = handle.closest('.audio-clip, .sequence-clip');
+            const isLeft = handle.classList.contains('clip-resize-handle-left');
+            startClipResize(e, clipEl, isLeft);
+        });
+    });
+}
+
+let clipDragState = null;
+
+function startClipDrag(e, clipEl) {
+    const clipId = clipEl.dataset.clipId;
+    const trackId = clipEl.dataset.trackId;
+    const tracks = typeof localAppServices.getTracks === 'function' ? localAppServices.getTracks() : [];
+    const track = tracks.find(t => t.id === trackId);
+    if (!track) return;
+    
+    const clip = track.timelineClips.find(c => c.id === clipId);
+    if (!clip) return;
+    
+    const PIXELS_PER_SECOND = 50 * timelineZoomLevel;
+    const startX = e.clientX;
+    const originalLeft = clip.startTime * PIXELS_PER_SECOND;
+    const snapValue = getSnapValue();
+    
+    clipDragState = {
+        clipEl,
+        clip,
+        track,
+        startX,
+        originalLeft,
+        PIXELS_PER_SECOND,
+        snapValue
+    };
+    
+    document.addEventListener('mousemove', onClipDrag);
+    document.addEventListener('mouseup', stopClipDrag);
+}
+
+function onClipDrag(e) {
+    if (!clipDragState) return;
+    const { clipEl, startX, originalLeft, PIXELS_PER_SECOND, clip, snapValue } = clipDragState;
+    
+    const deltaX = e.clientX - startX;
+    let newLeft = Math.max(0, originalLeft + deltaX);
+    
+    // Apply snap-to-grid if enabled
+    if (snapValue > 0) {
+        newLeft = snapPixelToGrid(newLeft, snapValue, PIXELS_PER_SECOND);
+    }
+    
+    const newStartTime = newLeft / PIXELS_PER_SECOND;
+    
+    clipEl.style.left = `${newLeft}px`;
+    clip.startTime = newStartTime;
+}
+
+function stopClipDrag(e) {
+    if (!clipDragState) return;
+    const { clip, track, clipEl } = clipDragState;
+    
+    // Finalize position
+    if (typeof track.updateAudioClipPosition === 'function') {
+        track.updateAudioClipPosition(clip.id, clip.startTime);
+    }
+    
+    clipDragState = null;
+    document.removeEventListener('mousemove', onClipDrag);
+    document.removeEventListener('mouseup', stopClipDrag);
+}
+
+let clipResizeState = null;
+
+function startClipResize(e, clipEl, isLeft) {
+    const clipId = clipEl.dataset.clipId;
+    const trackId = clipEl.dataset.trackId;
+    const tracks = typeof localAppServices.getTracks === 'function' ? localAppServices.getTracks() : [];
+    const track = tracks.find(t => t.id === trackId);
+    if (!track) return;
+    
+    const clip = track.timelineClips.find(c => c.id === clipId);
+    if (!clip) return;
+    
+    const PIXELS_PER_SECOND = 50 * timelineZoomLevel;
+    const startX = e.clientX;
+    const originalLeft = clip.startTime * PIXELS_PER_SECOND;
+    const originalWidth = clip.duration * PIXELS_PER_SECOND;
+    const snapValue = getSnapValue();
+    
+    clipResizeState = {
+        clipEl,
+        clip,
+        track,
+        isLeft,
+        startX,
+        originalLeft,
+        originalWidth,
+        PIXELS_PER_SECOND,
+        snapValue
+    };
+    
+    document.addEventListener('mousemove', onClipResize);
+    document.addEventListener('mouseup', stopClipResize);
+}
+
+function onClipResize(e) {
+    if (!clipResizeState) return;
+    const { clipEl, clip, isLeft, startX, originalLeft, originalWidth, PIXELS_PER_SECOND, snapValue } = clipResizeState;
+    
+    const deltaX = e.clientX - startX;
+    
+    if (isLeft) {
+        // Resize from left (change start time and width)
+        let newLeft = Math.max(0, originalLeft + deltaX);
+        let newWidth = originalWidth - deltaX;
+        
+        // Apply snap-to-grid if enabled
+        if (snapValue > 0) {
+            newLeft = snapPixelToGrid(newLeft, snapValue, PIXELS_PER_SECOND);
+            // Recalculate width from snapped left edge to original right edge
+            newWidth = (originalLeft + originalWidth) - newLeft;
+        }
+        
+        newWidth = Math.max(20, newWidth);
+        const newStartTime = newLeft / PIXELS_PER_SECOND;
+        
+        clipEl.style.left = `${newLeft}px`;
+        clip.startTime = newStartTime;
+        clip.duration = newWidth / PIXELS_PER_SECOND;
+    } else {
+        // Resize from right (change width only)
+        let newWidth = originalWidth + deltaX;
+        
+        // Apply snap-to-grid if enabled - snap the new right edge
+        if (snapValue > 0) {
+            const newRightEdge = originalLeft + newWidth;
+            const snappedRight = snapPixelToGrid(newRightEdge, snapValue, PIXELS_PER_SECOND);
+            newWidth = snappedRight - originalLeft;
+        }
+        
+        newWidth = Math.max(20, newWidth);
+        clipEl.style.width = `${newWidth}px`;
+        clip.duration = newWidth / PIXELS_PER_SECOND;
+    }
+}
+
+function stopClipResize(e) {
+    if (!clipResizeState) return;
+    const { clip, track, isLeft } = clipResizeState;
+    
+    // Call the track's update functions to persist and handle undo
+    if (typeof track.updateAudioClipDuration === 'function') {
+        track.updateAudioClipDuration(clip.id, clip.duration);
+    } else if (typeof track.updateAudioClipPosition === 'function') {
+        // Fallback: also update position since we modified it during drag
+        track.updateAudioClipPosition(clip.id, clip.startTime);
+    }
+    
+    // When resizing from the left edge, startTime was also modified - capture it for undo too
+    if (isLeft && typeof track.updateAudioClipPosition === 'function') {
+        track.updateAudioClipPosition(clip.id, clip.startTime);
+    }
+    
+    clipResizeState = null;
+    document.removeEventListener('mousemove', onClipResize);
+    document.removeEventListener('mouseup', stopClipResize);
+}
+
+function selectClip(trackId, clipId) {
+    // Highlight selected clip
+    document.querySelectorAll('.audio-clip, .sequence-clip').forEach(el => {
+        el.style.outline = '';
+    });
+    const clipEl = document.querySelector(`.audio-clip[data-clip-id="${clipId}"], .sequence-clip[data-clip-id="${clipId}"]`);
+    if (clipEl) {
+        clipEl.style.outline = '2px solid #fff';
+    }
+    
+    // Could also open an inspector or show clip details
+    console.log(`Selected clip ${clipId} on track ${trackId}`);
+}
+
+export function updatePlayheadPosition(progress = undefined) {
+    // Update the timeline playhead position
+    const playhead = document.getElementById('timeline-playhead');
+    if (!playhead) return;
+    
+    const tracksArea = document.getElementById('timeline-tracks-area');
+    if (!tracksArea) return;
+    
+    if (progress === undefined) {
+        // Get real transport position
+        try {
+            const transportPosition = Tone.Transport.position;
+            const [bars, beats, sixteenths] = transportPosition.split(':').map(Number);
+            const secondsPerBeat = 60 / Tone.Transport.bpm.value;
+            const secondsPerBar = secondsPerBeat * 4;
+            const currentSeconds = (bars * secondsPerBar) + (beats * secondsPerBeat) + (sixteenths * secondsPerBeat / 4);
+            progress = currentSeconds / (16 * secondsPerBeat); // Normalize to 16 bars
+        } catch (e) {
+            progress = 0;
+        }
+    }
+    
+    const TRACK_NAME_WIDTH = 120;
+    const PIXELS_PER_SECOND = 50 * timelineZoomLevel;
+    const totalBars = 16;
+    const totalSeconds = totalBars * (60 / Tone.Transport.bpm.value) * 4;
+    const timelineWidth = TRACK_NAME_WIDTH + (totalSeconds * PIXELS_PER_SECOND);
+    const position = TRACK_NAME_WIDTH + (progress * (timelineWidth - TRACK_NAME_WIDTH));
+    
+    playhead.style.left = `${position}px`;
+    playhead.style.display = 'block';
+}
+
+export function renderDrumSamplerPads(track) {
+    // Render the drum pad grid for DrumSampler tracks
+    const container = document.getElementById(`drumPadsGridContainer-${track.id}`);
+    if (!container) return;
+    
+    const numPads = 8; // 4x4 grid
+    let html = '';
+    const selectedPadIndex = getNormalizedDrumSamplerPadIndex(track, -1);
+    for (let i = 0; i < numPads; i++) {
+        const padData = track.drumSamplerPads && track.drumSamplerPads[i];
+        const hasSample = padData && padData.audioBuffer;
+        const isSelected = selectedPadIndex === i;
+        html += `<div class="drum-pad pad-button ${hasSample ? 'has-sample' : ''} ${isSelected ? 'selected-for-edit' : ''}" 
+            data-pad-index="${i}" data-track-id="${track.id}">
+            <span class="pad-label">${i + 1}</span>
+        </div>`;
+    }
+    container.innerHTML = html;
+    
+    // Add click handlers for pad selection
+    container.querySelectorAll('.drum-pad').forEach(pad => {
+        pad.addEventListener('click', (e) => {
+            const padIndex = parseInt(e.currentTarget.dataset.padIndex, 10);
+            const trackId = e.currentTarget.dataset.trackId;
+            if (localAppServices.selectDrumPad) {
+                localAppServices.selectDrumPad(trackId, padIndex);
+            } else {
+                track.selectedDrumPadForEdit = padIndex;
+                updateDrumPadControlsUI(track);
+            }
+        });
+    });
+
+    // Add drop zone handlers for drum pads (direct drop onto pad grid pads)
+    container.querySelectorAll('.drum-pad').forEach(padEl => {
+        padEl.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            padEl.classList.add('dragover');
+            e.dataTransfer.dropEffect = "copy";
+        });
+        padEl.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            padEl.classList.remove('dragover');
+        });
+        padEl.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            padEl.classList.remove('dragover');
+
+            const padIndex = parseInt(padEl.dataset.padIndex, 10);
+            const trackId = padEl.dataset.trackId;
+
+            const soundDataString = e.dataTransfer.getData("application/json");
+            if (soundDataString) {
+                try {
+                    const soundData = JSON.parse(soundDataString);
+                    if (soundData.type === 'sound-browser-item' && localAppServices.loadSoundFromBrowserToTarget) {
+                        await localAppServices.loadSoundFromBrowserToTarget(soundData, trackId, 'DrumSampler', padIndex);
+                    }
+                } catch (err) {
+                    console.error("[UI renderDrumSamplerPads] Error parsing dropped sound data:", err);
+                }
+            } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                const simulatedEvent = { target: { files: [file] } };
+                if (localAppServices.loadDrumSamplerPadFile) {
+                    await localAppServices.loadDrumSamplerPadFile(simulatedEvent, trackId, padIndex, file.name);
+                }
+            }
+        });
+    });
+}
+
+export function renderSamplePads(track) {
+    // Render the sample pads grid for Sampler tracks
+    const container = document.getElementById(`samplePadsContainer-${track.id}`);
+    if (!container) {
+        console.warn(`[UI] Sample pads container not found for track ${track.id}`);
+        return;
+    }
+    
+    // Get number of slices/pads from track (default to 16 if no slices yet)
+    const numPads = (track.slices && track.slices.length > 0) ? Math.min(track.slices.length, 16) : 16;
+    
+    let html = '';
+    for (let i = 0; i < numPads; i++) {
+        const slice = track.slices && track.slices[i];
+        const hasContent = slice && slice.duration > 0;
+        html += `<div class="pad-button ${hasContent ? 'has-sample' : ''}" 
+            data-pad-index="${i}" data-track-id="${track.id}">
+            <span class="pad-label">S${i + 1}</span>
+        </div>`;
+    }
+    container.innerHTML = html;
+    
+    // Add click handlers - select slice for editing and play preview
+    container.querySelectorAll('.pad-button').forEach((pad, index) => {
+        pad.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const padIndex = index;
+            const trackId = track.id;
+            
+            // Select slice for editing
+            if (track) {
+                track.selectedSliceForEdit = padIndex;
+                updateSliceEditorUI(track);
+            }
+            
+            // Play slice preview if it has content
+            const slice = track.slices && track.slices[padIndex];
+            if (slice && slice.duration > 0 && localAppServices.playSlicePreview) {
+                localAppServices.playSlicePreview(trackId, padIndex);
+            }
+        });
+        
+        // Add cursor style
+        pad.style.cursor = 'pointer';
+    });
+}
+
+export function updateSliceEditorUI(track) {
+    // Update the slice editor UI with current slice info
+    if (!track) return;
+    
+    // Get the current slice data
+    const currentSliceIndex = track.selectedSliceForEdit || 0;
+    const slice = track.slices && track.slices[currentSliceIndex];
+    
+    // Default slice data if not found
+    const sliceData = slice || { volume: 0.7, pitchShift: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 1.0, release: 0.1 } };
+    
+    // Update selected slice info
+    const sliceInfoEl = document.getElementById(`selectedSliceInfo-${track.id}`);
+    if (sliceInfoEl) {
+        sliceInfoEl.textContent = currentSliceIndex + 1;
+    }
+    
+    // Update pad selection visual
+    const container = document.getElementById(`samplePadsContainer-${track.id}`);
+    if (container) {
+        container.querySelectorAll('.pad-button').forEach((pad, index) => {
+            pad.classList.toggle('selected-for-edit', index === currentSliceIndex);
+        });
+    }
+    
+    // Update knob values to reflect the selected slice's values
+    if (track.inspectorControls) {
+        if (track.inspectorControls.sliceVolume && sliceData) {
+            track.inspectorControls.sliceVolume.setValue(sliceData.volume !== undefined ? sliceData.volume : 0.7, false);
+        }
+        if (track.inspectorControls.slicePitch && sliceData) {
+            track.inspectorControls.slicePitch.setValue(sliceData.pitchShift !== undefined ? sliceData.pitchShift : 0, false);
+        }
+        if (track.inspectorControls.sliceEnvAttack && ((sliceData) && (sliceData).envelope)) {
+            track.inspectorControls.sliceEnvAttack.setValue(sliceData.envelope.attack || 0.01, false);
+        }
+        if (track.inspectorControls.sliceEnvDecay && ((sliceData) && (sliceData).envelope)) {
+            track.inspectorControls.sliceEnvDecay.setValue(sliceData.envelope.decay || 0.1, false);
+        }
+        if (track.inspectorControls.sliceEnvSustain && ((sliceData) && (sliceData).envelope)) {
+            track.inspectorControls.sliceEnvSustain.setValue(sliceData.envelope.sustain !== undefined ? sliceData.envelope.sustain : 1.0, false);
+        }
+        if (track.inspectorControls.sliceEnvRelease && ((sliceData) && (sliceData).envelope)) {
+            track.inspectorControls.sliceEnvRelease.setValue(sliceData.envelope.release || 0.1, false);
+        }
+        
+        // Update loop/reverse toggle buttons
+        const loopToggleBtn = document.getElementById(`sliceLoopToggle-${track.id}`);
+        if (loopToggleBtn) {
+            loopToggleBtn.textContent = sliceData.loop ? 'Loop: ON' : 'Loop: OFF';
+            loopToggleBtn.classList.toggle('active', sliceData.loop);
+        }
+        const reverseToggleBtn = document.getElementById(`sliceReverseToggle-${track.id}`);
+        if (reverseToggleBtn) {
+            reverseToggleBtn.textContent = sliceData.reverse ? 'Rev: ON' : 'Rev: OFF';
+            reverseToggleBtn.classList.toggle('active', sliceData.reverse);
+        }
+    }
+}
+
+export function updateDrumPadControlsUI(track) {
+    // Update the selected drum pad info display
+    if (!track) return;
+    
+    const padInfoEl = document.getElementById(`selectedDrumPadInfo-${track.id}`);
+    if (padInfoEl) {
+        padInfoEl.textContent = getNormalizedDrumSamplerPadIndex(track) + 1;
+    }
+    
+    renderDrumPadEditorControls(track);
+    renderDrumSamplerPads(track);
+}
+
+// Snap-to-grid for clips: reads from global controls bar or defaults to sequence snap
+function getSnapValue() {
+    // First check global controls bar snap button if available
+    const snapBtn = document.getElementById('snapToggleBtnGlobal');
+    if (snapBtn) {
+        const snapText = snapBtn.textContent || '';
+        if (snapText.includes('Off')) return 0;
+        if (snapText.includes('1/4')) return 4;
+        if (snapText.includes('1/8')) return 8;
+        if (snapText.includes('1/16')) return 16;
+    }
+    // Fall back to sequence snap value
+    return window.SEQUENCER_SNAP_VALUE || 16;
+}
+
+// Snap a pixel position to the nearest grid line
+function snapPixelToGrid(pixelPos, snapValue, pixelsPerSecond) {
+    if (snapValue === 0) return pixelPos;
+    const snapInSeconds = snapValue / 4 * (60 / (Tone.Transport.bpm?.value || 120));
+    const snapInPixels = snapInSeconds * pixelsPerSecond;
+    return Math.round(pixelPos / snapInPixels) * snapInPixels;
+}
+
+// --- Region Marker Update ---
+function updateTimelineRegionMarkers() {
+    const loopStartMarker = document.getElementById('timeline-loop-start-marker');
+    const loopEndMarker = document.getElementById('timeline-loop-end-marker');
+    const punchStartMarker = document.getElementById('timeline-punch-start-marker');
+    const punchEndMarker = document.getElementById('timeline-punch-end-marker');
+    const tracksArea = document.getElementById('timeline-tracks-area');
+    if (!tracksArea) return;
+
+    const TRACK_NAME_WIDTH = 120;
+    const PIXELS_PER_SECOND = 50 * timelineZoomLevel;
+    const totalBars = 16;
+    const secondsPerBar = (60 / Tone.Transport.bpm.value) * 4;
+    const totalSeconds = totalBars * secondsPerBar;
+    const timelineWidth = TRACK_NAME_WIDTH + (totalSeconds * PIXELS_PER_SECOND);
+    const contentWidth = timelineWidth - TRACK_NAME_WIDTH;
+
+    // Helper to convert bars to pixels
+    function barsToPixels(bars) {
+        return TRACK_NAME_WIDTH + (bars / totalBars) * contentWidth;
+    }
+
+    // Get loop region from audio.js
+    let loopStartBars = 0, loopEndBars = 16, loopEnabled = false;
+    if (localAppServices.getLoopStartBars !== undefined) {
+        loopStartBars = localAppServices.getLoopStartBars();
+        loopEndBars = localAppServices.getLoopEndBars();
+        loopEnabled = localAppServices.isLoopRegionEnabled ? localAppServices.isLoopRegionEnabled() : false;
+    }
+    if (loopEnabled && loopEndBars > loopStartBars) {
+        const startX = barsToPixels(loopStartBars);
+        const endX = barsToPixels(loopEndBars);
+        // Loop: green vertical lines at start and end of region
+        if (loopStartMarker) {
+            loopStartMarker.style.left = `${startX}px`;
+            loopStartMarker.style.display = 'block';
+        }
+        if (loopEndMarker) {
+            loopEndMarker.style.left = `${endX}px`;
+            loopEndMarker.style.display = 'block';
+        }
+    } else {
+        if (loopStartMarker) loopStartMarker.style.display = 'none';
+        if (loopEndMarker) loopEndMarker.style.display = 'none';
+    }
+
+    // Get punch region from audio.js
+    let punchStartBars = 0, punchEndBars = 16, punchEnabled = false;
+    if (localAppServices.getPunchInBars !== undefined) {
+        punchStartBars = localAppServices.getPunchInBars();
+        punchEndBars = localAppServices.getPunchOutBars();
+        punchEnabled = localAppServices.isPunchRegionEnabled ? localAppServices.isPunchRegionEnabled() : false;
+    }
+    if (punchEnabled && punchEndBars > punchStartBars) {
+        const startX = barsToPixels(punchStartBars);
+        const endX = barsToPixels(punchEndBars);
+        // Punch: orange vertical lines at start and end of region
+        if (punchStartMarker) {
+            punchStartMarker.style.left = `${startX}px`;
+            punchStartMarker.style.display = 'block';
+        }
+        if (punchEndMarker) {
+            punchEndMarker.style.left = `${endX}px`;
+            punchEndMarker.style.display = 'block';
+        }
+    } else {
+        if (punchStartMarker) punchStartMarker.style.display = 'none';
+        if (punchEndMarker) punchEndMarker.style.display = 'none';
+    }
+}
+
+// Export so main.js can call it when global controls change
+export { updateTimelineRegionMarkers };
+// --- Keyboard Shortcuts Help Window ---
+export function showKeyboardShortcutsHelpWindow() {
+    const windowId = 'keyboardShortcutsHelp';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId)) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    const shortcutsHTML = `
+        <div style="padding: 15px; max-height: 400px; overflow-y: auto; font-family: sans-serif; font-size: 13px; color: #e0e0e0;">
+            <h3 style="margin: 0 0 10px 0; color: #fff;">🎹 Keyboard Shortcuts</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">▶️ Playback Controls</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Space</kbd></td><td>Play / Pause</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Enter</kbd></td><td>Stop</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">R</kbd></td><td>Toggle Record Arm</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+S</kbd></td><td>Save Project</td></tr>
+                    <tr><td style="padding: 3px 0;"><button id="micTestBtnGlobal" title="Test Mic" class="px-2 py-1 text-xs border rounded bg-blue-400 hover:bg-blue-500 text-white dark:bg-blue-500 dark:hover:bg-blue-600 dark:border-blue-600 disabled:opacity-40">Test Mic</button></td><td>Mic Recording Test</td></tr>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">✂️ Edit Operations</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Z</kbd></td><td>Undo</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Y</kbd></td><td>Redo</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Z</kbd></td><td>Redo (Alt)</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+C</kbd></td><td>Copy Sequencer Selection</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+C</kbd></td><td>Copy Section (Column Range)</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+X</kbd></td><td>Cut Selection</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+V</kbd></td><td>Paste</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+V</kbd></td><td>Paste Section (At Original Column)</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+A</kbd></td><td>Select All Notes</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+A</kbd></td><td>Deselect All Notes</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+D</kbd></td><td>Duplicate Sequence</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Q</kbd></td><td>Quantize Selection</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+H</kbd></td><td>Humanize Velocities</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+E</kbd></td><td>Reverse Sequence</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+R</kbd></td><td>Flip Sequence</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+I</kbd></td><td>Invert Sequence</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Escape</kbd></td><td>Clear Selection</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Delete</kbd></td><td>Delete Selection</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Up</kbd></td><td>Shift Notes Up</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Down</kbd></td><td>Shift Notes Down</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Alt+Up</kbd></td><td>Shift Notes Octave Up</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Alt+Down</kbd></td><td>Shift Notes Octave Down</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Left</kbd></td><td>Shift Notes Left</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Shift+Right</kbd></td><td>Shift Notes Right</td></tr>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">🎵 Track Controls</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">M</kbd></td><td>Mute Track</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">S</kbd></td><td>Solo Track</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">1-8</kbd></td><td>Select Track 1-8</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Tab</kbd></td><td>Cycle to Next Track</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Shift+Tab</kbd></td><td>Cycle to Previous Track</td></tr>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">🎹 Piano Keys</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">A-L</kbd></td><td>Play C4-B4 (white keys)</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">W-U</kbd></td><td>Play C#4-A#4 (black keys)</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Z</kbd></td><td>Octave Down</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">X</kbd></td><td>Octave Up</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Q</kbd></td><td>Reset Octave</td></tr>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #a0a0ff; margin: 5px 0;">🔧 Snap & Quantize</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">S</kbd></td><td>Cycle Snap (Off / 1/4 / 1/8 / 1/16)</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Ctrl+Q</kbd></td><td>Quantize Selection</td></tr>
+                </table>
+            </div>
+
+            <div>
+                <h4 style="color: #a0a0ff; margin: 5px 0;">📖 Other</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">?</kbd></td><td>Show This Help</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">Esc</kbd></td><td>Close Window / Cancel</td></tr>
+                    <tr><td style="padding: 3px 0;"><kbd style="background:#333;padding:2px 6px;border-radius:3px;">F11</kbd></td><td>Toggle Full Screen</td></tr>
+                </table>
+            </div>
+        </div>
+    `;
+
+    const options = {
+        width: Constants.KEYBOARD_SHORTCUTS_HELP_WIDTH || 600,
+        height: Constants.KEYBOARD_SHORTCUTS_HELP_HEIGHT || 500,
+        minWidth: 400,
+        minHeight: 300,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, Constants.KEYBOARD_SHORTCUTS_HELP_TITLE || 'Keyboard Shortcuts', shortcutsHTML, options);
+    return win;
+}
+
+// --- Track Templates Window ---
+export function openTrackTemplatesWindow(savedState = null) {
+    const windowId = 'trackTemplates';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    const templates = localAppServices.getTrackTemplates ? localAppServices.getTrackTemplates() : [];
+    const hasTemplates = templates && templates.length > 0;
+
+    const templatesListHTML = hasTemplates
+        ? templates.map(t => `
+            <div class="template-item p-2 border-b border-gray-600 dark:border-slate-600 hover:bg-purple-900/30 cursor-pointer" data-template-id="${t.id}">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="template-color w-3 h-3 rounded" style="background-color:${t.color || '#54a0ff'}"></span>
+                        <span class="template-name font-medium text-slate-200">${t.name || 'Unnamed Template'}</span>
+                        <span class="text-xs text-slate-400">(${t.type || 'Synth'})</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <button class="load-template-btn px-2 py-1 text-xs bg-violet-600 hover:bg-violet-500 text-white rounded">Load</button>
+                        <button class="delete-template-btn px-2 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded">Delete</button>
+                    </div>
+                </div>
+                ${t.activeEffects && t.activeEffects.length > 0 ? `<div class="text-xs text-slate-400 mt-1">FX: ${t.activeEffects.map(e => e.type || 'unknown').join(', ')}</div>` : ''}
+            </div>
+        `).join('')
+        : '<p class="text-slate-400 italic text-center py-4">No templates saved yet. Use "Save Track as Template" from the track menu to save your first template.</p>';
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column;">
+            <h3 style="margin: 0 0 10px 0; color: #fff;">📋 Track Templates</h3>
+            <div id="trackTemplatesList" class="flex-grow overflow-y-auto border border-slate-600 rounded bg-slate-800 mb-2" style="min-height: 150px;">
+                ${templatesListHTML}
+            </div>
+            <div class="text-xs text-slate-500">Click "Load" to apply a template to a selected track, or "Delete" to remove it.</div>
+        </div>
+    `;
+
+    const options = {
+        width: 450,
+        height: 350,
+        minWidth: 350,
+        minHeight: 250,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, 'Track Templates', contentHTML, options);
+
+    // Wire up load/delete buttons
+    if (hasTemplates && win && win.element) {
+        const listContainer = win.element.querySelector('#trackTemplatesList');
+        if (listContainer) {
+            listContainer.querySelectorAll('.template-item').forEach(item => {
+                const templateId = parseInt(item.dataset.templateId, 10);
+                const loadBtn = item.querySelector('.load-template-btn');
+                const deleteBtn = item.querySelector('.delete-template-btn');
+                if (loadBtn) {
+                    loadBtn.addEventListener('click', () => {
+                        const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+                        if (tracks.length === 0) { showNotification('No tracks available to apply template', 2000); return; }
+                        // Prefer the currently active sequencer track (what the user is interacting with),
+                        // then the ghost/selected track, and only fall back to the first track if neither is set.
+                        const targetTrack = (localAppServices.getActiveTrackForInteraction && localAppServices.getActiveTrackForInteraction())
+                            || tracks[0];
+                        const template = localAppServices.getTrackTemplateById ? localAppServices.getTrackTemplateById(templateId) : null;
+                        if (!template) { showNotification('Template not found', 2000); return; }
+                        if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Apply Template "${template.name}" to ${targetTrack.name}`);
+                        if (template.synthParams && targetTrack.synthParams !== undefined) {
+                            Object.keys(template.synthParams).forEach(k => { if (targetTrack.setSynthParam) targetTrack.setSynthParam(k, template.synthParams[k]); });
+                        }
+                        if (template.activeEffects && Array.isArray(template.activeEffects)) {
+                            // Clear existing effects and apply template effects
+                            while (targetTrack.activeEffects && targetTrack.activeEffects.length > 0) {
+                                const eff = targetTrack.activeEffects[0];
+                                if (targetTrack.removeEffect) targetTrack.removeEffect(eff.id);
+                            }
+                            template.activeEffects.forEach(effDef => {
+                                if (targetTrack.addEffect) targetTrack.addEffect(effDef.type);
+                            });
+                        }
+                        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(targetTrack.id, 'inspectorUpdated');
+                        showNotification(`Template "${template.name}" applied to ${targetTrack.name}`, 2000);
+                    });
+                }
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', () => {
+                        const template = localAppServices.getTrackTemplateById ? localAppServices.getTrackTemplateById(templateId) : null;
+                        if (localAppServices.removeTrackTemplate) {
+                            localAppServices.removeTrackTemplate(templateId);
+                            showNotification(`Template "${template ? template.name : 'Template'}" deleted`, 2000);
+                            // Refresh window
+                            if (localAppServices.getOpenWindows) {
+                                const wins = localAppServices.getOpenWindows();
+                                const tw = wins.get(windowId);
+                                if (tw && tw.close) tw.close(true);
+                            }
+                            openTrackTemplatesWindow();
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    return win;
+}
+
+// --- Scale Mode Window ---
+export function openScaleModeWindow(savedState = null) {
+    const windowId = 'scaleMode';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function getCurrentSettings() {
+        return {
+            enabled: localAppServices.getScaleModeEnabled ? localAppServices.getScaleModeEnabled() : false,
+            scale: localAppServices.getScaleModeScale ? localAppServices.getScaleModeScale() : 'Major',
+            root: localAppServices.getScaleModeRoot ? localAppServices.getScaleModeRoot() : 'C',
+            lock: localAppServices.getScaleModeLock ? localAppServices.getScaleModeLock() : false
+        };
+    }
+
+    const current = getCurrentSettings();
+    const scalesList = Object.keys(Constants.SCALES || {});
+    const rootsList = Constants.SCALE_ROOTS || ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column; gap: 12px;">
+            <h3 style="margin: 0; color: #fff;">🎹 Scale Mode</h3>
+            <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="scaleModeEnabled" ${current.enabled ? 'checked' : ''} />
+                <span>Enable Scale Mode</span>
+            </label>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Scale</label>
+                    <select id="scaleModeScale" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${scalesList.map(s => `<option value="${s}" ${s === current.scale ? 'selected' : ''}>${s}</option>`).join('')}
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Root</label>
+                    <select id="scaleModeRoot" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${rootsList.map(r => `<option value="${r}" ${r === current.root ? 'selected' : ''}>${r}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="scaleModeLock" ${current.lock ? 'checked' : ''} />
+                <span>Lock (only allow notes within the scale)</span>
+            </label>
+            <div id="scaleModePreview" style="padding: 8px; background: #0f172a; border-radius: 4px; font-size: 12px; color: #94a3b8;">
+                Notes: ${current.scale} / ${current.root}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: auto;">
+                <button id="saveScaleModeBtn" style="padding: 6px 16px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer;">Save</button>
+            </div>
+        </div>
+    `;
+
+    const options = {
+        width: 400,
+        height: 350,
+        minWidth: 300,
+        minHeight: 250,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, 'Scale Mode', contentHTML, options);
+
+    if (win && win.element) {
+        const enabledCheckbox = win.element.querySelector('#scaleModeEnabled');
+        const scaleSelect = win.element.querySelector('#scaleModeScale');
+        const rootSelect = win.element.querySelector('#scaleModeRoot');
+        const lockCheckbox = win.element.querySelector('#scaleModeLock');
+        const saveBtn = win.element.querySelector('#saveScaleModeBtn');
+
+        const updatePreview = () => {
+            const scale = scaleSelect?.value || 'Major';
+            const root = rootSelect?.value || 'C';
+            const preview = win.element.querySelector('#scaleModePreview');
+            if (preview) preview.textContent = `Notes: ${scale} / ${root}`;
+        };
+
+        scaleSelect?.addEventListener('change', updatePreview);
+        rootSelect?.addEventListener('change', updatePreview);
+
+        saveBtn?.addEventListener('click', () => {
+            const enabled = enabledCheckbox?.checked || false;
+            const scale = scaleSelect?.value || 'Major';
+            const root = rootSelect?.value || 'C';
+            const lock = lockCheckbox?.checked || false;
+
+            if (localAppServices.setScaleModeEnabled) localAppServices.setScaleModeEnabled(enabled);
+            if (localAppServices.setScaleModeScale) localAppServices.setScaleModeScale(scale);
+            if (localAppServices.setScaleModeRoot) localAppServices.setScaleModeRoot(root);
+            if (localAppServices.setScaleModeLock) localAppServices.setScaleModeLock(lock);
+
+            showNotification('Scale Mode settings saved.', 1500);
+        });
+    }
+
+    return win;
+}
+
+// --- MIDI CC Mappings Window ---
+export function openMidiCCMappingsWindow(savedState = null) {
+    const windowId = 'midiCCMappings';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function buildMappingsListHTML() {
+        const mappings = typeof getMidiCCMappings === 'function' ? getMidiCCMappings() : {};
+        const entries = Object.entries(mappings);
+
+        if (entries.length === 0) {
+            return '<p class="text-slate-400 italic text-center py-4">No MIDI CC mappings configured. Right-click any knob and select "Assign MIDI CC..." to create a mapping.</p>';
+        }
+
+        return entries.map(([targetId, mapping]) => {
+            const entry = window._midiCCKnobRegistry ? window._midiCCKnobRegistry[targetId] : null;
+            const ownerInfo = entry ? `${entry.ownerType || 'unknown'} / ${entry.ownerId || 'unknown'} / ${entry.paramPath || 'unknown'}` : targetId;
+            return `
+                <div class="mapping-item p-2 border-b border-gray-600 dark:border-slate-600 hover:bg-slate-700/50" data-target-id="${targetId}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="cc-badge px-2 py-0.5 text-xs font-mono bg-purple-700 text-purple-200 rounded">CC ${mapping.cc}</span>
+                            <span class="ch-badge text-xs text-slate-400">Ch ${(mapping.channel || 0) + 1}</span>
+                            <span class="range-badge text-xs text-slate-500">${mapping.min?.toFixed(2) || 0} – ${mapping.max?.toFixed(2) || 1}</span>
+                        </div>
+                        <button class="remove-mapping-btn px-2 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded" data-target-id="${targetId}">Remove</button>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1 truncate" title="${ownerInfo}">${ownerInfo}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderMappingsList(listContainer) {
+        if (!listContainer) return;
+        listContainer.innerHTML = buildMappingsListHTML();
+
+        listContainer.querySelectorAll('.remove-mapping-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetId = btn.dataset.targetId;
+                if (typeof removeMidiCCMapping === 'function') {
+                    removeMidiCCMapping(targetId);
+                    showNotification(`MIDI CC mapping removed.`, 2000);
+                }
+                renderMappingsList(listContainer);
+            });
+        });
+    }
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column;">
+            <h3 style="margin: 0 0 10px 0; color: #fff;">🎹 MIDI CC Mappings</h3>
+            <div id="midiMappingsList" class="flex-grow overflow-y-auto border border-slate-600 rounded bg-slate-800 mb-2" style="min-height: 150px;">
+                ${buildMappingsListHTML()}
+            </div>
+            <div class="text-xs text-slate-500">Mappings are saved with your project. Click "Remove" to delete a mapping.</div>
+        </div>
+    `;
+
+    const options = {
+        width: 480,
+        height: 380,
+        minWidth: 350,
+        minHeight: 280,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    const win = localAppServices.createWindow(windowId, 'MIDI CC Mappings', contentHTML, options);
+
+    if (win && win.element) {
+        const listContainer = win.element.querySelector('#midiMappingsList');
+        renderMappingsList(listContainer);
+    }
+
+    return win;
+}
+
+// --- Chord Mode Window ---
+export function openChordModeWindow(savedState = null) {
+    const windowId = 'chordMode';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function getCurrentChordSettings() {
+        return {
+            enabled: localAppServices.getChordModeEnabled ? localAppServices.getChordModeEnabled() : false,
+            root: localAppServices.getChordModeRoot ? localAppServices.getChordModeRoot() : 0,
+            type: localAppServices.getChordModeType ? localAppServices.getChordModeType() : 'major',
+            lock: localAppServices.getChordModeLock ? localAppServices.getChordModeLock() : false,
+            voicing: localAppServices.getChordVoicing ? localAppServices.getChordVoicing() : 'closed'
+        };
+    }
+
+    const current = getCurrentChordSettings();
+    const rootsList = Constants.SCALE_ROOTS || ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const typesList = Object.keys(Constants.CHORD_TYPES || {});
+    const voicingList = Constants.CHORD_VOICINGS || ['closed', 'wide', 'drop2', 'rootless'];
+
+    function getChordNotes(rootIndex, chordType) {
+        const intervals = Constants.CHORD_TYPES?.[chordType] || [0, 4, 7];
+        const noteNames = rootsList;
+        return intervals.map(i => noteNames[(rootIndex + i) % 12]);
+    }
+
+    const chordNotes = getChordNotes(current.root, current.type);
+    const previewNotes = chordNotes.join(' - ');
+
+    const contentHTML = `
+        <div style="padding: 15px; font-family: sans-serif; font-size: 13px; color: #e0e0e0; height: 100%; display: flex; flex-direction: column; gap: 12px;">
+            <h3 style="margin: 0; color: #fff;">🎸 Chord Mode</h3>
+            <label style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="chordModeEnabled" ${current.enabled ? 'checked' : ''} />
+                <span>Enable Chord Mode</span>
+            </label>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Root</label>
+                    <select id="chordModeRoot" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${rootsList.map((r, i) => `<option value="${i}" ${i === current.root ? 'selected' : ''}>${r}</option>`).join('')}
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Type</label>
+                    <select id="chordModeType" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${typesList.map(t => `<option value="${t}" ${t === current.type ? 'selected' : ''}>${t.charAt(0).toUpperCase() + t.slice(1)}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 4px; color: #94a3b8;">Voicing</label>
+                    <select id="chordModeVoicing" style="width: 100%; padding: 6px; border-radius: 4px; background: #1e293b; color: #e2e8f0; border: 1px solid #475569;">
+                        ${voicingList.map(v => `<option value="${v}" ${v === current.voicing ? 'selected' : ''}>${v.charAt(0).toUpperCase() + v.slice(1)}</option>`).join('')}
+                    </select>
+                </div>
+                <div style="flex: 1; display: flex; align-items: flex-end;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="chordModeLock" ${current.lock ? 'checked' : ''} />
+                        <span>Lock</span>
+                    </label>
+                </div>
+            </div>
+            <div id="chordModePreview" style="padding: 8px; background: #0f172a; border-radius: 4px; font-size: 12px; color: #94a3b8;">
+                Notes: ${previewNotes}
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: auto;">
+                <button id="saveChordModeBtn" style="padding: 6px 16px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer;">Save</button>
+            </div>
+        </div>
+    `;
+
+    const options = {
+        width: 400,
+        height: 380,
+        minWidth: 300,
+        minHeight: 280,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+
+    if (savedState) Object.assign(options, { x: parseInt(savedState.left, 10), y: parseInt(savedState.top, 10), width: parseInt(savedState.width, 10), height: parseInt(savedState.height, 10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+
+    const win = localAppServices.createWindow(windowId, 'Chord Mode', contentHTML, options);
+
+    if (win && win.element) {
+        const enabledCheckbox = win.element.querySelector('#chordModeEnabled');
+        const rootSelect = win.element.querySelector('#chordModeRoot');
+        const typeSelect = win.element.querySelector('#chordModeType');
+        const voicingSelect = win.element.querySelector('#chordModeVoicing');
+        const lockCheckbox = win.element.querySelector('#chordModeLock');
+        const saveBtn = win.element.querySelector('#saveChordModeBtn');
+
+        const updatePreview = () => {
+            const root = parseInt(rootSelect?.value || '0', 10);
+            const type = typeSelect?.value || 'major';
+            const notes = getChordNotes(root, type);
+            const preview = win.element.querySelector('#chordModePreview');
+            if (preview) preview.textContent = `Notes: ${notes.join(' - ')}`;
+        };
+
+        rootSelect?.addEventListener('change', updatePreview);
+        typeSelect?.addEventListener('change', updatePreview);
+
+        saveBtn?.addEventListener('click', () => {
+            const enabled = enabledCheckbox?.checked || false;
+            const root = parseInt(rootSelect?.value || '0', 10);
+            const type = typeSelect?.value || 'major';
+            const voicing = voicingSelect?.value || 'closed';
+            const lock = lockCheckbox?.checked || false;
+
+            if (localAppServices.setChordModeEnabled) localAppServices.setChordModeEnabled(enabled);
+            if (localAppServices.setChordModeRoot) localAppServices.setChordModeRoot(root
