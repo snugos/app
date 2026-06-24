@@ -28586,283 +28586,8 @@ TestRunner.test("Day 738 - superellipseNotes functional test: skips source cell 
 // Day 739: Cassini Oval Notes test block
 TestRunner.test("Day 739 - cassiniNotes is a function on Track.prototype", (t) => {
     t.assertEqual(typeof Track.prototype.cassiniNotes, 'function', 'cassiniNotes should be a function');
+});
 
-// Run tests by opening browser console and calling: (await import('./js/tests.js')).runTests()
-
-import { TestRunner } from './testRunner.js';
-
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
-import {
-    MAX_EFFECT_PRESETS,
-    DEFAULT_PRESET_NAME_PREFIX,
-    DEFAULT_EFFECT_PRESET,
-    SCALES,
-    SCALE_ROOTS,
-    DEFAULT_SCALE_MODE,
-    MAX_HISTORY_STATES,
-    MAX_BARS,
-    DEFAULT_NOTE_PROBABILITY,
-    STEPS_PER_BAR,
-    defaultStepsPerBar,
-    MIDI_LEARN_SHORTCUT_KEY,
-    MIDI_LEARN_INDICATOR_TIMEOUT_MS,
-    MIDI_CC_COMMAND,
-    GRID_STEP_LABELS,
-    STEP_LABELS_SIXTEENTHS,
-    DEFAULT_METRONOME_ENABLED,
-    DEFAULT_METRONOME_VOLUME,
-    MIN_METRONOME_VOLUME,
-    MAX_METRONOME_VOLUME,
-    DEFAULT_TEMPO,
-    MIN_TEMPO,
-    MAX_TEMPO,
-    DEFAULT_LOOP_REGION,
-    MAX_TIMELINE_MARKERS,
-    DEFAULT_MARKER_COLOR,
-    MARKER_COLORS,
-    DEFAULT_MARKER,
-    AUTOMATION_LANE_HEIGHT,
-    AUTOMATION_LANE_DEFAULT,
-    AUTOMATION_LANE_PRECISION,
-    AUTOMATION_LANE_STEP,
-    AUTOMATION_LANE_PARAMETERS,
-    AUTOMATION_LANE_COLORS,
-    CONTEXT_MENU_ITEM_HEIGHT,
-    CONTEXT_MENU_MAX_WIDTH,
-    TIME_SIG_MAX_DENOMINATOR,
-    SEND_LEVEL_POST_FADER,
-    MIDI_EXPORT_VELOCITY_SCALE,
-    MIDI_DEFAULT_CHANNEL,
-    MIDI_DEFAULT_PROGRAM,
-    MIDI_EXPORT_TicksPerQuarterNote,
-    MIDI_FILE_FORMAT,
-    MIDI_FILE_TYPE_NAMES,
-    DEFAULT_MIDI_EXPORT_FILENAME_PREFIX,
-    MAX_MIDI_EXPORT_TRACKS,
-    MIDI_IMPORT_MIN_NOTES,
-    MIDI_IMPORT_MAX_VELOCITY,
-    MIDI_IMPORT_DEFAULT_VELOCITY,
-    MIDI_IMPORT_DEFAULT_PROBABILITY,
-    MIDI_IMPORT_SNAP_TO_GRID,
-    MIDI_IMPORT_VELOCITY_SCALE,
-    DESKTOP_BACKGROUND_KEY,
-    DESKTOP_BG_TYPE_KEY,
-    DEFAULT_SEND_LEVEL,
-    SEND_LEVEL_MIN,
-    SEND_LEVEL_MAX,
-    DEFAULT_SEND_PRE_FADER,
-    SEND_PRE_FADER_ENABLED,
-    MAX_SWING_AMOUNT,
-    SWING_SUBDIVISION,
-    MIN_MONITORING_VOLUME,
-    MAX_MONITORING_VOLUME,
-    DEFAULT_MONITORING_VOLUME,
-    MAX_TRACK_TEMPLATES,
-    DEFAULT_TEMPLATE_NAME_PREFIX,
-    TRACK_TEMPLATE_COLORS,
-    DEFAULT_TRACK_TEMPLATE_COLOR,
-    DEFAULT_TRACK_TEMPLATE,
-    CHORD_VOICINGS,
-    DEFAULT_CHORD_VOICING,
-    CHORD_VOICING_SPREAD,
-    TRACK_COLORS,
-    numSlices,
-    numDrumSamplerPads,
-    synthPitches,
-    soundLibraries
-} from './constants.js';
-import {
-    // Chord Mode state functions
-    // Additional state functions
-    // Time Signature state functions
-    // Ghost Track state functions
-    // Armed/Soloed Track state functions
-    // Scale Mode state functions
-    // Loop Region state functions
-    // Timeline Zoom state functions
-    // Swing state functions
-    // Timeline Markers cleanup functions
-    // Track Groups state functions
-    // Track Templates cleanup functions
-    // Master Effects state functions
-    // MIDI Learn state functions
-    // Performance Monitor state functions
-    getPerformanceMonitorState,
-    getPerformanceMonitorEnabledState,
-    setPerformanceMonitorEnabledState,
-    getAudioContextStateState,
-    setAudioContextStateState,
-    getCPUUsageState,
-    setCPUUsageState,
-    getMemoryPressureState,
-    setMemoryPressureState,
-    getActiveVoicesState,
-    setActiveVoicesState,
-    getAudioLatencyState,
-    setAudioLatencyState,
-    getLastCallbackTimeState,
-    setLastCallbackTimeState,
-    getDroppedCallbacksState,
-    setDroppedCallbacksState,
-    incrementDroppedCallbacksState,
-    resetPerformanceMonitorState
-
-} from './state.js';
-
-
-import {
-    exportToMidiInternal,
-    importFromMidiInternal,
-    buildMidiFile,
-    pitchToRow
-} from './state.js';
-import {
-    initializeAudioModule,
-    getMasterEffectsBusInputNode,
-    getActualMasterGainNode,
-    rebuildMasterEffectChain,
-    updateMasterEffectParamInAudio,
-    reorderMasterEffectInAudio,
-    addMasterEffectToAudio,
-    removeMasterEffectFromAudio,
-    updateMeters,
-    getTransportPosition,
-    getTransportSeconds,
-    getTransportBpm,
-    getTransportState,
-    getMimeTypeFromFilename,
-    clearAllMasterEffectNodes,
-    autoSliceSample,
-    cleanupRecordingScheduling,
-    getPunchRegion,
-    setPunchRegion,
-    setPunchRegionEnabled,
-    isPunchRegionEnabled,
-    isPositionInPunchRegion,
-    getPunchInBars,
-    getPunchOutBars,
-    deleteSendBusFromAudio,
-    addEffectToSendBus,
-    removeEffectFromSendBus,
-    reorderEffectInSendBus,
-    updateSendBusEffectParam,
-    setSendBusLevel,
-    setSendBusMuted,
-    resolveRecordingMicrophoneTestTrack,
-    connectTrackToSendBus,
-    disconnectTrackFromSendBus,
-    runRecordingMicrophoneE2ETest,
-    getRecordingInputGainNode,
-    setRecordingInputGain,
-    getContextSuspensionCount,
-    getContextState,
-    startContextSuspensionMonitoring,
-    stopContextSuspensionMonitoring,
-    getSidechainBusInput,
-    enableSidechainFromMic,
-    disableSidechainFromMic,
-    enableSidechainFromTrackIn,
-    disableSidechainBus,
-    isMicOpenForSidechain,
-    cleanupRecordingAudioResources
-} from './audio.js';
-
-import {
-    AVAILABLE_EFFECTS,
-    synthEngineControlDefinitions,
-    createEffectInstance,
-    getEffectDefaultParams,
-    getEffectParamDefinitions,
-    getEffectBypassState,
-    setEffectBypassState
-} from './effectsRegistry.js';
-
-import { Track } from './Track.js';
-import { SnugWindow } from './SnugWindow.js';
-
-import {
-    openMixerWindow,
-    openGlobalControlsWindow,
-    showKeyboardShortcutsHelpWindow,
-    openTimelineWindow,
-    openTrackSequencerWindow,
-    openSoundBrowserWindow,
-    openTrackTemplatesWindow,
-    openTrackInspectorWindow,
-    openMasterEffectsRackWindow,
-    openSendEffectsWindow,
-    openTrackEffectsRackWindow,
-    updateMixerWindow,
-    renderTimeline,
-    updatePlayheadPosition,
-    createKnob,
-    initializeUIModule,
-    renderEffectsList,
-    renderEffectControls,
-    updateSoundBrowserDisplayForLibrary,
-    renderSoundBrowserDirectory,
-    drawWaveform,
-    drawInstrumentWaveform,
-    highlightPlayingStep,
-    renderSamplePads,
-    updateSliceEditorUI,
-    updateSequencerCellUI,
-    renderDrumPadEditorControls,
-    getDrumSamplerPadExistingAudioData,
-    updateDrumPadControlsUI,
-    renderDrumSamplerPads,
-    openChordModeWindow,
-    openTimelineMarkersWindow,
-    openTransportSettingsWindow,
-    openTrackGroupsWindow,
-    openMidiCCMappingsWindow,
-    openScaleModeWindow,
-    renderSoundBrowserDirectoryFiltered,
-    renderSoundBrowserFavorites,
-    renderSoundBrowserRecent,
-    toggleSequencerViewMode,
-} from './ui.js';
-
-import {
-    showNotification,
-    showCustomModal,
-    showConfirmationDialog,
-    secondsToBBSTime,
-    bbsTimeToSeconds,
-    createContextMenu,
-    createDropZoneHTML,
-    setupGenericDropZoneListeners
-} from './utils.js';
-
-import {
-    attachGlobalControlEvents,
-    setupMIDI,
-    selectMIDIInput,
-    initializeEventHandlersModule,
-    currentlyPressedComputerKeys,
-    getMidiCCMappings,
-    getMidiCCMappingsForProject,
-    loadMidiCCMappingsFromProject,
-    clearMidiCCMappings,
-    removeMidiCCMapping,
-    setMidiCCMapping,
-    getMidiCCMapping,
-    startMidiCCLearn,
-    cancelMidiCCLearn,
-    getMidiCCLearnActive,
-    handleOpenTrackInspector,
-    handleOpenEffectsRack,
-    handleOpenSequencer
-} from './eventHandlers.js';
-
-import {
-    storeAudio,
-    getAudio,
-    deleteAudio,
-    clearAllAudio
-} from './db.js';
 
 // ============================================
 // Day 230: DB Module Tests (IndexedDB Helper)
@@ -58281,7 +58006,7 @@ TestRunner.test("Day 744 - Folium Notes menu items call recreateToneSequence aft
 
 TestRunner.test("Day 744 - Folium Notes menu items show 'Folium\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
-    t.assertTruthy((uSrc.match(/Folium'd \$\{result\} note/g) || []).length >= 1, 'Folium\\'d notification present');
+    t.assertTruthy((uSrc.match(/Folium'd \$\{result\} note/g) || []).length >= 1, 'Folium notification present');
 });
 
 TestRunner.test("Day 744 - Folium Notes menu items include all 4 shape variants (standard, inverted, right, tight)", (t) => {
@@ -58458,7 +58183,7 @@ TestRunner.test("Day 745 - Kampyle Notes menu items call recreateToneSequence af
 
 TestRunner.test("Day 745 - Kampyle Notes menu items show 'Kampyle\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
-    t.assertTruthy((uSrc.match(/Kampyle'd \$\{result\} note/g) || []).length >= 1, 'Kampyle\\'d notification present');
+    t.assertTruthy((uSrc.match(/Kampyle'd \$\{result\} note/g) || []).length >= 1, 'Kampyle notification present');
 });
 
 TestRunner.test("Day 745 - Kampyle Notes menu items include all 4 shape variants (standard, inverted, right, upper)", (t) => {
@@ -58646,7 +58371,7 @@ TestRunner.test("Day 746 - Bicorn Notes menu items call recreateToneSequence aft
 
 TestRunner.test("Day 746 - Bicorn Notes menu items show 'Bicorn\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
-    t.assertTruthy((uSrc.match(/Bicorn'd \$\{result\} note/g) || []).length >= 1, 'Bicorn\\'d notification present');
+    t.assertTruthy((uSrc.match(/Bicorn'd \$\{result\} note/g) || []).length >= 1, 'Bicorn notification present');
 });
 
 TestRunner.test("Day 746 - Bicorn Notes menu items include all 4 shape variants (standard, inverted, hat, tight)", (t) => {
@@ -59653,7 +59378,7 @@ TestRunner.test("Day 750 - Astroid Notes menu items call recreateToneSequence af
 TestRunner.test("Day 750 - Astroid Notes menu items show 'Astroid\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
     const matches = uSrc.match(/Astroid'd \$\{result\} note\(s\)/g) || [];
-    t.assertEqual(matches.length, 4, '4 Astroid\\'d notifications');
+    t.assertEqual(matches.length, 4, '4 Astroid notifications');
 });
 
 TestRunner.test("Day 750 - Astroid Notes menu items include all 4 shape variants (standard, inverted, upper, tight)", (t) => {
@@ -59873,7 +59598,7 @@ TestRunner.test("Day 751 - Deltoid Notes menu items call recreateToneSequence af
 TestRunner.test("Day 751 - Deltoid Notes menu items show 'Deltoid\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
     const matches = uSrc.match(/Deltoid'd\s+\$\{result\}\s+note\(s\)/g) || [];
-    t.assertEqual(matches.length, 4, '4 Deltoid\\'d notifications');
+    t.assertEqual(matches.length, 4, '4 Deltoid notifications');
 });
 
 TestRunner.test("Day 751 - Deltoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
@@ -60096,7 +59821,7 @@ TestRunner.test("Day 752 - Pentoid Notes menu items call recreateToneSequence af
 TestRunner.test("Day 752 - Pentoid Notes menu items show 'Pentoid\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
     const matches = uSrc.match(/Pentoid'd\s+\$\{result\}\s+note\(s\)/g) || [];
-    t.assertEqual(matches.length, 4, '4 Pentoid\\'d notifications');
+    t.assertEqual(matches.length, 4, '4 Pentoid notifications');
 });
 
 TestRunner.test("Day 752 - Pentoid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
@@ -60322,7 +60047,7 @@ TestRunner.test("Day 753 - Hexacuspid Notes menu items call recreateToneSequence
 TestRunner.test("Day 753 - Hexacuspid Notes menu items show 'Hexacuspid'd N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
     const matches = uSrc.match(/Hexacuspid'd\s+\$\{result\}\s+note\(s\)/g) || [];
-    t.assertEqual(matches.length, 4, '4 Hexacuspid\\'d notifications');
+    t.assertEqual(matches.length, 4, '4 Hexacuspid notifications');
 });
 
 TestRunner.test("Day 753 - Hexacuspid Notes menu items call localAppServices.updateTrackUI on success", (t) => {
@@ -61090,7 +60815,7 @@ TestRunner.test("Day 756 - Functional test: enneoid parametric y = a*sin(t) - (a
 
 TestRunner.test("Day 756 - Functional test: at t=0, x=9a/8 and y=0 (the rightmost extreme of the enneoid)", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x = a \+ a/8 = 9a/8/.test(tSrc), 'rightmost extreme (9a/8, 0) documented in comments');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x = a \+ a\/8 = 9a\/8/.test(tSrc), 'rightmost extreme (9a/8, 0) documented in comments');
 });
 
 TestRunner.test("Day 756 - Structural test: enneoidNotes uses Math.floor for length and scale clamping", (t) => {
@@ -61352,7 +61077,7 @@ TestRunner.test("Day 756 - Functional test: y = a*sin(t) - (a/8)*sin(8t) (9-cusp
 
 TestRunner.test("Day 756 - Functional test: at t=0, x=9a/8 and y=0 (the rightmost extreme of the enneoid)", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
-    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x = a \+ a/8 = 9a/8/.test(tSrc), 'rightmost extreme (9a/8, 0) documented in comments');
+    t.assertTruthy(/enneoidNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x = a \+ a\/8 = 9a\/8/.test(tSrc), 'rightmost extreme (9a/8, 0) documented in comments');
 });
 
 TestRunner.test("Day 756 - Structural test: enneoidNotes uses Math.floor for length and scale clamping", (t) => {
@@ -61551,7 +61276,7 @@ TestRunner.test("Day 758 - Decussata Notes menu items call recreateToneSequence 
 
 TestRunner.test("Day 758 - Decussata Notes menu items show 'Decussata\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
-    t.assertTruthy(/Decussata'd \$\{result\} note\(s\)/.test(uSrc), 'Decussata\\'d notification');
+    t.assertTruthy(/Decussata'd \$\{result\} note\(s\)/.test(uSrc), 'Decussata notification');
 });
 
 TestRunner.test("Day 758 - Decussata Notes menu items include all 4 shape variants", (t) => {
@@ -61687,7 +61412,7 @@ TestRunner.test("Day 759 - Hendeca Notes menu items call recreateToneSequence af
 });
 TestRunner.test("Day 759 - Hendeca Notes menu items show 'Hendeca\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
-    t.assertTruthy(/Hendeca'd \$\{result\} note\(s\)/.test(uSrc), 'Hendeca\\'d notification');
+    t.assertTruthy(/Hendeca'd \$\{result\} note\(s\)/.test(uSrc), 'Hendeca notification');
 });
 TestRunner.test("Day 759 - APP_VERSION validation (>= 2.408 for Day 759)", (t) => {
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
@@ -61803,7 +61528,7 @@ TestRunner.test("Day 760 - Dodecagon Notes menu items call recreateToneSequence 
 });
 TestRunner.test("Day 760 - Dodecagon Notes menu items show 'Dodecagon\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
-    t.assertTruthy(/Dodecagon'd \$\{result\} note\(s\)/.test(uSrc), 'Dodecagon\\'d notification');
+    t.assertTruthy(/Dodecagon'd \$\{result\} note\(s\)/.test(uSrc), 'Dodecagon notification');
 });
 TestRunner.test("Day 760 - APP_VERSION validation (>= 2.409 for Day 760)", (t) => {
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
@@ -61919,7 +61644,7 @@ TestRunner.test("Day 761 - Tridecagon Notes menu items call recreateToneSequence
 });
 TestRunner.test("Day 761 - Tridecagon Notes menu items show 'Tridecagon\\'d N note(s)' notification", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
-    t.assertTruthy(/Tridecagon'd \$\{result\} note\(s\)/.test(uSrc), 'Tridecagon\\'d notification');
+    t.assertTruthy(/Tridecagon'd \$\{result\} note\(s\)/.test(uSrc), 'Tridecagon notification');
 });
 TestRunner.test("Day 761 - APP_VERSION validation (>= 2.410 for Day 761)", (t) => {
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
