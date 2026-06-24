@@ -62721,3 +62721,138 @@ TestRunner.test("Day 768 - Functional test: at t=0, x = a + a/18 = 19a/18 (the r
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/enneadecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/18\s*=\s*19a\/18/.test(tSrc), 'rightmost extreme (19a/18) documented in comments');
 });
+
+// Day 769: Icosagon (20-cusped Hypocycloid) Notes test block - 20-fold D20 symmetric hypocycloid (R/r=20)
+TestRunner.test("Day 769 - icosagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.icosagonNotes, 'function', 'icosagonNotes should be a function');
+});
+
+TestRunner.test("Day 769 - icosagonNotes captures undo BEFORE mutation with descriptive Icosagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,3000}_captureUndoState\s*\(\s*`Icosagon Notes \(/.test(tSrc), 'icosagonNotes should call _captureUndoState with Icosagon Notes label');
+});
+
+TestRunner.test("Day 769 - icosagonNotes clamps length to ICOSAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*length\s*\)[\s\S]{0,500}ICOSAGON_NOTES_MIN_LENGTH[\s\S]{0,500}ICOSAGON_NOTES_MAX_LENGTH/.test(tSrc), 'length clamping with Math.floor');
+});
+
+TestRunner.test("Day 769 - icosagonNotes uses Math.cos, Math.sin, Math.cos(19t), Math.sin(19t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*19\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(19*t)');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*19\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(19*t)');
+});
+
+TestRunner.test("Day 769 - icosagonNotes uses 20-cusped hypocycloid parametric x = a*cos(t) + (a/19)*cos(19t) and y = a*sin(t) - (a/19)*sin(19t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver19\s*\*\s*cos19T/.test(tSrc), 'x = a*cos(t) + (a/19)*cos(19t)');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver19\s*\*\s*sin19T/.test(tSrc), 'y = a*sin(t) - (a/19)*sin(19t)');
+});
+
+TestRunner.test("Day 769 - icosagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange safety');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange safety');
+});
+
+TestRunner.test("Day 769 - icosagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,5000}tRangeMap\s*=\s*\{[\s\S]{0,3000}ICOSAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}ICOSAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}ICOSAGON_NOTES_SHAPE_ICOSAGON[\s\S]{0,500}ICOSAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tRangeMap with 4 shapes');
+});
+
+TestRunner.test("Day 769 - icosagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 769 - icosagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity rounding to 2 decimals');
+});
+
+TestRunner.test("Day 769 - icosagonNotes returns count of icosagon notes (icosagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,10000}icosagonCount\+\+/.test(tSrc), 'icosagonCount++');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,10000}return\s+icosagonCount/.test(tSrc), 'return icosagonCount');
+});
+
+TestRunner.test("Day 769 - All 22 ICOSAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConsts = [
+        'ICOSAGON_NOTES_MIN_LENGTH', 'ICOSAGON_NOTES_MAX_LENGTH', 'ICOSAGON_NOTES_DEFAULT_LENGTH',
+        'ICOSAGON_NOTES_MIN_A', 'ICOSAGON_NOTES_MAX_A', 'ICOSAGON_NOTES_DEFAULT_A',
+        'ICOSAGON_NOTES_MIN_VELOCITY_DECAY', 'ICOSAGON_NOTES_MAX_VELOCITY_DECAY', 'ICOSAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'ICOSAGON_NOTES_DEFAULT_T_MIN', 'ICOSAGON_NOTES_DEFAULT_T_MAX',
+        'ICOSAGON_NOTES_INVERTED_T_MIN', 'ICOSAGON_NOTES_INVERTED_T_MAX',
+        'ICOSAGON_NOTES_ICOSAGON_T_MIN', 'ICOSAGON_NOTES_ICOSAGON_T_MAX',
+        'ICOSAGON_NOTES_TIGHT_T_MIN', 'ICOSAGON_NOTES_TIGHT_T_MAX',
+        'ICOSAGON_NOTES_SHAPE_STANDARD', 'ICOSAGON_NOTES_SHAPE_INVERTED',
+        'ICOSAGON_NOTES_SHAPE_ICOSAGON', 'ICOSAGON_NOTES_SHAPE_TIGHT',
+        'ICOSAGON_NOTES_SHAPES', 'APP_VERSION'
+    ];
+    for (const c of expectedConsts) {
+        t.assertTruthy(new RegExp('export const ' + c + ' ').test(cSrc), c + ' should be defined');
+    }
+});
+
+TestRunner.test("Day 769 - ICOSAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/ICOSAGON_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(!!m, 'ICOSAGON_NOTES_SHAPES array exists');
+    const body = m[1];
+    t.assertTruthy(body.includes('ICOSAGON_NOTES_SHAPE_STANDARD'), 'standard');
+    t.assertTruthy(body.includes('ICOSAGON_NOTES_SHAPE_INVERTED'), 'inverted');
+    t.assertTruthy(body.includes('ICOSAGON_NOTES_SHAPE_ICOSAGON'), 'icosagon');
+    t.assertTruthy(body.includes('ICOSAGON_NOTES_SHAPE_TIGHT'), 'tight');
+});
+
+TestRunner.test("Day 769 - ui.js has 4 Icosagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const labels = ['Standard, 32', 'Inverted, 32', 'Icosagon, 32', 'Tight, 32'];
+    for (const lbl of labels) {
+        t.assertTruthy(new RegExp('Icosagon Notes \(' + lbl + '\)').test(uSrc), 'menu item ' + lbl);
+    }
+});
+
+TestRunner.test("Day 769 - Icosagon Notes menu items call track.icosagonNotes (4 calls)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.icosagonNotes\(/g);
+    t.assertEqual(matches ? matches.length : 0, 4, '4 calls to track.icosagonNotes');
+});
+
+TestRunner.test("Day 769 - Icosagon Notes menu items call recreateToneSequence after icosagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const re = /icosagonNotes\([^)]*\);[\s\S]{0,200}recreateToneSequence/;
+    const matches = uSrc.match(new RegExp(re, 'g'));
+    t.assertEqual(matches ? matches.length : 0, 4, '4 recreateToneSequence calls after icosagonNotes');
+});
+
+TestRunner.test("Day 769 - APP_VERSION validation (>= 2.417 for Day 769)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([\d.]+)'/);
+    t.assertTruthy(!!m, 'APP_VERSION defined');
+    const v = m[1].split('.').map(Number);
+    const required = [2, 417];
+    t.assertTruthy(v[0] > required[0] || (v[0] === required[0] && v[1] >= required[1]), 'APP_VERSION >= 2.417');
+});
+
+TestRunner.test("Day 769 - Functional test: x = a*cos(t) + (a/19)*cos(19t) (20-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver19\s*\*\s*cos19T/.test(tSrc), 'x = a*cos(t) + (a/19)*cos(19t)');
+});
+
+TestRunner.test("Day 769 - Functional test: y = a*sin(t) - (a/19)*sin(19t) (20-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver19\s*\*\s*sin19T/.test(tSrc), 'y = a*sin(t) - (a/19)*sin(19t)');
+});
+
+TestRunner.test("Day 769 - Structural test: icosagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 769 - Functional test: at t=0, x = a + a/19 = 20a/19 (the rightmost extreme of the icosagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/icosagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/19\s*=\s*20a\/19/.test(tSrc), 'rightmost extreme (20a/19) documented in comments');
+});
