@@ -62476,3 +62476,114 @@ TestRunner.test("Day 765 - Functional test: at t=0, x = a + a/16 = 17a/16 (the r
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/heptadecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/16\s*=\s*17a\/16/.test(tSrc), 'rightmost extreme (17a/16) documented in comments');
 });
+
+
+// Day 767: Octadecagon (18-cusped Hypocycloid) Notes test block - 18-fold D18 symmetric hypocycloid (R/r=18)
+TestRunner.test("Day 767 - octadecagonNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes\s*\(.*?\)\s*{/.test(tSrc), 'octadecagonNotes method');
+});
+
+TestRunner.test("Day 767 - octadecagonNotes captures undo BEFORE mutation with descriptive Octadecagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,3000}_captureUndoState\(`Octadecagon Notes \(\$\{useShape\}, a=\$\{clampedA\}, N=\$\{clampedLength\}\) on \$\{activeSeq\.name\}`\)/.test(tSrc), 'undo capture with descriptive Octadecagon Notes label');
+});
+
+TestRunner.test("Day 767 - octadecagonNotes clamps length to OCTADECAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,3000}OCTADECAGON_NOTES_MIN_LENGTH[\s\S]{0,200}OCTADECAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor\(length\)/.test(tSrc), 'length clamping with Math.floor');
+});
+
+TestRunner.test("Day 767 - octadecagonNotes uses Math.cos, Math.sin, Math.cos(17t), Math.sin(17t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}cos17T\s*=\s*Math\.cos\(\s*17\s*\*\s*t\s*\)/.test(tSrc), 'cos17T = Math.cos(17*t)');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}sin17T\s*=\s*Math\.sin\(\s*17\s*\*\s*t\s*\)/.test(tSrc), 'sin17T = Math.sin(17*t)');
+});
+
+TestRunner.test("Day 767 - octadecagonNotes uses 18-cusped hypocycloid parametric x = a*cos(t) + (a/17)*cos(17t) and y = a*sin(t) - (a/17)*sin(17t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver17\s*\*\s*cos17T/.test(tSrc), 'x = a*cosT + aOver17*cos17T');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver17\s*\*\s*sin17T/.test(tSrc), 'y = a*sinT - aOver17*sin17T');
+});
+
+TestRunner.test("Day 767 - octadecagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange Math.max safety');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange Math.max safety');
+});
+
+TestRunner.test("Day 767 - octadecagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}OCTADECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,1000}OCTADECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,1000}OCTADECAGON_NOTES_SHAPE_OCTADECAGON[\s\S]{0,1000}OCTADECAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 shapes in tRangeMap');
+});
+
+TestRunner.test("Day 767 - octadecagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)');
+});
+
+TestRunner.test("Day 767 - octadecagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}velocity:\s*Math\.round\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity rounded to 2 decimal places');
+});
+
+TestRunner.test("Day 767 - octadecagonNotes returns count of octadecagon notes (octadecagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,12000}return\s+octadecagonCount/.test(tSrc), 'returns octadecagonCount');
+});
+
+TestRunner.test("Day 767 - All 22 OCTADECAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const constants = ['OCTADECAGON_NOTES_MIN_LENGTH', 'OCTADECAGON_NOTES_MAX_LENGTH', 'OCTADECAGON_NOTES_DEFAULT_LENGTH', 'OCTADECAGON_NOTES_MIN_A', 'OCTADECAGON_NOTES_MAX_A', 'OCTADECAGON_NOTES_DEFAULT_A', 'OCTADECAGON_NOTES_MIN_VELOCITY_DECAY', 'OCTADECAGON_NOTES_MAX_VELOCITY_DECAY', 'OCTADECAGON_NOTES_DEFAULT_VELOCITY_DECAY', 'OCTADECAGON_NOTES_DEFAULT_T_MIN', 'OCTADECAGON_NOTES_DEFAULT_T_MAX', 'OCTADECAGON_NOTES_INVERTED_T_MIN', 'OCTADECAGON_NOTES_INVERTED_T_MAX', 'OCTADECAGON_NOTES_OCTADECAGON_T_MIN', 'OCTADECAGON_NOTES_OCTADECAGON_T_MAX', 'OCTADECAGON_NOTES_TIGHT_T_MIN', 'OCTADECAGON_NOTES_TIGHT_T_MAX', 'OCTADECAGON_NOTES_SHAPE_STANDARD', 'OCTADECAGON_NOTES_SHAPE_INVERTED', 'OCTADECAGON_NOTES_SHAPE_OCTADECAGON', 'OCTADECAGON_NOTES_SHAPE_TIGHT', 'OCTADECAGON_NOTES_SHAPES'];
+    for (const c of constants) {
+        t.assertTruthy(new RegExp('export\s+const\s+' + c + '\b').test(cSrc), `${c} defined`);
+    }
+});
+
+TestRunner.test("Day 767 - OCTADECAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/OCTADECAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}OCTADECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}OCTADECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}OCTADECAGON_NOTES_SHAPE_OCTADECAGON[\s\S]{0,500}OCTADECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'all 4 shapes in SHAPES');
+});
+
+TestRunner.test("Day 767 - ui.js has 4 Octadecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Octadecagon Notes \(/g) || []).length;
+    t.assertEqual(matches, 4, '4 Octadecagon Notes menu items');
+});
+
+TestRunner.test("Day 767 - Octadecagon Notes menu items call track.octadecagonNotes (4 calls)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const calls = (uSrc.match(/currentTrackForMenu\.octadecagonNotes\(/g) || []).length;
+    t.assertEqual(calls, 4, '4 octadecagonNotes calls');
+});
+
+TestRunner.test("Day 767 - Octadecagon Notes menu items call recreateToneSequence after octadecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Octadecagon Notes[\s\S]{0,500}octadecagonNotes[\s\S]{0,500}recreateToneSequence/.test(uSrc), 'recreateToneSequence after octadecagonNotes');
+});
+
+TestRunner.test("Day 767 - APP_VERSION validation (>= 2.415 for Day 767)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.415/.test(cSrc), 'APP_VERSION 2.415.0');
+});
+
+TestRunner.test("Day 767 - Functional test: x = a*cos(t) + (a/17)*cos(17t) (18-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver17\s*\*\s*cos17T/.test(tSrc), 'x = a*cos(t) + (a/17)*cos(17t)');
+});
+
+TestRunner.test("Day 767 - Functional test: y = a*sin(t) - (a/17)*sin(17t) (18-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver17\s*\*\s*sin17T/.test(tSrc), 'y = a*sin(t) - (a/17)*sin(17t)');
+});
+
+TestRunner.test("Day 767 - Structural test: octadecagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 767 - Functional test: at t=0, x = a + a/17 = 18a/17 (the rightmost extreme of the octadecagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/octadecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/17\s*=\s*18a\/17/.test(tSrc), 'rightmost extreme (18a/17) documented in comments');
+});
