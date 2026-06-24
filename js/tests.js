@@ -62084,3 +62084,133 @@ TestRunner.test("Day 763 - Functional test: at t=0, x = a + a/14 = 15a/14 (the r
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/pentadecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/14\s*=\s*15a\/14/.test(tSrc), 'rightmost extreme (15a/14) documented in comments');
 });
+// Day 764: Hexadecagon (16-cusped Hypocycloid) Notes test block - 16-fold D16 symmetric hypocycloid (R/r=16)
+TestRunner.test("Day 764 - hexadecagonNotes is a function on Track.prototype", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes\s*\(\s*length\s*=\s*Constants\.HEXADECAGON_NOTES_DEFAULT_LENGTH[\s\S]{0,200}\{[\s\S]{0,50}if\s*\(\s*this\.type\s*===\s*'Audio'\s*\)\s*return\s*0/.test(tSrc), 'hexadecagonNotes method defined');
+});
+
+TestRunner.test("Day 764 - hexadecagonNotes captures undo BEFORE mutation with descriptive Hexadecagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,3000}this\._captureUndoState\(`Hexadecagon Notes \$\{useShape\}/.test(tSrc), 'undo capture with Hexadecagon Notes label');
+});
+
+TestRunner.test("Day 764 - hexadecagonNotes clamps length to HEXADECAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,3000}Math\.max\(Constants\.HEXADECAGON_NOTES_MIN_LENGTH,\s*Math\.min\(Constants\.HEXADECAGON_NOTES_MAX_LENGTH,\s*Math\.floor\(length\)\)\)/.test(tSrc), 'length clamping');
+});
+
+TestRunner.test("Day 764 - hexadecagonNotes uses Math.cos, Math.sin, Math.cos(15t), Math.sin(15t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}cos15T\s*=\s*Math\.cos\(\s*15\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(15*t)');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}sin15T\s*=\s*Math\.sin\(\s*15\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(15*t)');
+});
+
+TestRunner.test("Day 764 - hexadecagonNotes uses 16-cusped hypocycloid parametric x = a*cos(t) + (a/15)*cos(15t) and y = a*sin(t) - (a/15)*sin(15t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver15\s*\*\s*cos15T/.test(tSrc), 'x = a*cos(t) + (a/15)*cos(15t)');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver15\s*\*\s*sin15T/.test(tSrc), 'y = a*sin(t) - (a/15)*sin(15t)');
+});
+
+TestRunner.test("Day 764 - hexadecagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'xRange guard');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'yRange guard');
+});
+
+TestRunner.test("Day 764 - hexadecagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tRangeMap\s*=\s*\{[\s\S]{0,500}Constants\.HEXADECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}Constants\.HEXADECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}Constants\.HEXADECAGON_NOTES_SHAPE_HEXADECAGON[\s\S]{0,500}Constants\.HEXADECAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 shape tRangeMap');
+});
+
+TestRunner.test("Day 764 - hexadecagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(tSrc), 't parameterization');
+});
+
+TestRunner.test("Day 764 - hexadecagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}Math\.round\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity rounding to 2 decimals');
+});
+
+TestRunner.test("Day 764 - hexadecagonNotes returns count of hexadecagon notes (hexadecagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let\s+hexadecagonCount\s*=\s*0/.test(tSrc), 'hexadecagonCount initialized');
+    t.assertTruthy(/return\s+hexadecagonCount/.test(tSrc), 'hexadecagonCount returned');
+});
+
+TestRunner.test("Day 764 - All 22 HEXADECAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const required = [
+        'HEXADECAGON_NOTES_MIN_LENGTH', 'HEXADECAGON_NOTES_MAX_LENGTH', 'HEXADECAGON_NOTES_DEFAULT_LENGTH',
+        'HEXADECAGON_NOTES_MIN_A', 'HEXADECAGON_NOTES_MAX_A', 'HEXADECAGON_NOTES_DEFAULT_A',
+        'HEXADECAGON_NOTES_MIN_VELOCITY_DECAY', 'HEXADECAGON_NOTES_MAX_VELOCITY_DECAY', 'HEXADECAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEXADECAGON_NOTES_DEFAULT_T_MIN', 'HEXADECAGON_NOTES_DEFAULT_T_MAX',
+        'HEXADECAGON_NOTES_INVERTED_T_MIN', 'HEXADECAGON_NOTES_INVERTED_T_MAX',
+        'HEXADECAGON_NOTES_HEXADECAGON_T_MIN', 'HEXADECAGON_NOTES_HEXADECAGON_T_MAX',
+        'HEXADECAGON_NOTES_TIGHT_T_MIN', 'HEXADECAGON_NOTES_TIGHT_T_MAX',
+        'HEXADECAGON_NOTES_SHAPE_STANDARD', 'HEXADECAGON_NOTES_SHAPE_INVERTED',
+        'HEXADECAGON_NOTES_SHAPE_HEXADECAGON', 'HEXADECAGON_NOTES_SHAPE_TIGHT',
+        'HEXADECAGON_NOTES_SHAPES'
+    ];
+    for (const name of required) {
+        t.assertTruthy(cSrc.includes(`export const ${name}`), `${name} defined in constants.js`);
+    }
+});
+
+TestRunner.test("Day 764 - HEXADECAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEXADECAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}HEXADECAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}HEXADECAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}HEXADECAGON_NOTES_SHAPE_HEXADECAGON[\s\S]{0,500}HEXADECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), '4 shapes in HEXADECAGON_NOTES_SHAPES');
+});
+
+TestRunner.test("Day 764 - ui.js has 4 Hexadecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/label:\s*`Hexadecagon Notes \(Standard, 32\)`/.test(uSrc), 'Hexadecagon Standard');
+    t.assertTruthy(/label:\s*`Hexadecagon Notes \(Inverted, 32\)`/.test(uSrc), 'Hexadecagon Inverted');
+    t.assertTruthy(/label:\s*`Hexadecagon Notes \(Hexadecagon, 32\)`/.test(uSrc), 'Hexadecagon Hexadecagon');
+    t.assertTruthy(/label:\s*`Hexadecagon Notes \(Tight, 32\)`/.test(uSrc), 'Hexadecagon Tight');
+});
+
+TestRunner.test("Day 764 - Hexadecagon Notes menu items call track.hexadecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.hexadecagonNotes\(/g);
+    t.assertTruthy(matches && matches.length === 4, 'Expected 4 hexadecagonNotes calls, got ' + (matches?.length || 0));
+});
+
+TestRunner.test("Day 764 - Hexadecagon Notes menu items call recreateToneSequence after hexadecagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,500}recreateToneSequence\(true\)/.test(uSrc), 'recreateToneSequence call');
+});
+
+TestRunner.test("Day 764 - APP_VERSION validation (>= 2.413 for Day 764)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const versionMatch = cSrc.match(/export\s+const\s+APP_VERSION\s*=\s*'(\d+)\.(\d+)\.(\d+)'/);
+    t.assertTruthy(versionMatch, 'APP_VERSION found');
+    if (versionMatch) {
+        const major = parseInt(versionMatch[1]);
+        const minor = parseInt(versionMatch[2]);
+        t.assertTruthy(major > 2 || (major === 2 && minor >= 413), 'APP_VERSION >= 2.413 for Day 764 (got ' + versionMatch[0] + ')');
+    }
+});
+
+TestRunner.test("Day 764 - Functional test: x = a*cos(t) + (a/15)*cos(15t) (16-cusped hypocycloid x parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver15\s*\*\s*cos15T/.test(tSrc), 'x = a*cos(t) + (a/15)*cos(15t)');
+});
+
+TestRunner.test("Day 764 - Functional test: y = a*sin(t) - (a/15)*sin(15t) (16-cusped hypocycloid y parametric)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver15\s*\*\s*sin15T/.test(tSrc), 'y = a*sin(t) - (a/15)*sin(15t)');
+});
+
+TestRunner.test("Day 764 - Structural test: hexadecagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 764 - Functional test: at t=0, x = a + a/15 = 16a/15 (the rightmost extreme of the hexadecagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexadecagonNotes[\s\S]{0,8000}At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/15\s*=\s*16a\/15/.test(tSrc), 'rightmost extreme (16a/15) documented in comments');
+});
+
