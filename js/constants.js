@@ -2644,4 +2644,33 @@ export const TETRACOSAGON_NOTES_SHAPES = [
     TETRACOSAGON_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.421.0';
+export const PENTACOSAGON_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the pentacosagon
+export const PENTACOSAGON_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution pentacosagon)
+export const PENTACOSAGON_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the pentacosagon
+export const PENTACOSAGON_NOTES_MIN_A = 1; // Minimum 1 scale a (small pentacosagon)
+export const PENTACOSAGON_NOTES_MAX_A = 8; // Maximum 8 scale a (large pentacosagon)
+export const PENTACOSAGON_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium pentacosagon)
+export const PENTACOSAGON_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const PENTACOSAGON_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const PENTACOSAGON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const PENTACOSAGON_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const PENTACOSAGON_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 25 cusps visited)
+export const PENTACOSAGON_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const PENTACOSAGON_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const PENTACOSAGON_NOTES_PENTACOSAGON_T_MIN = 0; // Pentacosagon shape lower t bound (twenty-fifth revolution, 1 cusp region)
+export const PENTACOSAGON_NOTES_PENTACOSAGON_T_MAX = 2 * Math.PI / 25; // Pentacosagon shape upper t bound (twenty-fifth revolution, 1 cusp)
+export const PENTACOSAGON_NOTES_TIGHT_T_MIN = -Math.PI / 25; // Tight shape lower t bound (concentrated around rightmost extreme)
+export const PENTACOSAGON_NOTES_TIGHT_T_MAX = Math.PI / 25; // Tight shape upper t bound (concentrated around rightmost extreme)
+export const PENTACOSAGON_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2pi]: full pentacosagon with all 25 cusps
+export const PENTACOSAGON_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2pi, 0]: reversed traversal direction
+export const PENTACOSAGON_NOTES_SHAPE_PENTACOSAGON = 'pentacosagon'; // t in [0, 2pi/25]: twenty-fifth revolution, 1 cusp region
+export const PENTACOSAGON_NOTES_SHAPE_TIGHT = 'tight'; // t in [-pi/25, pi/25]: tight concentration around the rightmost extreme
+export const PENTACOSAGON_NOTES_SHAPES = [
+    PENTACOSAGON_NOTES_SHAPE_STANDARD,
+    PENTACOSAGON_NOTES_SHAPE_INVERTED,
+    PENTACOSAGON_NOTES_SHAPE_PENTACOSAGON,
+    PENTACOSAGON_NOTES_SHAPE_TIGHT
+];
+
+
+export const APP_VERSION = '2.422.0';

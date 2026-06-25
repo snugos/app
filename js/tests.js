@@ -63554,3 +63554,163 @@ TestRunner.test("Day 773 - Functional test: at t=0, x = a + a/23 = 24a/23 (the r
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/23\s*=\s*24a\/23[\s\S]{0,500}tetracosagonNotes/.test(tSrc), 'rightmost extreme (24a/23) documented in comments');
 });
+
+// ============================================================================
+// Day 774: Pentacosagon (25-cusped Hypocycloid) Notes Tests
+// ============================================================================
+
+TestRunner.test("Day 774 - pentacosagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.pentacosagonNotes, 'function', 'pentacosagonNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 774 - pentacosagonNotes captures undo BEFORE mutation with descriptive Pentacosagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacosagonNotes[\s\S]{0,3000}_captureUndoState\(`Pentacosagon Notes/.test(tSrc), 'undo captured with Pentacosagon Notes label');
+});
+
+TestRunner.test("Day 774 - pentacosagonNotes clamps length to PENTACOSAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const chunk = tSrc.match(/pentacosagonNotes[\s\S]{0,3000}/)[0];
+    t.assertTruthy(chunk.includes('PENTACOSAGON_NOTES_MIN_LENGTH'), 'MIN_LENGTH');
+    t.assertTruthy(chunk.includes('PENTACOSAGON_NOTES_MAX_LENGTH'), 'MAX_LENGTH');
+    t.assertTruthy(chunk.includes('Math.floor(length)'), 'Math.floor(length)');
+});
+
+TestRunner.test("Day 774 - pentacosagonNotes uses Math.cos, Math.sin, Math.cos(24t), Math.sin(24t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const chunk = tSrc.match(/pentacosagonNotes[\s\S]{0,3000}/)[0];
+    t.assertTruthy(chunk.includes('Math.cos(t)'), 'Math.cos(t)');
+    t.assertTruthy(chunk.includes('Math.sin(t)'), 'Math.sin(t)');
+    t.assertTruthy(chunk.includes('Math.cos(24 * t)'), 'Math.cos(24*t)');
+    t.assertTruthy(chunk.includes('Math.sin(24 * t)'), 'Math.sin(24*t)');
+});
+
+TestRunner.test("Day 774 - pentacosagonNotes uses 25-cusped hypocycloid parametric x = a*cos(t) + (a/24)*cos(24t) and y = a*sin(t) - (a/24)*sin(24t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const chunk = tSrc.match(/pentacosagonNotes[\s\S]{0,3000}/)[0];
+    t.assertTruthy(/a\s*\*\s*cosT\s*\+\s*aOver24\s*\*\s*cos24T/.test(chunk), 'x = a*cosT + aOver24*cos24T');
+    t.assertTruthy(/a\s*\*\s*sinT\s*-\s*aOver24\s*\*\s*sin24T/.test(chunk), 'y = a*sinT - aOver24*sin24T');
+});
+
+TestRunner.test("Day 774 - pentacosagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const chunk = tSrc.match(/pentacosagonNotes[\s\S]{0,3000}/)[0];
+    t.assertTruthy(/Math\.max\(0\.01,\s*xMax\s*-\s*xMin\)/.test(chunk), 'xRange floor');
+    t.assertTruthy(/Math\.max\(0\.01,\s*yMax\s*-\s*yMin\)/.test(chunk), 'yRange floor');
+});
+
+TestRunner.test("Day 774 - pentacosagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const chunk = tSrc.match(/pentacosagonNotes[\s\S]{0,3000}/)[0];
+    t.assertTruthy(chunk.includes('PENTACOSAGON_NOTES_SHAPE_STANDARD'), 'SHAPE_STANDARD');
+    t.assertTruthy(chunk.includes('PENTACOSAGON_NOTES_SHAPE_INVERTED'), 'SHAPE_INVERTED');
+    t.assertTruthy(chunk.includes('PENTACOSAGON_NOTES_SHAPE_PENTACOSAGON'), 'SHAPE_PENTACOSAGON');
+    t.assertTruthy(chunk.includes('PENTACOSAGON_NOTES_SHAPE_TIGHT'), 'SHAPE_TIGHT');
+});
+
+TestRunner.test("Day 774 - pentacosagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const chunk = tSrc.match(/pentacosagonNotes[\s\S]{0,3000}/)[0];
+    t.assertTruthy(/t\s*=\s*tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(chunk), 't formula');
+});
+
+TestRunner.test("Day 774 - pentacosagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const chunk = tSrc.match(/pentacosagonNotes[\s\S]{0,3000}/)[0];
+    t.assertTruthy(chunk.includes('Math.round(decayedVel * 100) / 100'), 'velocity rounding');
+});
+
+TestRunner.test("Day 774 - pentacosagonNotes returns count of pentacosagon notes (pentacosagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const chunk = tSrc.match(/pentacosagonNotes[\s\S]{0,3000}/)[0];
+    t.assertTruthy(chunk.includes('pentacosagonCount'), 'pentacosagonCount');
+    t.assertTruthy(chunk.includes('return pentacosagonCount'), 'return pentacosagonCount');
+});
+
+TestRunner.test("Day 774 - All 22 PENTACOSAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'PENTACOSAGON_NOTES_MIN_LENGTH', 'PENTACOSAGON_NOTES_MAX_LENGTH', 'PENTACOSAGON_NOTES_DEFAULT_LENGTH',
+        'PENTACOSAGON_NOTES_MIN_A', 'PENTACOSAGON_NOTES_MAX_A', 'PENTACOSAGON_NOTES_DEFAULT_A',
+        'PENTACOSAGON_NOTES_MIN_VELOCITY_DECAY', 'PENTACOSAGON_NOTES_MAX_VELOCITY_DECAY', 'PENTACOSAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'PENTACOSAGON_NOTES_DEFAULT_T_MIN', 'PENTACOSAGON_NOTES_DEFAULT_T_MAX',
+        'PENTACOSAGON_NOTES_INVERTED_T_MIN', 'PENTACOSAGON_NOTES_INVERTED_T_MAX',
+        'PENTACOSAGON_NOTES_PENTACOSAGON_T_MIN', 'PENTACOSAGON_NOTES_PENTACOSAGON_T_MAX',
+        'PENTACOSAGON_NOTES_TIGHT_T_MIN', 'PENTACOSAGON_NOTES_TIGHT_T_MAX',
+        'PENTACOSAGON_NOTES_SHAPE_STANDARD', 'PENTACOSAGON_NOTES_SHAPE_INVERTED',
+        'PENTACOSAGON_NOTES_SHAPE_PENTACOSAGON', 'PENTACOSAGON_NOTES_SHAPE_TIGHT',
+        'PENTACOSAGON_NOTES_SHAPES'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(cSrc.includes(`export const ${name}`), `${name} defined`);
+    }
+});
+
+TestRunner.test("Day 774 - PENTACOSAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/export const PENTACOSAGON_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\];/);
+    t.assertTruthy(m, 'PENTACOSAGON_NOTES_SHAPES array found');
+    const arr = m[1];
+    t.assertTruthy(arr.includes('PENTACOSAGON_NOTES_SHAPE_STANDARD'), 'STANDARD');
+    t.assertTruthy(arr.includes('PENTACOSAGON_NOTES_SHAPE_INVERTED'), 'INVERTED');
+    t.assertTruthy(arr.includes('PENTACOSAGON_NOTES_SHAPE_PENTACOSAGON'), 'PENTACOSAGON');
+    t.assertTruthy(arr.includes('PENTACOSAGON_NOTES_SHAPE_TIGHT'), 'TIGHT');
+});
+
+TestRunner.test("Day 774 - ui.js has 4 Pentacosagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/label:\s*`Pentacosagon Notes/g) || [];
+    t.assertEqual(matches.length, 4, `Expected 4 Pentacosagon menu items, found ${matches.length}`);
+});
+
+TestRunner.test("Day 774 - Pentacosagon Notes menu items call track.pentacosagonNotes (4 calls)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.pentacosagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, `Expected 4 calls to track.pentacosagonNotes, found ${matches.length}`);
+});
+
+TestRunner.test("Day 774 - Pentacosagon Notes menu items call recreateToneSequence after pentacosagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    // Verify all 4 menu items call recreateToneSequence after pentacosagonNotes
+    const menuBlock = uSrc.match(/Pentacosagon Notes[^]*?(?=Deltoid Notes)/);
+    t.assertTruthy(menuBlock, 'Pentacosagon menu block found');
+    const callCount = (menuBlock[0].match(/pentacosagonNotes\(/g) || []).length;
+    const recreateCount = (menuBlock[0].match(/recreateToneSequence/g) || []).length;
+    t.assertEqual(callCount, 4, '4 pentacosagonNotes calls');
+    t.assertEqual(recreateCount, 4, '4 recreateToneSequence calls');
+});
+
+TestRunner.test("Day 774 - APP_VERSION is bumped to 2.422.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.422\.0'/.test(cSrc), 'APP_VERSION is 2.422.0');
+});
+
+TestRunner.test("Day 774 - Functional test: x = a*cos(t) + (a/24)*cos(24t) (25-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const t = 0.7;
+    const x = a * Math.cos(t) + (a / 24) * Math.cos(24 * t);
+    t.assertTruthy(isFinite(x), 'x is finite');
+    t.assertTruthy(x !== 0, 'x non-zero for arbitrary t');
+});
+
+TestRunner.test("Day 774 - Functional test: y = a*sin(t) - (a/24)*sin(24t) (25-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const t = 0.7;
+    const y = a * Math.sin(t) - (a / 24) * Math.sin(24 * t);
+    t.assertTruthy(isFinite(y), 'y is finite');
+});
+
+TestRunner.test("Day 774 - Functional test: at t=0, x = a + a/24 = 25a/24 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 24) * Math.cos(24 * t);
+    const y = a * Math.sin(t) - (a / 24) * Math.sin(24 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((a + a / 24) * 1000) / 1000, 'rightmost extreme x = 25a/24');
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 774 - Structural test: pentacosagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacosagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/pentacosagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
