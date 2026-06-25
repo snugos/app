@@ -63410,3 +63410,147 @@ TestRunner.test("Day 772 - Functional test: at t=0, x = a + a/22 = 23a/22 (the r
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/22\s*=\s*23a\/22[\s\S]{0,500}icosikaitetragonNotes/.test(tSrc), 'rightmost extreme (23a/22) documented in comments');
 });
+
+TestRunner.test("Day 773 - tetracosagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.tetracosagonNotes, 'function', 'tetracosagonNotes should be a function on Track.prototype');
+});
+
+TestRunner.test("Day 773 - tetracosagonNotes captures undo BEFORE mutation with descriptive Tetracosagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,3000}_captureUndoState\(`Tetracosagon Notes/.test(tSrc), 'undo captured with Tetracosagon Notes label');
+});
+
+TestRunner.test("Day 773 - tetracosagonNotes clamps length to TETRACOSAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const chunk = tSrc.match(/tetracosagonNotes[\s\S]{0,3000}/)[0];
+    t.assertTruthy(chunk.includes('TETRACOSAGON_NOTES_MIN_LENGTH'), 'MIN_LENGTH');
+    t.assertTruthy(chunk.includes('TETRACOSAGON_NOTES_MAX_LENGTH'), 'MAX_LENGTH');
+    t.assertTruthy(chunk.includes('Math.floor(length)'), 'Math.floor(length)');
+});
+
+TestRunner.test("Day 773 - tetracosagonNotes uses Math.cos, Math.sin, Math.cos(23t), Math.sin(23t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*23\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(23*t)');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*23\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(23*t)');
+});
+
+TestRunner.test("Day 773 - tetracosagonNotes uses 24-cusped hypocycloid parametric x = a*cos(t) + (a/23)*cos(23t) and y = a*sin(t) - (a/23)*sin(23t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver23\s*\*\s*cos23T/.test(tSrc), 'x = a*cos(t) + (a/23)*cos(23t)');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver23\s*\*\s*sin23T/.test(tSrc), 'y = a*sin(t) - (a/23)*sin(23t)');
+});
+
+TestRunner.test("Day 773 - tetracosagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,8000}Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange safety');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,8000}Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange safety');
+});
+
+TestRunner.test("Day 773 - tetracosagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,5000}tRangeMap\s*=\s*\{[\s\S]{0,3000}TETRACOSAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}TETRACOSAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}TETRACOSAGON_NOTES_SHAPE_TETRACOSAGON[\s\S]{0,500}TETRACOSAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tRangeMap with 4 shapes');
+});
+
+TestRunner.test("Day 773 - tetracosagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 773 - tetracosagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'velocity rounding to 2 decimals');
+});
+
+TestRunner.test("Day 773 - tetracosagonNotes returns count of tetracosagon notes (tetracosagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,10000}tetracosagonCount\+\+/.test(tSrc), 'tetracosagonCount++');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,10000}return\s+tetracosagonCount/.test(tSrc), 'return tetracosagonCount');
+});
+
+TestRunner.test("Day 773 - All 22 TETRACOSAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const constants = [
+        'TETRACOSAGON_NOTES_MIN_LENGTH', 'TETRACOSAGON_NOTES_MAX_LENGTH', 'TETRACOSAGON_NOTES_DEFAULT_LENGTH',
+        'TETRACOSAGON_NOTES_MIN_A', 'TETRACOSAGON_NOTES_MAX_A', 'TETRACOSAGON_NOTES_DEFAULT_A',
+        'TETRACOSAGON_NOTES_MIN_VELOCITY_DECAY', 'TETRACOSAGON_NOTES_MAX_VELOCITY_DECAY', 'TETRACOSAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'TETRACOSAGON_NOTES_DEFAULT_T_MIN', 'TETRACOSAGON_NOTES_DEFAULT_T_MAX',
+        'TETRACOSAGON_NOTES_INVERTED_T_MIN', 'TETRACOSAGON_NOTES_INVERTED_T_MAX',
+        'TETRACOSAGON_NOTES_TETRACOSAGON_T_MIN', 'TETRACOSAGON_NOTES_TETRACOSAGON_T_MAX',
+        'TETRACOSAGON_NOTES_TIGHT_T_MIN', 'TETRACOSAGON_NOTES_TIGHT_T_MAX',
+        'TETRACOSAGON_NOTES_SHAPE_STANDARD', 'TETRACOSAGON_NOTES_SHAPE_INVERTED',
+        'TETRACOSAGON_NOTES_SHAPE_TETRACOSAGON', 'TETRACOSAGON_NOTES_SHAPE_TIGHT',
+        'TETRACOSAGON_NOTES_SHAPES'
+    ];
+    let missing = [];
+    for (const c of constants) {
+        if (!cSrc.includes(c)) missing.push(c);
+    }
+    t.assertEqual(missing.length, 0, 'All TETRACOSAGON_NOTES_* constants defined (missing: ' + missing.join(', ') + ')');
+});
+
+TestRunner.test("Day 773 - TETRACOSAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const body = cSrc.match(/TETRACOSAGON_NOTES_SHAPES\s*=\s*\[[\s\S]*?\]/)[0];
+    t.assertTruthy(body.includes('TETRACOSAGON_NOTES_SHAPE_STANDARD'), 'standard');
+    t.assertTruthy(body.includes('TETRACOSAGON_NOTES_SHAPE_INVERTED'), 'inverted');
+    t.assertTruthy(body.includes('TETRACOSAGON_NOTES_SHAPE_TETRACOSAGON'), 'tetracosagon');
+    t.assertTruthy(body.includes('TETRACOSAGON_NOTES_SHAPE_TIGHT'), 'tight');
+});
+
+TestRunner.test("Day 773 - ui.js has 4 Tetracosagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/label:\s*`Tetracosagon Notes \(/g);
+    t.assertEqual(matches ? matches.length : 0, 4, '4 Tetracosagon Notes menu items in ui.js');
+});
+
+TestRunner.test("Day 773 - Tetracosagon Notes menu items call track.tetracosagonNotes (4 calls)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.tetracosagonNotes\(/g);
+    t.assertEqual(matches ? matches.length : 0, 4, '4 calls to track.tetracosagonNotes');
+});
+
+TestRunner.test("Day 773 - Tetracosagon Notes menu items call recreateToneSequence after tetracosagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const re = /tetracosagonNotes\([^)]*\);[\s\S]{0,200}recreateToneSequence/;
+    const matches = uSrc.match(re);
+    t.assertEqual(matches ? matches.length : 0, 4, '4 recreateToneSequence calls after tetracosagonNotes');
+});
+
+TestRunner.test("Day 773 - APP_VERSION validation (>= 2.421 for Day 773)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    t.assertTruthy(m, 'APP_VERSION defined');
+    const v = m[1];
+    const parts = v.split('.').map(Number);
+    t.assertTruthy(parts[0] >= 2, 'major >= 2');
+    t.assertTruthy(parts[0] > 2 || parts[1] >= 421, 'minor >= 421 for Day 773');
+});
+
+TestRunner.test("Day 773 - Functional test: x = a*cos(t) + (a/23)*cos(23t) (24-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const cosT = Math.cos(t);
+    const cos23T = Math.cos(23 * t);
+    const x = a * cosT + (a / 23) * cos23T;
+    t.assertEqual(x, a + a / 23, 'at t=0, x should equal a + a/23');
+});
+
+TestRunner.test("Day 773 - Functional test: y = a*sin(t) - (a/23)*sin(23t) (24-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const sinT = Math.sin(t);
+    const sin23T = Math.sin(23 * t);
+    const y = a * sinT - (a / 23) * sin23T;
+    t.assertEqual(y, 0, 'at t=0, y should be 0');
+});
+
+TestRunner.test("Day 773 - Structural test: tetracosagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/tetracosagonNotes[\s\S]{0,3000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 773 - Functional test: at t=0, x = a + a/23 = 24a/23 (the rightmost extreme of the tetracosagon)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/At\s+t\s*=\s*0[\s\S]{0,200}x\s*=\s*a\s*\+\s*a\/23\s*=\s*24a\/23[\s\S]{0,500}tetracosagonNotes/.test(tSrc), 'rightmost extreme (24a/23) documented in comments');
+});
