@@ -64511,3 +64511,151 @@ TestRunner.test("Day 781 - triacontagonNotes uses TRIACONTAGON_NOTES_TIGHT_T_MIN
 });
 
 
+
+// Day 782: Hentriacontagon (31-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 782 - hentriacontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.hentriacontagonNotes, 'function', 'hentriacontagonNotes should be a function');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes captures undo BEFORE mutation with descriptive Hentriacontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}_captureUndoState\s*\(\s*`Hentriacontagon Notes\s*\(/.test(tSrc), 'hentriacontagonNotes calls _captureUndoState with Hentriacontagon Notes label');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes clamps length to HENTRIACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}HENTRIACONTAGON_NOTES_MIN_LENGTH[\s\S]{0,200}HENTRIACONTAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'clampedLength uses Math.floor(length)');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes uses Math.cos, Math.sin, Math.cos(30t), Math.sin(30t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t)');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t)');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*30\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(30*t)');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*30\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(30*t)');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes uses 31-cusped hypocycloid parametric x = a*cos(t) + (a/30)*cos(30t) and y = a*sin(t) - (a/30)*sin(30t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver30\s*\*\s*cos30T/.test(tSrc), 'x = a*cosT + aOver30*cos30T');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver30\s*\*\s*sin30T/.test(tSrc), 'y = a*sinT - aOver30*sin30T');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'xRange = Math.max(0.01, ...)');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'yRange = Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}HENTRIACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'standard shape');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}HENTRIACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'inverted shape');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}HENTRIACONTAGON_NOTES_SHAPE_HENTRIACONTAGON/.test(tSrc), 'hentriacontagon shape');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}HENTRIACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tight shape');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't formula');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'Math.round(decayedVel * 100) / 100');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes returns count of hentriacontagon notes (hentriacontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}return\s+hentriacontagonCount/.test(tSrc), 'return hentriacontagonCount');
+});
+
+TestRunner.test("Day 782 - All 22 HENTRIACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const constants = [
+        'HENTRIACONTAGON_NOTES_MIN_LENGTH', 'HENTRIACONTAGON_NOTES_MAX_LENGTH', 'HENTRIACONTAGON_NOTES_DEFAULT_LENGTH',
+        'HENTRIACONTAGON_NOTES_MIN_A', 'HENTRIACONTAGON_NOTES_MAX_A', 'HENTRIACONTAGON_NOTES_DEFAULT_A',
+        'HENTRIACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'HENTRIACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'HENTRIACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HENTRIACONTAGON_NOTES_DEFAULT_T_MIN', 'HENTRIACONTAGON_NOTES_DEFAULT_T_MAX',
+        'HENTRIACONTAGON_NOTES_INVERTED_T_MIN', 'HENTRIACONTAGON_NOTES_INVERTED_T_MAX',
+        'HENTRIACONTAGON_NOTES_HENTRIACONTAGON_T_MIN', 'HENTRIACONTAGON_NOTES_HENTRIACONTAGON_T_MAX',
+        'HENTRIACONTAGON_NOTES_TIGHT_T_MIN', 'HENTRIACONTAGON_NOTES_TIGHT_T_MAX',
+        'HENTRIACONTAGON_NOTES_SHAPE_STANDARD', 'HENTRIACONTAGON_NOTES_SHAPE_INVERTED',
+        'HENTRIACONTAGON_NOTES_SHAPE_HENTRIACONTAGON', 'HENTRIACONTAGON_NOTES_SHAPE_TIGHT',
+        'HENTRIACONTAGON_NOTES_SHAPES'
+    ];
+    for (const name of constants) {
+        t.assertTruthy(new RegExp('export const ' + name + '\\b').test(cSrc), name + ' should be defined');
+    }
+});
+
+TestRunner.test("Day 782 - HENTRIACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HENTRIACONTAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}HENTRIACONTAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}HENTRIACONTAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}HENTRIACONTAGON_NOTES_SHAPE_HENTRIACONTAGON[\s\S]{0,500}HENTRIACONTAGON_NOTES_SHAPE_TIGHT[\s\S]{0,500}\]/.test(cSrc), 'SHAPES includes all 4');
+});
+
+TestRunner.test("Day 782 - ui.js has 4 Hentriacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const labels = ['Hentriacontagon Notes (Standard, 32)', 'Hentriacontagon Notes (Inverted, 32)', 'Hentriacontagon Notes (Hentriacontagon, 32)', 'Hentriacontagon Notes (Tight, 32)'];
+    for (const label of labels) {
+        t.assertTruthy(uSrc.includes(label), 'ui.js has label ' + label);
+    }
+});
+
+TestRunner.test("Day 782 - Hentriacontagon Notes menu items call track.hentriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((uSrc.match(/currentTrackForMenu\.hentriacontagonNotes/g) || []).length, 4, '4 hentriacontagonNotes calls');
+});
+
+TestRunner.test("Day 782 - Hentriacontagon Notes menu items call recreateToneSequence after hentriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes\s*\([\s\S]{0,200}recreateToneSequence\s*\(\s*true\s*\)/.test(uSrc), 'recreateToneSequence(true) after hentriacontagonNotes');
+});
+
+TestRunner.test("Day 782 - APP_VERSION validation (>= 2.428 for Day 782)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.428\.0'/.test(cSrc), 'APP_VERSION = 2.428.0');
+});
+
+TestRunner.test("Day 782 - Functional test: x = a*cos(t) + (a/30)*cos(30t) (31-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const tt = 1.234;
+    const x = a * Math.cos(tt) + (a / 30) * Math.cos(30 * tt);
+    const expected = a * Math.cos(tt) + (a / 30) * Math.cos(30 * tt);
+    t.assertEqual(Math.round(x * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'x parametric');
+});
+
+TestRunner.test("Day 782 - Functional test: y = a*sin(t) - (a/30)*sin(30t) (31-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const tt = 1.234;
+    const y = a * Math.sin(tt) - (a / 30) * Math.sin(30 * tt);
+    const expected = a * Math.sin(tt) - (a / 30) * Math.sin(30 * tt);
+    t.assertEqual(Math.round(y * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'y parametric');
+});
+
+TestRunner.test("Day 782 - Structural test: hentriacontagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/hentriacontagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 782 - Functional test: at t=0, x = a + a/30 = 31a/30 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const tt = 0;
+    const x = a * Math.cos(tt) + (a / 30) * Math.cos(30 * tt);
+    const y = a * Math.sin(tt) - (a / 30) * Math.sin(30 * tt);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((a + a / 30) * 1000) / 1000, 'rightmost extreme x = 31a/30');
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes uses HENTRIACONTAGON_NOTES_HENTRIACONTAGON_T_MAX = 2*Math.PI/31", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HENTRIACONTAGON_NOTES_HENTRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*31/.test(cSrc), 'HENTRIACONTAGON_T_MAX = 2π/31');
+});
+
+TestRunner.test("Day 782 - hentriacontagonNotes uses HENTRIACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/31", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HENTRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*31/.test(cSrc), 'TIGHT_T_MIN = -π/31');
+    t.assertTruthy(/export const HENTRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*31/.test(cSrc), 'TIGHT_T_MAX = π/31');
+});
+

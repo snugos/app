@@ -13370,4 +13370,111 @@ export class Track {
         return triacontagonCount;
     }
 
+    hentriacontagonNotes(length = Constants.HENTRIACONTAGON_NOTES_DEFAULT_LENGTH, scale = Constants.HENTRIACONTAGON_NOTES_DEFAULT_A, velocityDecay = Constants.HENTRIACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.HENTRIACONTAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} hentriacontagonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.HENTRIACONTAGON_NOTES_MIN_LENGTH, Math.min(Constants.HENTRIACONTAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.HENTRIACONTAGON_NOTES_MIN_A, Math.min(Constants.HENTRIACONTAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.HENTRIACONTAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.HENTRIACONTAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.HENTRIACONTAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.HENTRIACONTAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.HENTRIACONTAGON_NOTES_SHAPE_STANDARD]: [Constants.HENTRIACONTAGON_NOTES_DEFAULT_T_MIN, Constants.HENTRIACONTAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.HENTRIACONTAGON_NOTES_SHAPE_INVERTED]: [Constants.HENTRIACONTAGON_NOTES_INVERTED_T_MIN, Constants.HENTRIACONTAGON_NOTES_INVERTED_T_MAX],
+            [Constants.HENTRIACONTAGON_NOTES_SHAPE_HENTRIACONTAGON]: [Constants.HENTRIACONTAGON_NOTES_HENTRIACONTAGON_T_MIN, Constants.HENTRIACONTAGON_NOTES_HENTRIACONTAGON_T_MAX],
+            [Constants.HENTRIACONTAGON_NOTES_SHAPE_TIGHT]: [Constants.HENTRIACONTAGON_NOTES_TIGHT_T_MIN, Constants.HENTRIACONTAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.HENTRIACONTAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Hentriacontagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let hentriacontagonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver30 = a / 30;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos30T = Math.cos(30 * t);
+            const sin30T = Math.sin(30 * t);
+            const x = a * cosT + aOver30 * cos30T;
+            const y = a * sinT - aOver30 * sin30T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            hentriacontagonCount++;
+        }
+
+        return hentriacontagonCount;
+    }
+
 }
