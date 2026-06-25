@@ -64659,3 +64659,150 @@ TestRunner.test("Day 782 - hentriacontagonNotes uses HENTRIACONTAGON_NOTES_TIGHT
     t.assertTruthy(/export const HENTRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*31/.test(cSrc), 'TIGHT_T_MAX = π/31');
 });
 
+
+// Day 783: Dotriacontagon (32-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 783 - dotriacontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.dotriacontagonNotes, 'function', 'dotriacontagonNotes should be a function');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes captures undo BEFORE mutation with descriptive Dotriacontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}_captureUndoState\s*\(\s*`Dotriacontagon Notes\s*\(/.test(tSrc), 'dotriacontagonNotes calls _captureUndoState with Dotriacontagon Notes label');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes clamps length to DOTRIACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}DOTRIACONTAGON_NOTES_MIN_LENGTH[\s\S]{0,200}DOTRIACONTAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'clampedLength uses Math.floor(length)');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes uses Math.cos, Math.sin, Math.cos(31t), Math.sin(31t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t)');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t)');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*31\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(31*t)');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*31\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(31*t)');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes uses 32-cusped hypocycloid parametric x = a*cos(t) + (a/31)*cos(31t) and y = a*sin(t) - (a/31)*sin(31t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver31\s*\*\s*cos31T/.test(tSrc), 'x = a*cosT + aOver31*cos31T');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver31\s*\*\s*sin31T/.test(tSrc), 'y = a*sinT - aOver31*sin31T');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'xRange = Math.max(0.01, ...)');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'yRange = Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}DOTRIACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'standard shape');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}DOTRIACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'inverted shape');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}DOTRIACONTAGON_NOTES_SHAPE_DOTRIACONTAGON/.test(tSrc), 'dotriacontagon shape');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}DOTRIACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tight shape');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't formula');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'Math.round(decayedVel * 100) / 100');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes returns count of dotriacontagon notes (dotriacontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}return\s+dotriacontagonCount/.test(tSrc), 'return dotriacontagonCount');
+});
+
+TestRunner.test("Day 783 - All 22 DOTRIACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const constants = [
+        'DOTRIACONTAGON_NOTES_MIN_LENGTH', 'DOTRIACONTAGON_NOTES_MAX_LENGTH', 'DOTRIACONTAGON_NOTES_DEFAULT_LENGTH',
+        'DOTRIACONTAGON_NOTES_MIN_A', 'DOTRIACONTAGON_NOTES_MAX_A', 'DOTRIACONTAGON_NOTES_DEFAULT_A',
+        'DOTRIACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'DOTRIACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'DOTRIACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'DOTRIACONTAGON_NOTES_DEFAULT_T_MIN', 'DOTRIACONTAGON_NOTES_DEFAULT_T_MAX',
+        'DOTRIACONTAGON_NOTES_INVERTED_T_MIN', 'DOTRIACONTAGON_NOTES_INVERTED_T_MAX',
+        'DOTRIACONTAGON_NOTES_DOTRIACONTAGON_T_MIN', 'DOTRIACONTAGON_NOTES_DOTRIACONTAGON_T_MAX',
+        'DOTRIACONTAGON_NOTES_TIGHT_T_MIN', 'DOTRIACONTAGON_NOTES_TIGHT_T_MAX',
+        'DOTRIACONTAGON_NOTES_SHAPE_STANDARD', 'DOTRIACONTAGON_NOTES_SHAPE_INVERTED',
+        'DOTRIACONTAGON_NOTES_SHAPE_DOTRIACONTAGON', 'DOTRIACONTAGON_NOTES_SHAPE_TIGHT',
+        'DOTRIACONTAGON_NOTES_SHAPES'
+    ];
+    for (const name of constants) {
+        t.assertTruthy(new RegExp('export const ' + name + '\\b').test(cSrc), name + ' should be defined');
+    }
+});
+
+TestRunner.test("Day 783 - DOTRIACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/DOTRIACONTAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}DOTRIACONTAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}DOTRIACONTAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}DOTRIACONTAGON_NOTES_SHAPE_DOTRIACONTAGON[\s\S]{0,500}DOTRIACONTAGON_NOTES_SHAPE_TIGHT[\s\S]{0,500}\]/.test(cSrc), 'SHAPES includes all 4');
+});
+
+TestRunner.test("Day 783 - ui.js has 4 Dotriacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const labels = ['Dotriacontagon Notes (Standard, 32)', 'Dotriacontagon Notes (Inverted, 32)', 'Dotriacontagon Notes (Dotriacontagon, 32)', 'Dotriacontagon Notes (Tight, 32)'];
+    for (const label of labels) {
+        t.assertTruthy(uSrc.includes(label), 'ui.js has label ' + label);
+    }
+});
+
+TestRunner.test("Day 783 - Dotriacontagon Notes menu items call track.dotriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((uSrc.match(/currentTrackForMenu\.dotriacontagonNotes/g) || []).length, 4, '4 dotriacontagonNotes calls');
+});
+
+TestRunner.test("Day 783 - Dotriacontagon Notes menu items call recreateToneSequence after dotriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes\s*\([\s\S]{0,200}recreateToneSequence\s*\(\s*true\s*\)/.test(uSrc), 'recreateToneSequence(true) after dotriacontagonNotes');
+});
+
+TestRunner.test("Day 783 - APP_VERSION validation (>= 2.429 for Day 783)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.429\.0'/.test(cSrc), 'APP_VERSION = 2.429.0');
+});
+
+TestRunner.test("Day 783 - Functional test: x = a*cos(t) + (a/31)*cos(31t) (32-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const tt = 1.234;
+    const x = a * Math.cos(tt) + (a / 31) * Math.cos(31 * tt);
+    const expected = a * Math.cos(tt) + (a / 31) * Math.cos(31 * tt);
+    t.assertEqual(Math.round(x * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'x parametric');
+});
+
+TestRunner.test("Day 783 - Functional test: y = a*sin(t) - (a/31)*sin(31t) (32-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const tt = 1.234;
+    const y = a * Math.sin(tt) - (a / 31) * Math.sin(31 * tt);
+    const expected = a * Math.sin(tt) - (a / 31) * Math.sin(31 * tt);
+    t.assertEqual(Math.round(y * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'y parametric');
+});
+
+TestRunner.test("Day 783 - Structural test: dotriacontagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/dotriacontagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 783 - Functional test: at t=0, x = a + a/31 = 32a/31 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const tt = 0;
+    const x = a * Math.cos(tt) + (a / 31) * Math.cos(31 * tt);
+    const y = a * Math.sin(tt) - (a / 31) * Math.sin(31 * tt);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((a + a / 31) * 1000) / 1000, 'rightmost extreme x = 32a/31');
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes uses DOTRIACONTAGON_NOTES_DOTRIACONTAGON_T_MAX = 2*Math.PI/32", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const DOTRIACONTAGON_NOTES_DOTRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*32/.test(cSrc), 'DOTRIACONTAGON_T_MAX = 2π/32');
+});
+
+TestRunner.test("Day 783 - dotriacontagonNotes uses DOTRIACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/32", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const DOTRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*32/.test(cSrc), 'TIGHT_T_MIN = -π/32');
+    t.assertTruthy(/export const DOTRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*32/.test(cSrc), 'TIGHT_T_MAX = π/32');
+});
