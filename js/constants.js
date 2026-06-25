@@ -2702,4 +2702,32 @@ export const HEXACOSAGON_NOTES_SHAPES = [
     HEXACOSAGON_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.423.0';
+export const HEPTACOSAGON_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the heptacosagon
+export const HEPTACOSAGON_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution heptacosagon)
+export const HEPTACOSAGON_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the heptacosagon
+export const HEPTACOSAGON_NOTES_MIN_A = 1; // Minimum 1 scale a (small heptacosagon)
+export const HEPTACOSAGON_NOTES_MAX_A = 8; // Maximum 8 scale a (large heptacosagon)
+export const HEPTACOSAGON_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium heptacosagon)
+export const HEPTACOSAGON_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const HEPTACOSAGON_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const HEPTACOSAGON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const HEPTACOSAGON_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const HEPTACOSAGON_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 27 cusps visited)
+export const HEPTACOSAGON_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const HEPTACOSAGON_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const HEPTACOSAGON_NOTES_HEPTACOSAGON_T_MIN = 0; // Heptacosagon shape lower t bound (twenty-seventh revolution, 1 cusp region)
+export const HEPTACOSAGON_NOTES_HEPTACOSAGON_T_MAX = 2 * Math.PI / 27; // Heptacosagon shape upper t bound (twenty-seventh revolution, 1 cusp)
+export const HEPTACOSAGON_NOTES_TIGHT_T_MIN = -Math.PI / 27; // Tight shape lower t bound (concentrated around rightmost extreme)
+export const HEPTACOSAGON_NOTES_TIGHT_T_MAX = Math.PI / 27; // Tight shape upper t bound (concentrated around rightmost extreme)
+export const HEPTACOSAGON_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2pi]: full heptacosagon with all 27 cusps
+export const HEPTACOSAGON_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2pi, 0]: reversed traversal direction
+export const HEPTACOSAGON_NOTES_SHAPE_HEPTACOSAGON = 'heptacosagon'; // t in [0, 2pi/27]: twenty-seventh revolution, 1 cusp region
+export const HEPTACOSAGON_NOTES_SHAPE_TIGHT = 'tight'; // t in [-pi/27, pi/27]: tight concentration around the rightmost extreme
+export const HEPTACOSAGON_NOTES_SHAPES = [
+    HEPTACOSAGON_NOTES_SHAPE_STANDARD,
+    HEPTACOSAGON_NOTES_SHAPE_INVERTED,
+    HEPTACOSAGON_NOTES_SHAPE_HEPTACOSAGON,
+    HEPTACOSAGON_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.424.0';

@@ -63858,3 +63858,218 @@ TestRunner.test("Day 775 - hexacosagonNotes uses HEXACOSAGON_NOTES_TIGHT_T_MIN/M
     t.assertTruthy(/export const HEXACOSAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*26/.test(cSrc), 'TIGHT_T_MIN = -π/26');
     t.assertTruthy(/export const HEXACOSAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*26/.test(cSrc), 'TIGHT_T_MAX = π/26');
 });
+
+
+TestRunner.test("Day 776 - heptacosagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.heptacosagonNotes, 'function', 'heptacosagonNotes should be a function');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes captures undo BEFORE mutation with descriptive Heptacosagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,4000}_captureUndoState\(\s*`Heptacosagon Notes \(\$\{useShape\}, a=\$\{clampedA\}, N=\$\{clampedLength\}\) on \$\{activeSeq\.name\}`\s*\)/.test(tSrc), 'heptacosagonNotes captures undo before mutation');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes uses Math.cos, Math.sin, Math.cos(26t), Math.sin(26t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,5000}Math\.cos\(26\s*\*\s*t\)[\s\S]{0,200}Math\.sin\(26\s*\*\s*t\)/.test(tSrc), 'uses 26t trig terms');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes uses 27-cusped hypocycloid parametric x/y", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 26) * Math.cos(26 * t);
+    const y = a * Math.sin(t) - (a / 26) * Math.sin(26 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((a + a / 26) * 1000) / 1000, 'rightmost extreme x = 27a/26');
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes uses HEPTACOSAGON_NOTES_HEPTACOSAGON_T_MAX = 2*Math.PI/27", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEPTACOSAGON_NOTES_HEPTACOSAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*27/.test(cSrc), 'HEPTACOSAGON_T_MAX = 2π/27');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes uses HEPTACOSAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/27", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEPTACOSAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*27/.test(cSrc), 'TIGHT_T_MIN = -π/27');
+    t.assertTruthy(/export const HEPTACOSAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*27/.test(cSrc), 'TIGHT_T_MAX = π/27');
+});
+
+TestRunner.test("Day 776 - ui.js has 4 Heptacosagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Heptacosagon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, 'should have 4 Heptacosagon Notes menu items');
+});
+
+TestRunner.test("Day 776 - Heptacosagon Notes menu items call track.heptacosagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/heptacosagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, 'should call heptacosagonNotes 4 times');
+});
+
+TestRunner.test("Day 776 - Heptacosagon Notes menu items call recreateToneSequence after heptacosagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/heptacosagonNotes\([^
+]*recreateToneSequence\(true\)/g) || [];
+    t.assertEqual(matches.length, 4, 'should recreate tone sequence after heptacosagonNotes');
+});
+
+TestRunner.test("Day 776 - APP_VERSION validation (>= 2.424 for Day 776)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.424\.0'/.test(cSrc), 'APP_VERSION should be 2.424.0');
+});
+
+TestRunner.test("Day 776 - structural test: heptacosagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 776 - structural test: heptacosagonNotes returns count of heptacosagon notes", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return heptacosagonCount;/.test(tSrc), 'returns heptacosagonCount');
+});
+
+// Day 777: Heptacosagon (27-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 776 - heptacosagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.heptacosagonNotes, 'function', 'heptacosagonNotes should be a function');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes captures undo BEFORE mutation with descriptive Heptacosagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}_captureUndoState\s*\(\s*`Heptacosagon Notes\s*\(/.test(tSrc), 'heptacosagonNotes calls _captureUndoState with Heptacosagon Notes label');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes clamps length to HEPTACOSAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}HEPTACOSAGON_NOTES_MIN_LENGTH[\s\S]{0,200}HEPTACOSAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'clampedLength uses Math.floor(length)');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes uses Math.cos, Math.sin, Math.cos(26t), Math.sin(26t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t)');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t)');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*26\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(26*t)');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*26\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(26*t)');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes uses 27-cusped hypocycloid parametric x = a*cos(t) + (a/26)*cos(26t) and y = a*sin(t) - (a/26)*sin(26t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver26\s*\*\s*cos26T/.test(tSrc), 'x = a*cosT + aOver26*cos26T');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver26\s*\*\s*sin26T/.test(tSrc), 'y = a*sinT - aOver26*sin26T');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\s*\(\s*0\.01\s*,\s*xMax\s*-\s*xMin\s*\)/.test(tSrc), 'xRange divide-by-zero safety');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\s*\(\s*0\.01\s*,\s*yMax\s*-\s*yMin\s*\)/.test(tSrc), 'yRange divide-by-zero safety');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}HEPTACOSAGON_NOTES_SHAPE_STANDARD[\s\S]{0,200}HEPTACOSAGON_NOTES_SHAPE_INVERTED[\s\S]{0,200}HEPTACOSAGON_NOTES_SHAPE_HEPTACOSAGON[\s\S]{0,200}HEPTACOSAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 shapes in tRangeMap');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't formula');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'Math.round(decayedVel * 100) / 100');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes returns count of heptacosagon notes (heptacosagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}return\s+heptacosagonCount/.test(tSrc), 'return heptacosagonCount');
+});
+
+TestRunner.test("Day 776 - All 22 HEPTACOSAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const constants = [
+        'HEPTACOSAGON_NOTES_MIN_LENGTH', 'HEPTACOSAGON_NOTES_MAX_LENGTH', 'HEPTACOSAGON_NOTES_DEFAULT_LENGTH',
+        'HEPTACOSAGON_NOTES_MIN_A', 'HEPTACOSAGON_NOTES_MAX_A', 'HEPTACOSAGON_NOTES_DEFAULT_A',
+        'HEPTACOSAGON_NOTES_MIN_VELOCITY_DECAY', 'HEPTACOSAGON_NOTES_MAX_VELOCITY_DECAY', 'HEPTACOSAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEPTACOSAGON_NOTES_DEFAULT_T_MIN', 'HEPTACOSAGON_NOTES_DEFAULT_T_MAX',
+        'HEPTACOSAGON_NOTES_INVERTED_T_MIN', 'HEPTACOSAGON_NOTES_INVERTED_T_MAX',
+        'HEPTACOSAGON_NOTES_HEPTACOSAGON_T_MIN', 'HEPTACOSAGON_NOTES_HEPTACOSAGON_T_MAX',
+        'HEPTACOSAGON_NOTES_TIGHT_T_MIN', 'HEPTACOSAGON_NOTES_TIGHT_T_MAX',
+        'HEPTACOSAGON_NOTES_SHAPE_STANDARD', 'HEPTACOSAGON_NOTES_SHAPE_INVERTED',
+        'HEPTACOSAGON_NOTES_SHAPE_HEPTACOSAGON', 'HEPTACOSAGON_NOTES_SHAPE_TIGHT',
+        'HEPTACOSAGON_NOTES_SHAPES'
+    ];
+    for (const name of constants) {
+        t.assertTruthy(new RegExp('export const ' + name + '\\b').test(cSrc), name + ' should be defined');
+    }
+});
+
+TestRunner.test("Day 776 - HEPTACOSAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACOSAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}HEPTACOSAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}HEPTACOSAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}HEPTACOSAGON_NOTES_SHAPE_HEPTACOSAGON[\s\S]{0,500}HEPTACOSAGON_NOTES_SHAPE_TIGHT[\s\S]{0,500}\]/.test(cSrc), 'SHAPES includes all 4');
+});
+
+TestRunner.test("Day 776 - ui.js has 4 Heptacosagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const labels = ['Heptacosagon Notes (Standard, 32)', 'Heptacosagon Notes (Inverted, 32)', 'Heptacosagon Notes (Heptacosagon, 32)', 'Heptacosagon Notes (Tight, 32)'];
+    for (const label of labels) {
+        t.assertTruthy(uSrc.includes(label), 'ui.js has label ' + label);
+    }
+});
+
+TestRunner.test("Day 776 - Heptacosagon Notes menu items call track.heptacosagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((uSrc.match(/currentTrackForMenu\.heptacosagonNotes/g) || []).length, 4, '4 heptacosagonNotes calls');
+});
+
+TestRunner.test("Day 776 - Heptacosagon Notes menu items call recreateToneSequence after heptacosagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes\s*\([\s\S]{0,200}recreateToneSequence\s*\(\s*true\s*\)/.test(uSrc), 'recreateToneSequence(true) after heptacosagonNotes');
+});
+
+TestRunner.test("Day 776 - APP_VERSION validation (>= 2.424 for Day 777)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.424\.0'/.test(cSrc), 'APP_VERSION = 2.424.0');
+});
+
+TestRunner.test("Day 776 - Functional test: x = a*cos(t) + (a/26)*cos(26t) (27-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const t = 1.234;
+    const x = a * Math.cos(t) + (a / 26) * Math.cos(26 * t);
+    const expected = a * Math.cos(t) + (a / 26) * Math.cos(26 * t);
+    t.assertEqual(Math.round(x * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'x parametric');
+});
+
+TestRunner.test("Day 776 - Functional test: y = a*sin(t) - (a/26)*sin(26t) (27-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const t = 1.234;
+    const y = a * Math.sin(t) - (a / 26) * Math.sin(26 * t);
+    const expected = a * Math.sin(t) - (a / 26) * Math.sin(26 * t);
+    t.assertEqual(Math.round(y * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'y parametric');
+});
+
+TestRunner.test("Day 776 - Structural test: heptacosagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/heptacosagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 776 - Functional test: at t=0, x = a + a/26 = 27a/26 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 26) * Math.cos(26 * t);
+    const y = a * Math.sin(t) - (a / 26) * Math.sin(26 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((a + a / 26) * 1000) / 1000, 'rightmost extreme x = 27a/26');
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes uses HEPTACOSAGON_NOTES_HEPTACOSAGON_T_MAX = 2*Math.PI/27", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEPTACOSAGON_NOTES_HEPTACOSAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*27/.test(cSrc), 'HEPTACOSAGON_T_MAX = 2π/27');
+});
+
+TestRunner.test("Day 776 - heptacosagonNotes uses HEPTACOSAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/27", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEPTACOSAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*27/.test(cSrc), 'TIGHT_T_MIN = -π/27');
+    t.assertTruthy(/export const HEPTACOSAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*27/.test(cSrc), 'TIGHT_T_MAX = π/27');
+});
+
