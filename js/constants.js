@@ -2768,4 +2768,33 @@ export const OCTACOSAGON_NOTES_SHAPES = [
     OCTACOSAGON_NOTES_SHAPE_TIGHT
 ];
 
-export const APP_VERSION = '2.425.0';
+// Day 779: Enneacosagon (29-cusped Hypocycloid) Notes constants
+export const ENNEACOSAGON_NOTES_MIN_LENGTH = 8; // Minimum 8 samples around the enneacosagon
+export const ENNEACOSAGON_NOTES_MAX_LENGTH = 64; // Maximum 64 samples (high-resolution enneacosagon)
+export const ENNEACOSAGON_NOTES_DEFAULT_LENGTH = 32; // Default 32 samples around the enneacosagon
+export const ENNEACOSAGON_NOTES_MIN_A = 1; // Minimum 1 scale a (small enneacosagon)
+export const ENNEACOSAGON_NOTES_MAX_A = 8; // Maximum 8 scale a (large enneacosagon)
+export const ENNEACOSAGON_NOTES_DEFAULT_A = 4; // Default 4 scale a (medium enneacosagon)
+export const ENNEACOSAGON_NOTES_MIN_VELOCITY_DECAY = 0.1; // Minimum 10% velocity preservation at last sample
+export const ENNEACOSAGON_NOTES_MAX_VELOCITY_DECAY = 1.0; // Maximum 1.0 (no decay)
+export const ENNEACOSAGON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95; // Default 95% velocity preservation per sample
+export const ENNEACOSAGON_NOTES_DEFAULT_T_MIN = 0; // Standard shape lower t bound (full revolution from 0)
+export const ENNEACOSAGON_NOTES_DEFAULT_T_MAX = 2 * Math.PI; // Standard shape upper t bound (full revolution, 29 cusps visited)
+export const ENNEACOSAGON_NOTES_INVERTED_T_MIN = 2 * Math.PI; // Inverted shape lower t bound (reverse direction)
+export const ENNEACOSAGON_NOTES_INVERTED_T_MAX = 0; // Inverted shape upper t bound (reverse direction)
+export const ENNEACOSAGON_NOTES_ENNEACOSAGON_T_MIN = 0; // Enneacosagon shape lower t bound (twenty-ninth revolution, 1 cusp region)
+export const ENNEACOSAGON_NOTES_ENNEACOSAGON_T_MAX = 2 * Math.PI / 29; // Enneacosagon shape upper t bound (twenty-ninth revolution, 1 cusp)
+export const ENNEACOSAGON_NOTES_TIGHT_T_MIN = -Math.PI / 29; // Tight shape lower t bound (concentrated around rightmost extreme)
+export const ENNEACOSAGON_NOTES_TIGHT_T_MAX = Math.PI / 29; // Tight shape upper t bound (concentrated around rightmost extreme)
+export const ENNEACOSAGON_NOTES_SHAPE_STANDARD = 'standard'; // t in [0, 2pi]: full enneacosagon with all 29 cusps
+export const ENNEACOSAGON_NOTES_SHAPE_INVERTED = 'inverted'; // t in [2pi, 0]: reversed traversal direction
+export const ENNEACOSAGON_NOTES_SHAPE_ENNEACOSAGON = 'enneacosagon'; // t in [0, 2pi/29]: twenty-ninth revolution, 1 cusp region
+export const ENNEACOSAGON_NOTES_SHAPE_TIGHT = 'tight'; // t in [-pi/29, pi/29]: tight concentration around the rightmost extreme
+export const ENNEACOSAGON_NOTES_SHAPES = [
+    ENNEACOSAGON_NOTES_SHAPE_STANDARD,
+    ENNEACOSAGON_NOTES_SHAPE_INVERTED,
+    ENNEACOSAGON_NOTES_SHAPE_ENNEACOSAGON,
+    ENNEACOSAGON_NOTES_SHAPE_TIGHT
+];
+
+export const APP_VERSION = '2.426.0';

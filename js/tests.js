@@ -64216,3 +64216,151 @@ TestRunner.test("Day 778 - octacosagonNotes uses OCTACOSAGON_NOTES_TIGHT_T_MIN/M
     t.assertTruthy(/export const OCTACOSAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*28/.test(cSrc), 'TIGHT_T_MAX = π/28');
 });
 
+
+// Day 779: Enneacosagon (29-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 779 - enneacosagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.enneacosagonNotes, 'function', 'enneacosagonNotes should be a function');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes captures undo BEFORE mutation with descriptive Enneacosagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}_captureUndoState\s*\(\s*`Enneacosagon Notes\s*\(/.test(tSrc), 'enneacosagonNotes calls _captureUndoState with Enneacosagon Notes label');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes clamps length to ENNEACOSAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}ENNEACOSAGON_NOTES_MIN_LENGTH[\s\S]{0,200}ENNEACOSAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'clampedLength uses Math.floor(length)');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes uses Math.cos, Math.sin, Math.cos(28t), Math.sin(28t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t)');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t)');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*28\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(28*t)');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*28\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(28*t)');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes uses 29-cusped hypocycloid parametric x = a*cos(t) + (a/28)*cos(28t) and y = a*sin(t) - (a/28)*sin(28t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver28\s*\*\s*cos28T/.test(tSrc), 'x = a*cosT + aOver28*cos28T');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver28\s*\*\s*sin28T/.test(tSrc), 'y = a*sinT - aOver28*sin28T');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'xRange = Math.max(0.01, ...)');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'yRange = Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}ENNEACOSAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'standard shape');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}ENNEACOSAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'inverted shape');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}ENNEACOSAGON_NOTES_SHAPE_ENNEACOSAGON/.test(tSrc), 'enneacosagon shape');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}ENNEACOSAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tight shape');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't formula');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'Math.round(decayedVel * 100) / 100');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes returns count of enneacosagon notes (enneacosagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}return\s+enneacosagonCount/.test(tSrc), 'return enneacosagonCount');
+});
+
+TestRunner.test("Day 779 - All 22 ENNEACOSAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const constants = [
+        'ENNEACOSAGON_NOTES_MIN_LENGTH', 'ENNEACOSAGON_NOTES_MAX_LENGTH', 'ENNEACOSAGON_NOTES_DEFAULT_LENGTH',
+        'ENNEACOSAGON_NOTES_MIN_A', 'ENNEACOSAGON_NOTES_MAX_A', 'ENNEACOSAGON_NOTES_DEFAULT_A',
+        'ENNEACOSAGON_NOTES_MIN_VELOCITY_DECAY', 'ENNEACOSAGON_NOTES_MAX_VELOCITY_DECAY', 'ENNEACOSAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'ENNEACOSAGON_NOTES_DEFAULT_T_MIN', 'ENNEACOSAGON_NOTES_DEFAULT_T_MAX',
+        'ENNEACOSAGON_NOTES_INVERTED_T_MIN', 'ENNEACOSAGON_NOTES_INVERTED_T_MAX',
+        'ENNEACOSAGON_NOTES_ENNEACOSAGON_T_MIN', 'ENNEACOSAGON_NOTES_ENNEACOSAGON_T_MAX',
+        'ENNEACOSAGON_NOTES_TIGHT_T_MIN', 'ENNEACOSAGON_NOTES_TIGHT_T_MAX',
+        'ENNEACOSAGON_NOTES_SHAPE_STANDARD', 'ENNEACOSAGON_NOTES_SHAPE_INVERTED',
+        'ENNEACOSAGON_NOTES_SHAPE_ENNEACOSAGON', 'ENNEACOSAGON_NOTES_SHAPE_TIGHT',
+        'ENNEACOSAGON_NOTES_SHAPES'
+    ];
+    for (const name of constants) {
+        t.assertTruthy(new RegExp('export const ' + name + '\\b').test(cSrc), name + ' should be defined');
+    }
+});
+
+TestRunner.test("Day 779 - ENNEACOSAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/ENNEACOSAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}ENNEACOSAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}ENNEACOSAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}ENNEACOSAGON_NOTES_SHAPE_ENNEACOSAGON[\s\S]{0,500}ENNEACOSAGON_NOTES_SHAPE_TIGHT[\s\S]{0,500}\]/.test(cSrc), 'SHAPES includes all 4');
+});
+
+TestRunner.test("Day 779 - ui.js has 4 Enneacosagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const labels = ['Enneacosagon Notes (Standard, 32)', 'Enneacosagon Notes (Inverted, 32)', 'Enneacosagon Notes (Enneacosagon, 32)', 'Enneacosagon Notes (Tight, 32)'];
+    for (const label of labels) {
+        t.assertTruthy(uSrc.includes(label), 'ui.js has label ' + label);
+    }
+});
+
+TestRunner.test("Day 779 - Enneacosagon Notes menu items call track.enneacosagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((uSrc.match(/currentTrackForMenu\.enneacosagonNotes/g) || []).length, 4, '4 enneacosagonNotes calls');
+});
+
+TestRunner.test("Day 779 - Enneacosagon Notes menu items call recreateToneSequence after enneacosagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes\s*\([\s\S]{0,200}recreateToneSequence\s*\(\s*true\s*\)/.test(uSrc), 'recreateToneSequence(true) after enneacosagonNotes');
+});
+
+TestRunner.test("Day 779 - APP_VERSION validation (>= 2.426 for Day 779)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.426\.0'/.test(cSrc), 'APP_VERSION = 2.426.0');
+});
+
+TestRunner.test("Day 779 - Functional test: x = a*cos(t) + (a/28)*cos(28t) (29-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const t = 1.234;
+    const x = a * Math.cos(t) + (a / 28) * Math.cos(28 * t);
+    const expected = a * Math.cos(t) + (a / 28) * Math.cos(28 * t);
+    t.assertEqual(Math.round(x * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'x parametric');
+});
+
+TestRunner.test("Day 779 - Functional test: y = a*sin(t) - (a/28)*sin(28t) (29-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const t = 1.234;
+    const y = a * Math.sin(t) - (a / 28) * Math.sin(28 * t);
+    const expected = a * Math.sin(t) - (a / 28) * Math.sin(28 * t);
+    t.assertEqual(Math.round(y * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'y parametric');
+});
+
+TestRunner.test("Day 779 - Structural test: enneacosagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/enneacosagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 779 - Functional test: at t=0, x = a + a/28 = 29a/28 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 28) * Math.cos(28 * t);
+    const y = a * Math.sin(t) - (a / 28) * Math.sin(28 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((a + a / 28) * 1000) / 1000, 'rightmost extreme x = 29a/28');
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes uses ENNEACOSAGON_NOTES_ENNEACOSAGON_T_MAX = 2*Math.PI/29", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const ENNEACOSAGON_NOTES_ENNEACOSAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*29/.test(cSrc), 'ENNEACOSAGON_T_MAX = 2π/29');
+});
+
+TestRunner.test("Day 779 - enneacosagonNotes uses ENNEACOSAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/29", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const ENNEACOSAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*29/.test(cSrc), 'TIGHT_T_MIN = -π/29');
+    t.assertTruthy(/export const ENNEACOSAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*29/.test(cSrc), 'TIGHT_T_MAX = π/29');
+});
+
