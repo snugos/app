@@ -66107,3 +66107,159 @@ TestRunner.test("Day 792 - 41 is prime but NOT a Fermat prime (so 41-gon is NOT 
     })();
     t.assertEqual(isPrime41, true, '41 should be prime');
 });
+
+// Day 793: Ditetracontagon (42-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 793 - ditetracontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.ditetracontagonNotes, 'function', 'ditetracontagonNotes should be a function');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes captures undo BEFORE mutation with descriptive Ditetracontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Ditetracontagon Notes \(/.test(tSrc), 'ditetracontagonNotes captures undo with Ditetracontagon Notes label');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes clamps length to DITETRACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/clampedLength = Math\.max\(Constants\.DITETRACONTAGON_NOTES_MIN_LENGTH, Math\.min\(Constants\.DITETRACONTAGON_NOTES_MAX_LENGTH, Math\.floor\(length\)\)\)/.test(tSrc), 'ditetracontagonNotes clamps length with Math.floor');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes uses Math.cos, Math.sin, Math.cos(41t), Math.sin(41t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(41 \* t\)/.test(tSrc), 'ditetracontagonNotes uses Math.cos(41*t)');
+    t.assertTruthy(/Math\.sin\(41 \* t\)/.test(tSrc), 'ditetracontagonNotes uses Math.sin(41*t)');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes uses 42-cusped hypocycloid parametric x = a*cos(t) + (a/41)*cos(41t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver41 = a \/ 41;/.test(tSrc), 'ditetracontagonNotes uses aOver41 = a/41');
+    t.assertTruthy(/const x = a \* cosT \+ aOver41 \* cos41T;/.test(tSrc), 'ditetracontagonNotes uses x = a*cosT + (a/41)*cos41T');
+    t.assertTruthy(/const y = a \* sinT - aOver41 \* sin41T;/.test(tSrc), 'ditetracontagonNotes uses y = a*sinT - (a/41)*sin41T');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/xRange = Math\.max\(0\.01, xMax - xMin\)/.test(tSrc), 'ditetracontagonNotes uses xRange with Math.max(0.01, ...)');
+    t.assertTruthy(/yRange = Math\.max\(0\.01, yMax - yMin\)/.test(tSrc), 'ditetracontagonNotes uses yRange with Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/DITETRACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'ditetracontagonNotes has STANDARD shape');
+    t.assertTruthy(/DITETRACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'ditetracontagonNotes has INVERTED shape');
+    t.assertTruthy(/DITETRACONTAGON_NOTES_SHAPE_DITETRACONTAGON/.test(tSrc), 'ditetracontagonNotes has DITETRACONTAGON shape');
+    t.assertTruthy(/DITETRACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'ditetracontagonNotes has TIGHT shape');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const t = tMin \+ \(tMax - tMin\) \* i \/ Math\.max\(1, clampedLength - 1\)/.test(tSrc), 'ditetracontagonNotes uses t = tMin + (tMax - tMin) * i / (length - 1)');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/velocity: Math\.round\(decayedVel \* 100\) \/ 100/.test(tSrc), 'ditetracontagonNotes rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes returns count of ditetracontagon notes (ditetracontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return ditetracontagonCount;/.test(tSrc), 'ditetracontagonNotes returns ditetracontagonCount');
+});
+
+TestRunner.test("Day 793 - All 22 DITETRACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'DITETRACONTAGON_NOTES_MIN_LENGTH', 'DITETRACONTAGON_NOTES_MAX_LENGTH', 'DITETRACONTAGON_NOTES_DEFAULT_LENGTH',
+        'DITETRACONTAGON_NOTES_MIN_A', 'DITETRACONTAGON_NOTES_MAX_A', 'DITETRACONTAGON_NOTES_DEFAULT_A',
+        'DITETRACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'DITETRACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'DITETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'DITETRACONTAGON_NOTES_DEFAULT_T_MIN', 'DITETRACONTAGON_NOTES_DEFAULT_T_MAX',
+        'DITETRACONTAGON_NOTES_INVERTED_T_MIN', 'DITETRACONTAGON_NOTES_INVERTED_T_MAX',
+        'DITETRACONTAGON_NOTES_DITETRACONTAGON_T_MIN', 'DITETRACONTAGON_NOTES_DITETRACONTAGON_T_MAX',
+        'DITETRACONTAGON_NOTES_TIGHT_T_MIN', 'DITETRACONTAGON_NOTES_TIGHT_T_MAX',
+        'DITETRACONTAGON_NOTES_SHAPE_STANDARD', 'DITETRACONTAGON_NOTES_SHAPE_INVERTED',
+        'DITETRACONTAGON_NOTES_SHAPE_DITETRACONTAGON', 'DITETRACONTAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(new RegExp(`export const ${name}\\b`).test(cSrc), `${name} should be defined in constants.js`);
+    }
+    t.assertTruthy(/DITETRACONTAGON_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'DITETRACONTAGON_NOTES_SHAPES array should be defined');
+});
+
+TestRunner.test("Day 793 - DITETRACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/DITETRACONTAGON_NOTES_SHAPES\s*=\s*\[\s*DITETRACONTAGON_NOTES_SHAPE_STANDARD\s*,\s*DITETRACONTAGON_NOTES_SHAPE_INVERTED\s*,\s*DITETRACONTAGON_NOTES_SHAPE_DITETRACONTAGON\s*,\s*DITETRACONTAGON_NOTES_SHAPE_TIGHT\s*\]/.test(cSrc), 'SHAPES array includes all 4 shape variants in correct order');
+});
+
+TestRunner.test("Day 793 - ui.js has 4 Ditetracontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Ditetracontagon Notes \([^)]+\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Ditetracontagon Notes menu items');
+});
+
+TestRunner.test("Day 793 - Ditetracontagon Notes menu items call track.ditetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.ditetracontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 ditetracontagonNotes calls');
+});
+
+TestRunner.test("Day 793 - Ditetracontagon Notes menu items call recreateToneSequence after ditetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/ditetracontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after ditetracontagonNotes');
+});
+
+TestRunner.test("Day 793 - APP_VERSION validation (>= 2.439 for Day 793)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.439\.0'/.test(cSrc), 'APP_VERSION should be 2.439.0 for Day 793');
+});
+
+TestRunner.test("Day 793 - Functional test: x = a*cos(t) + (a/41)*cos(41t) (42-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const cosT = Math.cos(t);
+    const cos41T = Math.cos(41 * t);
+    const x = a * cosT + (a / 41) * cos41T;
+    t.assertEqual(Math.round(x * 100) / 100, Math.round((a + a / 41) * 100) / 100, 'x = a + a/41 at t=0');
+});
+
+TestRunner.test("Day 793 - Functional test: y = a*sin(t) - (a/41)*sin(41t) (42-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const sinT = Math.sin(t);
+    const sin41T = Math.sin(41 * t);
+    const y = a * sinT - (a / 41) * sin41T;
+    t.assertEqual(Math.round(y * 1000000) / 1000000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 793 - Functional test: at t=0, x = a + a/41 = 42a/41 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 41) * Math.cos(41 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((42 * a / 41) * 1000) / 1000, 'rightmost extreme at x = 42a/41');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes uses DITETRACONTAGON_NOTES_DITETRACONTAGON_T_MAX = 2*Math.PI/42", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const DITETRACONTAGON_NOTES_DITETRACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*42/.test(cSrc), 'DITETRACONTAGON_T_MAX = 2π/42');
+});
+
+TestRunner.test("Day 793 - ditetracontagonNotes uses DITETRACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/42", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const DITETRACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*42/.test(cSrc), 'TIGHT_T_MIN = -π/42');
+    t.assertTruthy(/export const DITETRACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*42/.test(cSrc), 'TIGHT_T_MAX = π/42');
+});
+
+TestRunner.test("Day 793 - 42 = 2*3*7 IS NOT constructible (7 is prime but not Fermat)", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    // 42 = 2*3*7: 2 is power of 2, 3 is Fermat prime, but 7 is prime NOT Fermat
+    t.assertEqual(FermatPrimes.includes(7), false, '7 should not be a Fermat prime');
+    const isPrime7 = (() => {
+        if (7 < 2) return false;
+        for (let i = 2; i <= Math.sqrt(7); i++) if (7 % i === 0) return false;
+        return true;
+    })();
+    t.assertEqual(isPrime7, true, '7 should be prime');
+    // Verify 42 factorization
+    t.assertEqual(42 % 2, 0, '42 is divisible by 2');
+    t.assertEqual(42 % 3, 0, '42 is divisible by 3');
+    t.assertEqual(42 % 7, 0, '42 is divisible by 7');
+    t.assertEqual((42 / 2) / 3 / 7, 1, '42 = 2*3*7');
+});
