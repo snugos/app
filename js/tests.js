@@ -64806,3 +64806,151 @@ TestRunner.test("Day 783 - dotriacontagonNotes uses DOTRIACONTAGON_NOTES_TIGHT_T
     t.assertTruthy(/export const DOTRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*32/.test(cSrc), 'TIGHT_T_MIN = -π/32');
     t.assertTruthy(/export const DOTRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*32/.test(cSrc), 'TIGHT_T_MAX = π/32');
 });
+
+
+// Day 784: Tritriacontagon (33-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 784 - tritriacontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.tritriacontagonNotes, 'function', 'tritriacontagonNotes should be a function');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes captures undo BEFORE mutation with descriptive Tritriacontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}_captureUndoState\s*\(\s*`Tritriacontagon Notes\s*\(/.test(tSrc), 'tritriacontagonNotes calls _captureUndoState with Tritriacontagon Notes label');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes clamps length to TRITRIACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}TRITRIACONTAGON_NOTES_MIN_LENGTH[\s\S]{0,200}TRITRIACONTAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'clampedLength uses Math.floor(length)');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes uses Math.cos, Math.sin, Math.cos(32t), Math.sin(32t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*t\s*\)/.test(tSrc), 'Math.cos(t)');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*t\s*\)/.test(tSrc), 'Math.sin(t)');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}Math\.cos\s*\(\s*32\s*\*\s*t\s*\)/.test(tSrc), 'Math.cos(32*t)');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}Math\.sin\s*\(\s*32\s*\*\s*t\s*\)/.test(tSrc), 'Math.sin(32*t)');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes uses 33-cusped hypocycloid parametric x = a*cos(t) + (a/32)*cos(32t) and y = a*sin(t) - (a/32)*sin(32t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver32\s*\*\s*cos32T/.test(tSrc), 'x = a*cosT + aOver32*cos32T');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver32\s*\*\s*sin32T/.test(tSrc), 'y = a*sinT - aOver32*sin32T');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}xRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'xRange = Math.max(0.01, ...)');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}yRange\s*=\s*Math\.max\s*\(\s*0\.01/.test(tSrc), 'yRange = Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}TRITRIACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'standard shape');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}TRITRIACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'inverted shape');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}TRITRIACONTAGON_NOTES_SHAPE_TRITRIACONTAGON/.test(tSrc), 'tritriacontagon shape');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}TRITRIACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tight shape');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}t\s*=\s*tMin\s*\+\s*\(\s*tMax\s*-\s*tMin\s*\)\s*\*\s*i\s*\/\s*Math\.max\s*\(\s*1\s*,\s*clampedLength\s*-\s*1\s*\)/.test(tSrc), 't formula');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}Math\.round\s*\(\s*decayedVel\s*\*\s*100\s*\)\s*\/\s*100/.test(tSrc), 'Math.round(decayedVel * 100) / 100');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes returns count of tritriacontagon notes (tritriacontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}return\s+tritriacontagonCount/.test(tSrc), 'return tritriacontagonCount');
+});
+
+TestRunner.test("Day 784 - All 22 TRITRIACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const constants = [
+        'TRITRIACONTAGON_NOTES_MIN_LENGTH', 'TRITRIACONTAGON_NOTES_MAX_LENGTH', 'TRITRIACONTAGON_NOTES_DEFAULT_LENGTH',
+        'TRITRIACONTAGON_NOTES_MIN_A', 'TRITRIACONTAGON_NOTES_MAX_A', 'TRITRIACONTAGON_NOTES_DEFAULT_A',
+        'TRITRIACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'TRITRIACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'TRITRIACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'TRITRIACONTAGON_NOTES_DEFAULT_T_MIN', 'TRITRIACONTAGON_NOTES_DEFAULT_T_MAX',
+        'TRITRIACONTAGON_NOTES_INVERTED_T_MIN', 'TRITRIACONTAGON_NOTES_INVERTED_T_MAX',
+        'TRITRIACONTAGON_NOTES_TRITRIACONTAGON_T_MIN', 'TRITRIACONTAGON_NOTES_TRITRIACONTAGON_T_MAX',
+        'TRITRIACONTAGON_NOTES_TIGHT_T_MIN', 'TRITRIACONTAGON_NOTES_TIGHT_T_MAX',
+        'TRITRIACONTAGON_NOTES_SHAPE_STANDARD', 'TRITRIACONTAGON_NOTES_SHAPE_INVERTED',
+        'TRITRIACONTAGON_NOTES_SHAPE_TRITRIACONTAGON', 'TRITRIACONTAGON_NOTES_SHAPE_TIGHT',
+        'TRITRIACONTAGON_NOTES_SHAPES'
+    ];
+    for (const name of constants) {
+        t.assertTruthy(new RegExp('export const ' + name + '\\b').test(cSrc), name + ' should be defined');
+    }
+});
+
+TestRunner.test("Day 784 - TRITRIACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/TRITRIACONTAGON_NOTES_SHAPES\s*=\s*\[[\s\S]{0,500}TRITRIACONTAGON_NOTES_SHAPE_STANDARD[\s\S]{0,500}TRITRIACONTAGON_NOTES_SHAPE_INVERTED[\s\S]{0,500}TRITRIACONTAGON_NOTES_SHAPE_TRITRIACONTAGON[\s\S]{0,500}TRITRIACONTAGON_NOTES_SHAPE_TIGHT[\s\S]{0,500}\]/.test(cSrc), 'SHAPES includes all 4');
+});
+
+TestRunner.test("Day 784 - ui.js has 4 Tritriacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const labels = ['Tritriacontagon Notes (Standard, 32)', 'Tritriacontagon Notes (Inverted, 32)', 'Tritriacontagon Notes (Tritriacontagon, 32)', 'Tritriacontagon Notes (Tight, 32)'];
+    for (const label of labels) {
+        t.assertTruthy(uSrc.includes(label), 'ui.js has label ' + label);
+    }
+});
+
+TestRunner.test("Day 784 - Tritriacontagon Notes menu items call track.tritriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((uSrc.match(/currentTrackForMenu\.tritriacontagonNotes/g) || []).length, 4, '4 tritriacontagonNotes calls');
+});
+
+TestRunner.test("Day 784 - Tritriacontagon Notes menu items call recreateToneSequence after tritriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes\s*\([\s\S]{0,200}recreateToneSequence\s*\(\s*true\s*\)/.test(uSrc), 'recreateToneSequence(true) after tritriacontagonNotes');
+});
+
+TestRunner.test("Day 784 - APP_VERSION validation (>= 2.430 for Day 784)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.430\.0'/.test(cSrc), 'APP_VERSION = 2.430.0');
+});
+
+TestRunner.test("Day 784 - Functional test: x = a*cos(t) + (a/32)*cos(32t) (33-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const tt = 1.234;
+    const x = a * Math.cos(tt) + (a / 32) * Math.cos(32 * tt);
+    const expected = a * Math.cos(tt) + (a / 32) * Math.cos(32 * tt);
+    t.assertEqual(Math.round(x * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'x parametric');
+});
+
+TestRunner.test("Day 784 - Functional test: y = a*sin(t) - (a/32)*sin(32t) (33-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const tt = 1.234;
+    const y = a * Math.sin(tt) - (a / 32) * Math.sin(32 * tt);
+    const expected = a * Math.sin(tt) - (a / 32) * Math.sin(32 * tt);
+    t.assertEqual(Math.round(y * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, 'y parametric');
+});
+
+TestRunner.test("Day 784 - Structural test: tritriacontagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*length\s*\)/.test(tSrc), 'Math.floor(length)');
+    t.assertTruthy(/tritriacontagonNotes[\s\S]{0,8000}Math\.floor\s*\(\s*scale\s*\)/.test(tSrc), 'Math.floor(scale)');
+});
+
+TestRunner.test("Day 784 - Functional test: at t=0, x = a + a/32 = 33a/32 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const tt = 0;
+    const x = a * Math.cos(tt) + (a / 32) * Math.cos(32 * tt);
+    const y = a * Math.sin(tt) - (a / 32) * Math.sin(32 * tt);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((a + a / 32) * 1000) / 1000, 'rightmost extreme x = 33a/32');
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes uses TRITRIACONTAGON_NOTES_TRITRIACONTAGON_T_MAX = 2*Math.PI/33", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TRITRIACONTAGON_NOTES_TRITRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*33/.test(cSrc), 'TRITRIACONTAGON_T_MAX = 2π/33');
+});
+
+TestRunner.test("Day 784 - tritriacontagonNotes uses TRITRIACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/33", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TRITRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*33/.test(cSrc), 'TIGHT_T_MIN = -π/33');
+    t.assertTruthy(/export const TRITRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*33/.test(cSrc), 'TIGHT_T_MAX = π/33');
+});
