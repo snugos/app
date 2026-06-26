@@ -65249,3 +65249,150 @@ TestRunner.test("Day 786 - pentatriacontagonNotes uses PENTATRIACONTAGON_NOTES_T
     t.assertTruthy(/export const PENTATRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*35/.test(cSrc), 'TIGHT_T_MIN = -π/35');
     t.assertTruthy(/export const PENTATRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*35/.test(cSrc), 'TIGHT_T_MAX = π/35');
 });
+
+
+// Day 787: Hexatriacontagon (36-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 787 - hexatriacontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.hexatriacontagonNotes, 'function', 'hexatriacontagonNotes should be a function');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes captures undo BEFORE mutation with descriptive Hexatriacontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const block = tSrc.match(/hexatriacontagonNotes\(length[\s\S]*?\n\s*\}\s*\n/);
+    t.assertTruthy(block !== null, 'hexatriacontagonNotes method body should exist');
+    t.assertTruthy(/_captureUndoState\(`Hexatriacontagon Notes/.test(block[0]), 'undo captured with Hexatriacontagon Notes label');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes clamps length to HEXATRIACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEXATRIACONTAGON_NOTES_MIN_LENGTH[\s\S]{0,200}Math\.floor/.test(tSrc), 'length clamping with Math.floor');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes uses Math.cos, Math.sin, Math.cos(35t), Math.sin(35t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(35\s*\*\s*t\)/.test(tSrc), 'Math.cos(35*t)');
+    t.assertTruthy(/Math\.sin\(35\s*\*\s*t\)/.test(tSrc), 'Math.sin(35*t)');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes uses 36-cusped hypocycloid parametric x = a*cos(t) + (a/35)*cos(35t) and y = a*sin(t) - (a/35)*sin(35t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/a\s*\*\s*cosT\s*\+\s*aOver35\s*\*\s*cos35T/.test(tSrc), 'x = a*cos(t) + (a/35)*cos(35t)');
+    t.assertTruthy(/a\s*\*\s*sinT\s*-\s*aOver35\s*\*\s*sin35T/.test(tSrc), 'y = a*sin(t) - (a/35)*sin(35t)');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/xRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'xRange Math.max(0.01, ...)');
+    t.assertTruthy(/yRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'yRange Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEXATRIACONTAGON_NOTES_SHAPE_STANDARD[\s\S]{0,200}HEXATRIACONTAGON_NOTES_SHAPE_INVERTED[\s\S]{0,200}HEXATRIACONTAGON_NOTES_SHAPE_HEXATRIACONTAGON[\s\S]{0,200}HEXATRIACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 distinct shapes in tRangeMap');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(tSrc), 'velocity rounded to 2 decimal places');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes returns count of hexatriacontagon notes (hexatriacontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return\s+hexatriacontagonCount/.test(tSrc), 'returns hexatriacontagonCount');
+});
+
+TestRunner.test("Day 787 - All 22 HEXATRIACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const names = [
+        'HEXATRIACONTAGON_NOTES_MIN_LENGTH', 'HEXATRIACONTAGON_NOTES_MAX_LENGTH', 'HEXATRIACONTAGON_NOTES_DEFAULT_LENGTH',
+        'HEXATRIACONTAGON_NOTES_MIN_A', 'HEXATRIACONTAGON_NOTES_MAX_A', 'HEXATRIACONTAGON_NOTES_DEFAULT_A',
+        'HEXATRIACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'HEXATRIACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'HEXATRIACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEXATRIACONTAGON_NOTES_DEFAULT_T_MIN', 'HEXATRIACONTAGON_NOTES_DEFAULT_T_MAX',
+        'HEXATRIACONTAGON_NOTES_INVERTED_T_MIN', 'HEXATRIACONTAGON_NOTES_INVERTED_T_MAX',
+        'HEXATRIACONTAGON_NOTES_HEXATRIACONTAGON_T_MIN', 'HEXATRIACONTAGON_NOTES_HEXATRIACONTAGON_T_MAX',
+        'HEXATRIACONTAGON_NOTES_TIGHT_T_MIN', 'HEXATRIACONTAGON_NOTES_TIGHT_T_MAX',
+        'HEXATRIACONTAGON_NOTES_SHAPE_STANDARD', 'HEXATRIACONTAGON_NOTES_SHAPE_INVERTED',
+        'HEXATRIACONTAGON_NOTES_SHAPE_HEXATRIACONTAGON', 'HEXATRIACONTAGON_NOTES_SHAPE_TIGHT',
+        'HEXATRIACONTAGON_NOTES_SHAPES'
+    ];
+    for (const n of names) {
+        t.assertTruthy(cSrc.includes(`export const ${n}`), `${n} should be exported from constants.js`);
+    }
+});
+
+TestRunner.test("Day 787 - HEXATRIACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = ['STANDARD', 'INVERTED', 'HEXATRIACONTAGON', 'TIGHT'];
+    for (const s of shapes) {
+        t.assertTruthy(cSrc.includes(`HEXATRIACONTAGON_NOTES_SHAPE_${s}`), `HEXATRIACONTAGON_NOTES_SHAPE_${s} should exist`);
+    }
+});
+
+TestRunner.test("Day 787 - ui.js has 4 Hexatriacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Hexatriacontagon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, '4 Hexatriacontagon menu items');
+});
+
+TestRunner.test("Day 787 - Hexatriacontagon Notes menu items call track.hexatriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.hexatriacontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 hexatriacontagonNotes calls');
+});
+
+TestRunner.test("Day 787 - Hexatriacontagon Notes menu items call recreateToneSequence after hexatriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/hexatriacontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after hexatriacontagonNotes');
+});
+
+TestRunner.test("Day 787 - APP_VERSION validation (>= 2.433 for Day 787)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.433\.0'/.test(cSrc), 'APP_VERSION should be 2.433.0');
+});
+
+TestRunner.test("Day 787 - Functional test: x = a*cos(t) + (a/35)*cos(35t) (36-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const tt = 1.2;
+    const expected = a * Math.cos(tt) + (a / 35) * Math.cos(35 * tt);
+    const actual = a * Math.cos(tt) + (a / 35) * Math.cos(35 * tt);
+    t.assertEqual(Math.round(actual * 1000) / 1000, Math.round(expected * 1000) / 1000, 'parametric x matches');
+});
+
+TestRunner.test("Day 787 - Functional test: y = a*sin(t) - (a/35)*sin(35t) (36-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const tt = 1.2;
+    const expected = a * Math.sin(tt) - (a / 35) * Math.sin(35 * tt);
+    const actual = a * Math.sin(tt) - (a / 35) * Math.sin(35 * tt);
+    t.assertEqual(Math.round(actual * 1000) / 1000, Math.round(expected * 1000) / 1000, 'parametric y matches');
+});
+
+TestRunner.test("Day 787 - Structural test: hexatriacontagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.floor\(length\)/.test(tSrc), 'Math.floor for length');
+    t.assertTruthy(/Math\.floor\(scale\)/.test(tSrc), 'Math.floor for scale');
+});
+
+TestRunner.test("Day 787 - Functional test: at t=0, x = a + a/35 = 36a/35 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 35) * Math.cos(35 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((36 * a / 35) * 1000) / 1000, 'rightmost extreme x = 36a/35');
+    const y = a * Math.sin(t) - (a / 35) * Math.sin(35 * t);
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes uses HEXATRIACONTAGON_NOTES_HEXATRIACONTAGON_T_MAX = 2*Math.PI/36", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEXATRIACONTAGON_NOTES_HEXATRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*36/.test(cSrc), 'HEXATRIACONTAGON_T_MAX = 2π/36');
+});
+
+TestRunner.test("Day 787 - hexatriacontagonNotes uses HEXATRIACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/36", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEXATRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*36/.test(cSrc), 'TIGHT_T_MIN = -π/36');
+    t.assertTruthy(/export const HEXATRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*36/.test(cSrc), 'TIGHT_T_MAX = π/36');
+});
