@@ -65679,3 +65679,141 @@ TestRunner.test("Day 789 - octatriacontagonNotes uses OCTATRIACONTAGON_NOTES_TIG
     t.assertTruthy(/export const OCTATRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*38/.test(cSrc), 'TIGHT_T_MIN = -π/38');
     t.assertTruthy(/export const OCTATRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*38/.test(cSrc), 'TIGHT_T_MAX = π/38');
 });
+
+// Day 790: Enneatriacontagon (39-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 790 - enneatriacontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.enneatriacontagonNotes, 'function', 'enneatriacontagonNotes should be a function');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes captures undo BEFORE mutation with descriptive Enneatriacontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const block = tSrc.match(/enneatriacontagonNotes\(length[\s\S]*?\n\s*\}\s*\n/);
+    t.assertTruthy(block !== null, 'enneatriacontagonNotes method body should exist');
+    t.assertTruthy(/_captureUndoState\(`Enneatriacontagon Notes/.test(block[0]), 'undo captured with Enneatriacontagon Notes label');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes clamps length to ENNEATRIACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/ENNEATRIACONTAGON_NOTES_MIN_LENGTH[\s\S]{0,200}Math\.floor/.test(tSrc), 'length clamping with Math.floor');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes uses Math.cos, Math.sin, Math.cos(38t), Math.sin(38t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(38\s*\*\s*t\)/.test(tSrc), 'Math.cos(38*t) used');
+    t.assertTruthy(/Math\.sin\(38\s*\*\s*t\)/.test(tSrc), 'Math.sin(38*t) used');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes uses 39-cusped hypocycloid parametric x = a*cos(t) + (a/38)*cos(38t) and y = a*sin(t) - (a/38)*sin(38t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver38\s*\*\s*cos38T/.test(tSrc), 'x parametric form');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver38\s*\*\s*sin38T/.test(tSrc), 'y parametric form');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const xRange = Math\.max\(0\.01, xMax - xMin\)/.test(tSrc), 'xRange guarded');
+    t.assertTruthy(/const yRange = Math\.max\(0\.01, yMax - yMin\)/.test(tSrc), 'yRange guarded');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/ENNEATRIACONTAGON_NOTES_SHAPE_STANDARD[\s\S]{0,200}ENNEATRIACONTAGON_NOTES_SHAPE_INVERTED[\s\S]{0,200}ENNEATRIACONTAGON_NOTES_SHAPE_ENNEATRIACONTAGON[\s\S]{0,200}ENNEATRIACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 distinct shapes in tRangeMap');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const t = tMin \+ \(tMax - tMin\) \* i \/ Math\.max\(1, clampedLength - 1\)/.test(tSrc), 't interpolation formula');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.round\(decayedVel \* 100\) \/ 100/.test(tSrc), 'velocity rounding');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes returns count of enneatriacontagon notes (enneatriacontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let enneatriacontagonCount = 0/.test(tSrc), 'count variable declared');
+    t.assertTruthy(/return enneatriacontagonCount;/.test(tSrc), 'returns enneatriacontagonCount');
+});
+
+TestRunner.test("Day 790 - All 22 ENNEATRIACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const names = [
+        'ENNEATRIACONTAGON_NOTES_MIN_LENGTH', 'ENNEATRIACONTAGON_NOTES_MAX_LENGTH', 'ENNEATRIACONTAGON_NOTES_DEFAULT_LENGTH',
+        'ENNEATRIACONTAGON_NOTES_MIN_A', 'ENNEATRIACONTAGON_NOTES_MAX_A', 'ENNEATRIACONTAGON_NOTES_DEFAULT_A',
+        'ENNEATRIACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'ENNEATRIACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'ENNEATRIACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'ENNEATRIACONTAGON_NOTES_DEFAULT_T_MIN', 'ENNEATRIACONTAGON_NOTES_DEFAULT_T_MAX',
+        'ENNEATRIACONTAGON_NOTES_INVERTED_T_MIN', 'ENNEATRIACONTAGON_NOTES_INVERTED_T_MAX',
+        'ENNEATRIACONTAGON_NOTES_ENNEATRIACONTAGON_T_MIN', 'ENNEATRIACONTAGON_NOTES_ENNEATRIACONTAGON_T_MAX',
+        'ENNEATRIACONTAGON_NOTES_TIGHT_T_MIN', 'ENNEATRIACONTAGON_NOTES_TIGHT_T_MAX',
+        'ENNEATRIACONTAGON_NOTES_SHAPE_STANDARD', 'ENNEATRIACONTAGON_NOTES_SHAPE_INVERTED',
+        'ENNEATRIACONTAGON_NOTES_SHAPE_ENNEATRIACONTAGON', 'ENNEATRIACONTAGON_NOTES_SHAPE_TIGHT',
+        'ENNEATRIACONTAGON_NOTES_SHAPES'
+    ];
+    for (const name of names) {
+        t.assertTruthy(cSrc.includes(`export const ${name}`), `${name} should exist`);
+    }
+});
+
+TestRunner.test("Day 790 - ENNEATRIACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = ['STANDARD', 'INVERTED', 'ENNEATRIACONTAGON', 'TIGHT'];
+    for (const s of shapes) {
+        t.assertTruthy(cSrc.includes(`ENNEATRIACONTAGON_NOTES_SHAPE_${s}`), `ENNEATRIACONTAGON_NOTES_SHAPE_${s} should exist`);
+    }
+});
+
+TestRunner.test("Day 790 - ui.js has 4 Enneatriacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Enneatriacontagon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, '4 Enneatriacontagon Notes menu items');
+});
+
+TestRunner.test("Day 790 - Enneatriacontagon Notes menu items call track.enneatriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.enneatriacontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 enneatriacontagonNotes calls');
+});
+
+TestRunner.test("Day 790 - Enneatriacontagon Notes menu items call recreateToneSequence after enneatriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/enneatriacontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after enneatriacontagonNotes');
+});
+
+TestRunner.test("Day 790 - APP_VERSION validation (>= 2.436 for Day 790)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.436\.0'/.test(cSrc), 'APP_VERSION should be 2.436.0');
+});
+
+TestRunner.test("Day 790 - Functional test: x = a*cos(t) + (a/38)*cos(38t) (39-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const x0 = a * Math.cos(0) + (a / 38) * Math.cos(38 * 0);
+    const x1 = a * Math.cos(Math.PI / 39) + (a / 38) * Math.cos(38 * Math.PI / 39);
+    t.assertEqual(Math.round(x0 * 1000000) / 1000000, Math.round((a + a / 38) * 1000000) / 1000000, 'x(0) = a + a/38');
+    t.assertTruthy(Number.isFinite(x1), 'x at sample angle is finite');
+});
+
+TestRunner.test("Day 790 - Functional test: y = a*sin(t) - (a/38)*sin(38t) (39-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const y0 = a * Math.sin(0) - (a / 38) * Math.sin(38 * 0);
+    const y1 = a * Math.sin(Math.PI / 39) - (a / 38) * Math.sin(38 * Math.PI / 39);
+    t.assertEqual(Math.round(y0 * 1000000) / 1000000, 0, 'y(0) = 0');
+    t.assertTruthy(Number.isFinite(y1), 'y at sample angle is finite');
+});
+
+TestRunner.test("Day 790 - Functional test: at t=0, x = a + a/38 = 39a/38 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const x0 = a * Math.cos(0) + (a / 38) * Math.cos(38 * 0);
+    t.assertEqual(Math.round(x0 * 1000000) / 1000000, Math.round((39 * a / 38) * 1000000) / 1000000, 'x(0) should equal 39a/38');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes uses ENNEATRIACONTAGON_NOTES_ENNEATRIACONTAGON_T_MAX = 2*Math.PI/39", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const ENNEATRIACONTAGON_NOTES_ENNEATRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*39/.test(cSrc), 'ENNEATRIACONTAGON_T_MAX = 2π/39');
+});
+
+TestRunner.test("Day 790 - enneatriacontagonNotes uses ENNEATRIACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/39", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const ENNEATRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*39/.test(cSrc), 'TIGHT_T_MIN = -π/39');
+    t.assertTruthy(/export const ENNEATRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*39/.test(cSrc), 'TIGHT_T_MAX = π/39');
+});
