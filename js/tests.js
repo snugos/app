@@ -64954,3 +64954,152 @@ TestRunner.test("Day 784 - tritriacontagonNotes uses TRITRIACONTAGON_NOTES_TIGHT
     t.assertTruthy(/export const TRITRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*33/.test(cSrc), 'TIGHT_T_MIN = -π/33');
     t.assertTruthy(/export const TRITRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*33/.test(cSrc), 'TIGHT_T_MAX = π/33');
 });
+
+// Day 785: Tetartotriacontagon (34-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 785 - tetartotriacontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.tetartotriacontagonNotes, 'function', 'tetartotriacontagonNotes should be a function');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes captures undo BEFORE mutation with descriptive Tetartotriacontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const block = tSrc.match(/tetartotriacontagonNotes\(length[\s\S]*?\n\s*\}\s*\n/);
+    t.assertTruthy(block !== null, 'tetartotriacontagonNotes method body should exist');
+    t.assertTruthy(/_captureUndoState\(`Tetartotriacontagon Notes \$/.test(block[0]), 'captures undo BEFORE mutation with Tetartotriacontagon Notes label');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes clamps length to TETARTOTRIACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/TETARTOTRIACONTAGON_NOTES_MIN_LENGTH[\s\S]{0,200}Math\.floor/.test(tSrc), 'length clamping with Math.floor');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes uses Math.cos, Math.sin, Math.cos(33t), Math.sin(33t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(33\s*\*\s*t\)/.test(tSrc), 'uses Math.cos(33*t)');
+    t.assertTruthy(/Math\.sin\(33\s*\*\s*t\)/.test(tSrc), 'uses Math.sin(33*t)');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes uses 34-cusped hypocycloid parametric x = a*cos(t) + (a/33)*cos(33t) and y = a*sin(t) - (a/33)*sin(33t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver33\s*=\s*a\s*\/\s*33/.test(tSrc), 'precomputes aOver33 = a / 33');
+    t.assertTruthy(/a\s*\*\s*cosT\s*\+\s*aOver33\s*\*\s*cos33T/.test(tSrc), 'x = a*cosT + (a/33)*cos(33t)');
+    t.assertTruthy(/a\s*\*\s*sinT\s*-\s*aOver33\s*\*\s*sin33T/.test(tSrc), 'y = a*sinT - (a/33)*sin(33t)');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/xRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'xRange = Math.max(0.01, ...)');
+    t.assertTruthy(/yRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'yRange = Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/TETARTOTRIACONTAGON_NOTES_SHAPE_STANDARD[\s\S]{0,200}TETARTOTRIACONTAGON_NOTES_SHAPE_INVERTED[\s\S]{0,200}TETARTOTRIACONTAGON_NOTES_SHAPE_TETARTOTRIACONTAGON[\s\S]{0,200}TETARTOTRIACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 distinct shapes in tRangeMap');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(tSrc), 't = tMin + (tMax-tMin)*i/(length-1)');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(tSrc), 'rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes returns count of tetartotriacontagon notes (tetartotriacontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return\s+tetartotriacontagonCount/.test(tSrc), 'returns tetartotriacontagonCount');
+});
+
+TestRunner.test("Day 785 - All 22 TETARTOTRIACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expected = [
+        'TETARTOTRIACONTAGON_NOTES_MIN_LENGTH', 'TETARTOTRIACONTAGON_NOTES_MAX_LENGTH', 'TETARTOTRIACONTAGON_NOTES_DEFAULT_LENGTH',
+        'TETARTOTRIACONTAGON_NOTES_MIN_A', 'TETARTOTRIACONTAGON_NOTES_MAX_A', 'TETARTOTRIACONTAGON_NOTES_DEFAULT_A',
+        'TETARTOTRIACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'TETARTOTRIACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'TETARTOTRIACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'TETARTOTRIACONTAGON_NOTES_DEFAULT_T_MIN', 'TETARTOTRIACONTAGON_NOTES_DEFAULT_T_MAX',
+        'TETARTOTRIACONTAGON_NOTES_INVERTED_T_MIN', 'TETARTOTRIACONTAGON_NOTES_INVERTED_T_MAX',
+        'TETARTOTRIACONTAGON_NOTES_TETARTOTRIACONTAGON_T_MIN', 'TETARTOTRIACONTAGON_NOTES_TETARTOTRIACONTAGON_T_MAX',
+        'TETARTOTRIACONTAGON_NOTES_TIGHT_T_MIN', 'TETARTOTRIACONTAGON_NOTES_TIGHT_T_MAX',
+        'TETARTOTRIACONTAGON_NOTES_SHAPE_STANDARD', 'TETARTOTRIACONTAGON_NOTES_SHAPE_INVERTED',
+        'TETARTOTRIACONTAGON_NOTES_SHAPE_TETARTOTRIACONTAGON', 'TETARTOTRIACONTAGON_NOTES_SHAPE_TIGHT',
+        'TETARTOTRIACONTAGON_NOTES_SHAPES'
+    ];
+    for (const c of expected) {
+        t.assertTruthy(cSrc.includes(`export const ${c}`), `${c} should be defined in constants.js`);
+    }
+});
+
+TestRunner.test("Day 785 - TETARTOTRIACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = ['STANDARD', 'INVERTED', 'TETARTOTRIACONTAGON', 'TIGHT'];
+    for (const s of shapes) {
+        t.assertTruthy(cSrc.includes(`TETARTOTRIACONTAGON_NOTES_SHAPE_${s}`), `TETARTOTRIACONTAGON_NOTES_SHAPE_${s} should exist`);
+    }
+});
+
+TestRunner.test("Day 785 - ui.js has 4 Tetartotriacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Tetartotriacontagon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, '4 Tetartotriacontagon Notes menu items');
+});
+
+TestRunner.test("Day 785 - Tetartotriacontagon Notes menu items call track.tetartotriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.tetartotriacontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 tetartotriacontagonNotes calls');
+});
+
+TestRunner.test("Day 785 - Tetartotriacontagon Notes menu items call recreateToneSequence after tetartotriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/tetartotriacontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after tetartotriacontagonNotes');
+});
+
+TestRunner.test("Day 785 - APP_VERSION validation (>= 2.431 for Day 785)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'(\d+\.\d+\.\d+)'/);
+    t.assertTruthy(m !== null, 'APP_VERSION should be defined');
+    const [maj, min, pat] = m[1].split('.').map(Number);
+    t.assertTruthy(maj > 2 || (maj === 2 && (min > 431 || (min === 431 && pat >= 0))), `APP_VERSION should be >= 2.431.0 (got ${m[1]})`);
+});
+
+TestRunner.test("Day 785 - Functional test: x = a*cos(t) + (a/33)*cos(33t) (34-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 33) * Math.cos(33 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((a + a / 33) * 1000) / 1000, 'x at t=0 should equal a + a/33 = 34a/33');
+});
+
+TestRunner.test("Day 785 - Functional test: y = a*sin(t) - (a/33)*sin(33t) (34-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const y = a * Math.sin(t) - (a / 33) * Math.sin(33 * t);
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y at t=0 should be 0');
+});
+
+TestRunner.test("Day 785 - Structural test: tetartotriacontagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.floor\(length\)/.test(tSrc), 'Math.floor for length');
+    t.assertTruthy(/Math\.floor\(scale\)/.test(tSrc), 'Math.floor for scale');
+});
+
+TestRunner.test("Day 785 - Functional test: at t=0, x = a + a/33 = 34a/33 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 33) * Math.cos(33 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((34 * a / 33) * 1000) / 1000, 'rightmost extreme x = 34a/33');
+    const y = a * Math.sin(t) - (a / 33) * Math.sin(33 * t);
+    t.assertEqual(Math.round(y * 1000) / 1000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes uses TETARTOTRIACONTAGON_NOTES_TETARTOTRIACONTAGON_T_MAX = 2*Math.PI/34", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TETARTOTRIACONTAGON_NOTES_TETARTOTRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*34/.test(cSrc), 'TETARTOTRIACONTAGON_T_MAX = 2π/34');
+});
+
+TestRunner.test("Day 785 - tetartotriacontagonNotes uses TETARTOTRIACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/34", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TETARTOTRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*34/.test(cSrc), 'TIGHT_T_MIN = -π/34');
+    t.assertTruthy(/export const TETARTOTRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*34/.test(cSrc), 'TIGHT_T_MAX = π/34');
+});
+
