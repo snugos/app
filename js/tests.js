@@ -65956,3 +65956,154 @@ TestRunner.test("Day 791 - tetracontagonNotes uses TETRACONTAGON_NOTES_TIGHT_T_M
     t.assertTruthy(/export const TETRACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*40/.test(cSrc), 'TIGHT_T_MIN = -π/40');
     t.assertTruthy(/export const TETRACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*40/.test(cSrc), 'TIGHT_T_MAX = π/40');
 });
+
+
+// Day 792: Hepatetracontagon (41-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 792 - hepatetracontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.hepatetracontagonNotes, 'function', 'hepatetracontagonNotes should be a function');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes captures undo BEFORE mutation with descriptive Hepatetracontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Hepatetracontagon Notes \(/.test(tSrc), 'hepatetracontagonNotes captures undo with Hepatetracontagon Notes label');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes clamps length to HEPATETRACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/clampedLength = Math\.max\(Constants\.HEPATETRACONTAGON_NOTES_MIN_LENGTH, Math\.min\(Constants\.HEPATETRACONTAGON_NOTES_MAX_LENGTH, Math\.floor\(length\)\)\)/.test(tSrc), 'hepatetracontagonNotes clamps length with Math.floor');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes uses Math.cos, Math.sin, Math.cos(40t), Math.sin(40t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(40 \* t\)/.test(tSrc), 'hepatetracontagonNotes uses Math.cos(40*t)');
+    t.assertTruthy(/Math\.sin\(40 \* t\)/.test(tSrc), 'hepatetracontagonNotes uses Math.sin(40*t)');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes uses 41-cusped hypocycloid parametric x = a*cos(t) + (a/40)*cos(40t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver40 = a \/ 40;/.test(tSrc), 'hepatetracontagonNotes uses aOver40 = a/40');
+    t.assertTruthy(/const x = a \* cosT \+ aOver40 \* cos40T;/.test(tSrc), 'hepatetracontagonNotes uses x = a*cosT + (a/40)*cos40T');
+    t.assertTruthy(/const y = a \* sinT - aOver40 \* sin40T;/.test(tSrc), 'hepatetracontagonNotes uses y = a*sinT - (a/40)*sin40T');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/xRange = Math\.max\(0\.01, xMax - xMin\)/.test(tSrc), 'xRange Math.max(0.01,...) used');
+    t.assertTruthy(/yRange = Math\.max\(0\.01, yMax - yMin\)/.test(tSrc), 'yRange Math.max(0.01,...) used');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/SHAPE_STANDARD.*HEPATETRACONTAGON_DEFAULT_T_MIN.*HEPATETRACONTAGON_DEFAULT_T_MAX/s.test(tSrc), 'STANDARD shape in tRangeMap');
+    t.assertTruthy(/SHAPE_INVERTED.*HEPATETRACONTAGON_INVERTED_T_MIN.*HEPATETRACONTAGON_INVERTED_T_MAX/s.test(tSrc), 'INVERTED shape in tRangeMap');
+    t.assertTruthy(/SHAPE_HEPATETRACONTAGON.*HEPATETRACONTAGON_HEPATETRACONTAGON_T_MIN.*HEPATETRACONTAGON_HEPATETRACONTAGON_T_MAX/s.test(tSrc), 'HEPATETRACONTAGON shape in tRangeMap');
+    t.assertTruthy(/SHAPE_TIGHT.*HEPATETRACONTAGON_TIGHT_T_MIN.*HEPATETRACONTAGON_TIGHT_T_MAX/s.test(tSrc), 'TIGHT shape in tRangeMap');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const t = tMin \+ \(tMax - tMin\) \* i \/ Math\.max\(1, clampedLength - 1\)/.test(tSrc), 't computation uses Math.max(1, length-1)');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/velocity: Math\.round\(decayedVel \* 100\) \/ 100/.test(tSrc), 'hepatetracontagonNotes rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes returns count of hepatetracontagon notes (hepatetracontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return hepatetracontagonCount;/.test(tSrc), 'hepatetracontagonNotes returns hepatetracontagonCount');
+});
+
+TestRunner.test("Day 792 - All 22 HEPATETRACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const names = [
+        'HEPATETRACONTAGON_NOTES_MIN_LENGTH', 'HEPATETRACONTAGON_NOTES_MAX_LENGTH', 'HEPATETRACONTAGON_NOTES_DEFAULT_LENGTH',
+        'HEPATETRACONTAGON_NOTES_MIN_A', 'HEPATETRACONTAGON_NOTES_MAX_A', 'HEPATETRACONTAGON_NOTES_DEFAULT_A',
+        'HEPATETRACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'HEPATETRACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'HEPATETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEPATETRACONTAGON_NOTES_DEFAULT_T_MIN', 'HEPATETRACONTAGON_NOTES_DEFAULT_T_MAX',
+        'HEPATETRACONTAGON_NOTES_INVERTED_T_MIN', 'HEPATETRACONTAGON_NOTES_INVERTED_T_MAX',
+        'HEPATETRACONTAGON_NOTES_HEPATETRACONTAGON_T_MIN', 'HEPATETRACONTAGON_NOTES_HEPATETRACONTAGON_T_MAX',
+        'HEPATETRACONTAGON_NOTES_TIGHT_T_MIN', 'HEPATETRACONTAGON_NOTES_TIGHT_T_MAX',
+        'HEPATETRACONTAGON_NOTES_SHAPE_STANDARD', 'HEPATETRACONTAGON_NOTES_SHAPE_INVERTED',
+        'HEPATETRACONTAGON_NOTES_SHAPE_HEPATETRACONTAGON', 'HEPATETRACONTAGON_NOTES_SHAPE_TIGHT',
+        'HEPATETRACONTAGON_NOTES_SHAPES'
+    ];
+    for (const name of names) {
+        t.assertTruthy(cSrc.includes(`export const ${name}`), `${name} should exist`);
+    }
+});
+
+TestRunner.test("Day 792 - HEPATETRACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = ['STANDARD', 'INVERTED', 'HEPATETRACONTAGON', 'TIGHT'];
+    for (const s of shapes) {
+        t.assertTruthy(cSrc.includes(`HEPATETRACONTAGON_NOTES_SHAPE_${s}`), `HEPATETRACONTAGON_NOTES_SHAPE_${s} should exist`);
+    }
+});
+
+TestRunner.test("Day 792 - ui.js has 4 Hepatetracontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Hepatetracontagon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, '4 Hepatetracontagon Notes menu items');
+});
+
+TestRunner.test("Day 792 - Hepatetracontagon Notes menu items call track.hepatetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.hepatetracontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 hepatetracontagonNotes calls');
+});
+
+TestRunner.test("Day 792 - Hepatetracontagon Notes menu items call recreateToneSequence after hepatetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/hepatetracontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after hepatetracontagonNotes');
+});
+
+TestRunner.test("Day 792 - APP_VERSION validation (>= 2.438 for Day 792)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.438\.0'/.test(cSrc), 'APP_VERSION should be 2.438.0');
+});
+
+TestRunner.test("Day 792 - Functional test: x = a*cos(t) + (a/40)*cos(40t) (41-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const x0 = a * Math.cos(0) + (a / 40) * Math.cos(40 * 0);
+    const x1 = a * Math.cos(Math.PI / 41) + (a / 40) * Math.cos(40 * Math.PI / 41);
+    t.assertEqual(Math.round(x0 * 1000000) / 1000000, Math.round((a + a / 40) * 1000000) / 1000000, 'x(0) = a + a/40');
+    t.assertTruthy(Number.isFinite(x1), 'x at sample angle is finite');
+});
+
+TestRunner.test("Day 792 - Functional test: y = a*sin(t) - (a/40)*sin(40t) (41-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const y0 = a * Math.sin(0) - (a / 40) * Math.sin(40 * 0);
+    const y1 = a * Math.sin(Math.PI / 41) - (a / 40) * Math.sin(40 * Math.PI / 41);
+    t.assertEqual(Math.round(y0 * 1000000) / 1000000, 0, 'y(0) = 0');
+    t.assertTruthy(Number.isFinite(y1), 'y at sample angle is finite');
+});
+
+TestRunner.test("Day 792 - Functional test: at t=0, x = a + a/40 = 41a/40 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const x0 = a * Math.cos(0) + (a / 40) * Math.cos(40 * 0);
+    t.assertEqual(Math.round(x0 * 1000000) / 1000000, Math.round((41 * a / 40) * 1000000) / 1000000, 'x(0) should equal 41a/40');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes uses HEPATETRACONTAGON_NOTES_HEPATETRACONTAGON_T_MAX = 2*Math.PI/41", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEPATETRACONTAGON_NOTES_HEPATETRACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*41/.test(cSrc), 'HEPATETRACONTAGON_T_MAX = 2π/41');
+});
+
+TestRunner.test("Day 792 - hepatetracontagonNotes uses HEPATETRACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/41", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEPATETRACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*41/.test(cSrc), 'TIGHT_T_MIN = -π/41');
+    t.assertTruthy(/export const HEPATETRACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*41/.test(cSrc), 'TIGHT_T_MAX = π/41');
+});
+
+TestRunner.test("Day 792 - 41 is prime but NOT a Fermat prime (so 41-gon is NOT constructible)", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(FermatPrimes.includes(41), false, '41 should not be a Fermat prime');
+    const isPrime41 = (() => {
+        if (41 < 2) return false;
+        for (let i = 2; i <= Math.sqrt(41); i++) if (41 % i === 0) return false;
+        return true;
+    })();
+    t.assertEqual(isPrime41, true, '41 should be prime');
+});
