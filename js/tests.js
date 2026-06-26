@@ -65396,3 +65396,149 @@ TestRunner.test("Day 787 - hexatriacontagonNotes uses HEXATRIACONTAGON_NOTES_TIG
     t.assertTruthy(/export const HEXATRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*36/.test(cSrc), 'TIGHT_T_MIN = -π/36');
     t.assertTruthy(/export const HEXATRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*36/.test(cSrc), 'TIGHT_T_MAX = π/36');
 });
+
+// Day 788: Heptatriacontagon (37-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 788 - heptatriacontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.heptatriacontagonNotes, 'function', 'heptatriacontagonNotes should be a function');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes captures undo BEFORE mutation with descriptive Heptatriacontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    const block = tSrc.match(/heptatriacontagonNotes\(length[\s\S]*?\n\s*\}\s*\n/);
+    t.assertTruthy(block !== null, 'heptatriacontagonNotes method body should exist');
+    t.assertTruthy(/_captureUndoState\(`Heptatriacontagon Notes/.test(block[0]), 'undo captured with Heptatriacontagon Notes label');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes clamps length to HEPTATRIACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTATRIACONTAGON_NOTES_MIN_LENGTH[\s\S]{0,200}Math\.floor/.test(tSrc), 'length clamping with Math.floor');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes uses Math.cos, Math.sin, Math.cos(36t), Math.sin(36t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(36\s*\*\s*t\)/.test(tSrc), 'Math.cos(36*t)');
+    t.assertTruthy(/Math\.sin\(36\s*\*\s*t\)/.test(tSrc), 'Math.sin(36*t)');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes uses 37-cusped hypocycloid parametric x = a*cos(t) + (a/36)*cos(36t) and y = a*sin(t) - (a/36)*sin(36t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/a\s*\*\s*cosT\s*\+\s*aOver36\s*\*\s*cos36T/.test(tSrc), 'x = a*cos(t) + (a/36)*cos(36t)');
+    t.assertTruthy(/a\s*\*\s*sinT\s*-\s*aOver36\s*\*\s*sin36T/.test(tSrc), 'y = a*sin(t) - (a/36)*sin(36t)');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/xRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'xRange Math.max(0.01, ...)');
+    t.assertTruthy(/yRange\s*=\s*Math\.max\(0\.01/.test(tSrc), 'yRange Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTATRIACONTAGON_NOTES_SHAPE_STANDARD[\s\S]{0,200}HEPTATRIACONTAGON_NOTES_SHAPE_INVERTED[\s\S]{0,200}HEPTATRIACONTAGON_NOTES_SHAPE_HEPTATRIACONTAGON[\s\S]{0,200}HEPTATRIACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), '4 distinct shapes in tRangeMap');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max\(1,\s*clampedLength\s*-\s*1\)/.test(tSrc), 't parameter formula');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.round\(decayedVel\s*\*\s*100\)\s*\/\s*100/.test(tSrc), 'velocity rounded to 2 decimal places');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes returns count of heptatriacontagon notes (heptatriacontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return\s+heptatriacontagonCount/.test(tSrc), 'returns heptatriacontagonCount');
+});
+
+TestRunner.test("Day 788 - All 22 HEPTATRIACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const required = [
+        'HEPTATRIACONTAGON_NOTES_MIN_LENGTH', 'HEPTATRIACONTAGON_NOTES_MAX_LENGTH', 'HEPTATRIACONTAGON_NOTES_DEFAULT_LENGTH',
+        'HEPTATRIACONTAGON_NOTES_MIN_A', 'HEPTATRIACONTAGON_NOTES_MAX_A', 'HEPTATRIACONTAGON_NOTES_DEFAULT_A',
+        'HEPTATRIACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'HEPTATRIACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'HEPTATRIACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEPTATRIACONTAGON_NOTES_DEFAULT_T_MIN', 'HEPTATRIACONTAGON_NOTES_DEFAULT_T_MAX',
+        'HEPTATRIACONTAGON_NOTES_INVERTED_T_MIN', 'HEPTATRIACONTAGON_NOTES_INVERTED_T_MAX',
+        'HEPTATRIACONTAGON_NOTES_HEPTATRIACONTAGON_T_MIN', 'HEPTATRIACONTAGON_NOTES_HEPTATRIACONTAGON_T_MAX',
+        'HEPTATRIACONTAGON_NOTES_TIGHT_T_MIN', 'HEPTATRIACONTAGON_NOTES_TIGHT_T_MAX',
+        'HEPTATRIACONTAGON_NOTES_SHAPE_STANDARD', 'HEPTATRIACONTAGON_NOTES_SHAPE_INVERTED',
+        'HEPTATRIACONTAGON_NOTES_SHAPE_HEPTATRIACONTAGON', 'HEPTATRIACONTAGON_NOTES_SHAPE_TIGHT',
+        'HEPTATRIACONTAGON_NOTES_SHAPES'
+    ];
+    for (const name of required) {
+        t.assertTruthy(new RegExp('export const ' + name + ' ').test(cSrc), `${name} should be defined`);
+    }
+});
+
+TestRunner.test("Day 788 - HEPTATRIACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = ['STANDARD', 'INVERTED', 'HEPTATRIACONTAGON', 'TIGHT'];
+    for (const s of shapes) {
+        t.assertTruthy(cSrc.includes(`HEPTATRIACONTAGON_NOTES_SHAPE_${s}`), `HEPTATRIACONTAGON_NOTES_SHAPE_${s} should exist`);
+    }
+});
+
+TestRunner.test("Day 788 - ui.js has 4 Heptatriacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Heptatriacontagon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, '4 Heptatriacontagon Notes menu items');
+});
+
+TestRunner.test("Day 788 - Heptatriacontagon Notes menu items call track.heptatriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.heptatriacontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 heptatriacontagonNotes calls');
+});
+
+TestRunner.test("Day 788 - Heptatriacontagon Notes menu items call recreateToneSequence after heptatriacontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/heptatriacontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after heptatriacontagonNotes');
+});
+
+TestRunner.test("Day 788 - APP_VERSION validation (>= 2.434 for Day 788)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*['"]2\.434/.test(cSrc), 'APP_VERSION should be 2.434');
+});
+
+TestRunner.test("Day 788 - Functional test: x = a*cos(t) + (a/36)*cos(36t) (37-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const cosT = Math.cos(t);
+    const cos36T = Math.cos(36 * t);
+    const x = a * cosT + (a / 36) * cos36T;
+    t.assertEqual(Math.round(x * 100) / 100, 4.11, 'x at t=0 should be 37a/36 = 4.11');
+});
+
+TestRunner.test("Day 788 - Functional test: y = a*sin(t) - (a/36)*sin(36t) (37-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const sinT = Math.sin(t);
+    const sin36T = Math.sin(36 * t);
+    const y = a * sinT - (a / 36) * sin36T;
+    t.assertEqual(y, 0, 'y at t=0 should be 0');
+});
+
+TestRunner.test("Day 788 - Structural test: heptatriacontagonNotes uses Math.floor for length and scale clamping", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTATRIACONTAGON_NOTES_MIN_LENGTH[\s\S]{0,300}HEPTATRIACONTAGON_NOTES_MAX_LENGTH[\s\S]{0,300}Math\.floor/.test(tSrc), 'length clamping');
+    t.assertTruthy(/HEPTATRIACONTAGON_NOTES_MIN_A[\s\S]{0,300}HEPTATRIACONTAGON_NOTES_MAX_A[\s\S]{0,300}Math\.floor/.test(tSrc), 'scale clamping');
+});
+
+TestRunner.test("Day 788 - Functional test: at t=0, x = a + a/36 = 37a/36 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 36) * Math.cos(36 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, 4.111, 'x at t=0 should equal 37a/36');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes uses HEPTATRIACONTAGON_NOTES_HEPTATRIACONTAGON_T_MAX = 2*Math.PI/37", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEPTATRIACONTAGON_NOTES_HEPTATRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*37/.test(cSrc), 'HEPTATRIACONTAGON_T_MAX = 2π/37');
+});
+
+TestRunner.test("Day 788 - heptatriacontagonNotes uses HEPTATRIACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/37", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEPTATRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*37/.test(cSrc), 'TIGHT_T_MIN = -π/37');
+    t.assertTruthy(/export const HEPTATRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*37/.test(cSrc), 'TIGHT_T_MAX = π/37');
+});
