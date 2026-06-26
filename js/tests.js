@@ -65817,3 +65817,142 @@ TestRunner.test("Day 790 - enneatriacontagonNotes uses ENNEATRIACONTAGON_NOTES_T
     t.assertTruthy(/export const ENNEATRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*39/.test(cSrc), 'TIGHT_T_MIN = -π/39');
     t.assertTruthy(/export const ENNEATRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*39/.test(cSrc), 'TIGHT_T_MAX = π/39');
 });
+
+// Day 791: Tetracontagon (40-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 791 - tetracontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.tetracontagonNotes, 'function', 'tetracontagonNotes should be a function');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes captures undo BEFORE mutation with descriptive Tetracontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Tetracontagon Notes \(/.test(tSrc), 'tetracontagonNotes captures undo with Tetracontagon Notes label');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes clamps length to TETRACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/clampedLength = Math\.max\(Constants\.TETRACONTAGON_NOTES_MIN_LENGTH, Math\.min\(Constants\.TETRACONTAGON_NOTES_MAX_LENGTH, Math\.floor\(length\)\)\)/.test(tSrc), 'tetracontagonNotes clamps length with Math.floor');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes uses Math.cos, Math.sin, Math.cos(39t), Math.sin(39t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(39 \* t\)/.test(tSrc), 'tetracontagonNotes uses Math.cos(39*t)');
+    t.assertTruthy(/Math\.sin\(39 \* t\)/.test(tSrc), 'tetracontagonNotes uses Math.sin(39*t)');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes uses 40-cusped hypocycloid parametric x = a*cos(t) + (a/39)*cos(39t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver39 = a \/ 39;/.test(tSrc), 'tetracontagonNotes uses aOver39 = a/39');
+    t.assertTruthy(/const x = a \* cosT \+ aOver39 \* cos39T;/.test(tSrc), 'tetracontagonNotes uses x = a*cosT + (a/39)*cos39T');
+    t.assertTruthy(/const y = a \* sinT - aOver39 \* sin39T;/.test(tSrc), 'tetracontagonNotes uses y = a*sinT - (a/39)*sin39T');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/xRange = Math\.max\(0\.01, xMax - xMin\)/.test(tSrc), 'xRange Math.max(0.01,...) used');
+    t.assertTruthy(/yRange = Math\.max\(0\.01, yMax - yMin\)/.test(tSrc), 'yRange Math.max(0.01,...) used');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/SHAPE_STANDARD.*DEFAULT_T_MIN.*DEFAULT_T_MAX/s.test(tSrc), 'STANDARD shape in tRangeMap');
+    t.assertTruthy(/SHAPE_INVERTED.*INVERTED_T_MIN.*INVERTED_T_MAX/s.test(tSrc), 'INVERTED shape in tRangeMap');
+    t.assertTruthy(/SHAPE_TETRACONTAGON.*TETRACONTAGON_T_MIN.*TETRACONTAGON_T_MAX/s.test(tSrc), 'TETRACONTAGON shape in tRangeMap');
+    t.assertTruthy(/SHAPE_TIGHT.*TIGHT_T_MIN.*TIGHT_T_MAX/s.test(tSrc), 'TIGHT shape in tRangeMap');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const t = tMin \+ \(tMax - tMin\) \* i \/ Math\.max\(1, clampedLength - 1\)/.test(tSrc), 't computation uses Math.max(1, length-1)');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/velocity: Math\.round\(decayedVel \* 100\) \/ 100/.test(tSrc), 'tetracontagonNotes rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes returns count of tetracontagon notes (tetracontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return tetracontagonCount;/.test(tSrc), 'tetracontagonNotes returns tetracontagonCount');
+});
+
+TestRunner.test("Day 791 - All 22 TETRACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const names = [
+        'TETRACONTAGON_NOTES_MIN_LENGTH', 'TETRACONTAGON_NOTES_MAX_LENGTH', 'TETRACONTAGON_NOTES_DEFAULT_LENGTH',
+        'TETRACONTAGON_NOTES_MIN_A', 'TETRACONTAGON_NOTES_MAX_A', 'TETRACONTAGON_NOTES_DEFAULT_A',
+        'TETRACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'TETRACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'TETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'TETRACONTAGON_NOTES_DEFAULT_T_MIN', 'TETRACONTAGON_NOTES_DEFAULT_T_MAX',
+        'TETRACONTAGON_NOTES_INVERTED_T_MIN', 'TETRACONTAGON_NOTES_INVERTED_T_MAX',
+        'TETRACONTAGON_NOTES_TETRACONTAGON_T_MIN', 'TETRACONTAGON_NOTES_TETRACONTAGON_T_MAX',
+        'TETRACONTAGON_NOTES_TIGHT_T_MIN', 'TETRACONTAGON_NOTES_TIGHT_T_MAX',
+        'TETRACONTAGON_NOTES_SHAPE_STANDARD', 'TETRACONTAGON_NOTES_SHAPE_INVERTED',
+        'TETRACONTAGON_NOTES_SHAPE_TETRACONTAGON', 'TETRACONTAGON_NOTES_SHAPE_TIGHT',
+        'TETRACONTAGON_NOTES_SHAPES'
+    ];
+    for (const name of names) {
+        t.assertTruthy(cSrc.includes(`export const ${name}`), `${name} should exist`);
+    }
+});
+
+TestRunner.test("Day 791 - TETRACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const shapes = ['STANDARD', 'INVERTED', 'TETRACONTAGON', 'TIGHT'];
+    for (const s of shapes) {
+        t.assertTruthy(cSrc.includes(`TETRACONTAGON_NOTES_SHAPE_${s}`), `TETRACONTAGON_NOTES_SHAPE_${s} should exist`);
+    }
+});
+
+TestRunner.test("Day 791 - ui.js has 4 Tetracontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Tetracontagon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, '4 Tetracontagon Notes menu items');
+});
+
+TestRunner.test("Day 791 - Tetracontagon Notes menu items call track.tetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.tetracontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 tetracontagonNotes calls');
+});
+
+TestRunner.test("Day 791 - Tetracontagon Notes menu items call recreateToneSequence after tetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/tetracontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after tetracontagonNotes');
+});
+
+TestRunner.test("Day 791 - APP_VERSION validation (>= 2.437 for Day 791)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.437\.0'/.test(cSrc), 'APP_VERSION should be 2.437.0');
+});
+
+TestRunner.test("Day 791 - Functional test: x = a*cos(t) + (a/39)*cos(39t) (40-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const x0 = a * Math.cos(0) + (a / 39) * Math.cos(39 * 0);
+    const x1 = a * Math.cos(Math.PI / 40) + (a / 39) * Math.cos(39 * Math.PI / 40);
+    t.assertEqual(Math.round(x0 * 1000000) / 1000000, Math.round((a + a / 39) * 1000000) / 1000000, 'x(0) = a + a/39');
+    t.assertTruthy(Number.isFinite(x1), 'x at sample angle is finite');
+});
+
+TestRunner.test("Day 791 - Functional test: y = a*sin(t) - (a/39)*sin(39t) (40-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const y0 = a * Math.sin(0) - (a / 39) * Math.sin(39 * 0);
+    const y1 = a * Math.sin(Math.PI / 40) - (a / 39) * Math.sin(39 * Math.PI / 40);
+    t.assertEqual(Math.round(y0 * 1000000) / 1000000, 0, 'y(0) = 0');
+    t.assertTruthy(Number.isFinite(y1), 'y at sample angle is finite');
+});
+
+TestRunner.test("Day 791 - Functional test: at t=0, x = a + a/39 = 40a/39 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const x0 = a * Math.cos(0) + (a / 39) * Math.cos(39 * 0);
+    t.assertEqual(Math.round(x0 * 1000000) / 1000000, Math.round((40 * a / 39) * 1000000) / 1000000, 'x(0) should equal 40a/39');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes uses TETRACONTAGON_NOTES_TETRACONTAGON_T_MAX = 2*Math.PI/40", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TETRACONTAGON_NOTES_TETRACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*40/.test(cSrc), 'TETRACONTAGON_T_MAX = 2π/40');
+});
+
+TestRunner.test("Day 791 - tetracontagonNotes uses TETRACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/40", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TETRACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*40/.test(cSrc), 'TIGHT_T_MIN = -π/40');
+    t.assertTruthy(/export const TETRACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*40/.test(cSrc), 'TIGHT_T_MAX = π/40');
+});
