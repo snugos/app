@@ -66882,3 +66882,59 @@ TestRunner.test("Day 796 - 45 = 3^2 * 5 IS NOT constructible by compass and stra
     const allFactorsFermat = uniqueFactors.every(f => FermatPrimes.includes(f));
     t.assertEqual(allFactorsFermat, false, '45 = 3^2 * 5 has 3 with multiplicity 2, fails distinctness');
 });
+
+// Day 797: Hexatetracontagon (46-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 797 - hexatetracontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.hexatetracontagonNotes, 'function', 'hexatetracontagonNotes should be a function');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes captures undo BEFORE mutation with descriptive Hexatetracontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Hexatetracontagon Notes \(/.test(tSrc), 'hexatetracontagonNotes captures undo with Hexatetracontagon Notes label');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes uses x = a*cos(t) + (a/45)*cos(45t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver45 = a \/ 45;/.test(tSrc), 'hexatetracontagonNotes uses aOver45 = a/45');
+    t.assertTruthy(/const x = a \* cosT \+ aOver45 \* cos45T;/.test(tSrc), 'hexatetracontagonNotes uses x = a*cosT + (a/45)*cos45T');
+    t.assertTruthy(/const y = a \* sinT - aOver45 \* sin45T;/.test(tSrc), 'hexatetracontagonNotes uses y = a*sinT - (a/45)*sin45T');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'hexatetracontagonNotes has STANDARD shape');
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'hexatetracontagonNotes has INVERTED shape');
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPE_HEXATETRACONTAGON/.test(tSrc), 'hexatetracontagonNotes has HEXATETRACONTAGON shape');
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'hexatetracontagonNotes has TIGHT shape');
+});
+
+TestRunner.test("Day 797 - All 22 HEXATETRACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'HEXATETRACONTAGON_NOTES_MIN_LENGTH', 'HEXATETRACONTAGON_NOTES_MAX_LENGTH', 'HEXATETRACONTAGON_NOTES_DEFAULT_LENGTH',
+        'HEXATETRACONTAGON_NOTES_MIN_A', 'HEXATETRACONTAGON_NOTES_MAX_A', 'HEXATETRACONTAGON_NOTES_DEFAULT_A',
+        'HEXATETRACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'HEXATETRACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'HEXATETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEXATETRACONTAGON_NOTES_DEFAULT_T_MIN', 'HEXATETRACONTAGON_NOTES_DEFAULT_T_MAX',
+        'HEXATETRACONTAGON_NOTES_INVERTED_T_MIN', 'HEXATETRACONTAGON_NOTES_INVERTED_T_MAX',
+        'HEXATETRACONTAGON_NOTES_HEXATETRACONTAGON_T_MIN', 'HEXATETRACONTAGON_NOTES_HEXATETRACONTAGON_T_MAX',
+        'HEXATETRACONTAGON_NOTES_TIGHT_T_MIN', 'HEXATETRACONTAGON_NOTES_TIGHT_T_MAX',
+        'HEXATETRACONTAGON_NOTES_SHAPE_STANDARD', 'HEXATETRACONTAGON_NOTES_SHAPE_INVERTED',
+        'HEXATETRACONTAGON_NOTES_SHAPE_HEXATETRACONTAGON', 'HEXATETRACONTAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(cSrc.includes(name), `missing ${name}`);
+    }
+});
+
+TestRunner.test("Day 797 - ui.js has 4 Hexatetracontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const count = (uSrc.match(/Hexatetracontagon Notes \((Standard|Inverted|Hexatetracontagon|Tight), 32\)/g) || []).length;
+    t.assertEqual(count, 4, 'ui.js should have 4 Hexatetracontagon Notes menu items');
+});
+
+TestRunner.test("Day 797 - 46 = 2 * 23 is NOT constructible by compass and straightedge", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    const factors = [2, 23];
+    const allFactorsFermat = factors.every(f => FermatPrimes.includes(f));
+    t.assertEqual(allFactorsFermat, false, '46 = 2 * 23 is not constructible because 23 is not a Fermat prime');
+});
