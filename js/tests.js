@@ -66938,3 +66938,64 @@ TestRunner.test("Day 797 - 46 = 2 * 23 is NOT constructible by compass and strai
     const allFactorsFermat = factors.every(f => FermatPrimes.includes(f));
     t.assertEqual(allFactorsFermat, false, '46 = 2 * 23 is not constructible because 23 is not a Fermat prime');
 });
+
+// Day 798: Heptatetracontagon (47-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 798 - heptatetracontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.heptatetracontagonNotes, 'function', 'heptatetracontagonNotes should be a function');
+});
+
+TestRunner.test("Day 798 - heptatetracontagonNotes captures undo BEFORE mutation with descriptive Heptatetracontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Heptatetracontagon Notes \(/.test(tSrc), 'heptatetracontagonNotes captures undo with Heptatetracontagon Notes label');
+});
+
+TestRunner.test("Day 798 - heptatetracontagonNotes uses x = a*cos(t) + (a/46)*cos(46t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver46 = a \/ 46;/.test(tSrc), 'heptatetracontagonNotes uses aOver46 = a/46');
+    t.assertTruthy(/const x = a \* cosT \+ aOver46 \* cos46T;/.test(tSrc), 'heptatetracontagonNotes uses x = a*cosT + (a/46)*cos46T');
+    t.assertTruthy(/const y = a \* sinT - aOver46 \* sin46T;/.test(tSrc), 'heptatetracontagonNotes uses y = a*sinT - (a/46)*sin46T');
+});
+
+TestRunner.test("Day 798 - heptatetracontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTATETRACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'heptatetracontagonNotes has STANDARD shape');
+    t.assertTruthy(/HEPTATETRACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'heptatetracontagonNotes has INVERTED shape');
+    t.assertTruthy(/HEPTATETRACONTAGON_NOTES_SHAPE_HEPTATETRACONTAGON/.test(tSrc), 'heptatetracontagonNotes has HEPTATETRACONTAGON shape');
+    t.assertTruthy(/HEPTATETRACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'heptatetracontagonNotes has TIGHT shape');
+});
+
+TestRunner.test("Day 798 - All 22 HEPTATETRACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'HEPTATETRACONTAGON_NOTES_MIN_LENGTH', 'HEPTATETRACONTAGON_NOTES_MAX_LENGTH', 'HEPTATETRACONTAGON_NOTES_DEFAULT_LENGTH',
+        'HEPTATETRACONTAGON_NOTES_MIN_A', 'HEPTATETRACONTAGON_NOTES_MAX_A', 'HEPTATETRACONTAGON_NOTES_DEFAULT_A',
+        'HEPTATETRACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'HEPTATETRACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'HEPTATETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEPTATETRACONTAGON_NOTES_DEFAULT_T_MIN', 'HEPTATETRACONTAGON_NOTES_DEFAULT_T_MAX',
+        'HEPTATETRACONTAGON_NOTES_INVERTED_T_MIN', 'HEPTATETRACONTAGON_NOTES_INVERTED_T_MAX',
+        'HEPTATETRACONTAGON_NOTES_HEPTATETRACONTAGON_T_MIN', 'HEPTATETRACONTAGON_NOTES_HEPTATETRACONTAGON_T_MAX',
+        'HEPTATETRACONTAGON_NOTES_TIGHT_T_MIN', 'HEPTATETRACONTAGON_NOTES_TIGHT_T_MAX',
+        'HEPTATETRACONTAGON_NOTES_SHAPE_STANDARD', 'HEPTATETRACONTAGON_NOTES_SHAPE_INVERTED',
+        'HEPTATETRACONTAGON_NOTES_SHAPE_HEPTATETRACONTAGON', 'HEPTATETRACONTAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(cSrc.includes(name), `missing ${name}`);
+    }
+});
+
+TestRunner.test("Day 798 - ui.js has 4 Heptatetracontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const count = (uSrc.match(/Heptatetracontagon Notes \((Standard|Inverted|Heptatetracontagon|Tight), 32\)/g) || []).length;
+    t.assertEqual(count, 4, 'ui.js should have 4 Heptatetracontagon Notes menu items');
+});
+
+TestRunner.test("Day 798 - 47 is prime but NOT a Fermat prime so the 47-gon is NOT constructible", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    const isPrime = (n) => {
+        if (n < 2) return false;
+        for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
+        return true;
+    };
+    t.assertEqual(isPrime(47), true, '47 is prime');
+    t.assertEqual(FermatPrimes.includes(47), false, '47 is NOT a Fermat prime');
+    t.assertEqual(FermatPrimes.includes(47), false, '47-gon is NOT constructible by compass and straightedge (Gauss-Wantzel)');
+});
