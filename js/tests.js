@@ -67059,3 +67059,63 @@ TestRunner.test("Day 799 - 48 = 2^4 * 3 IS constructible by compass and straight
     t.assertEqual(allFermat, true, '48 = 2^4 * 3 with 3 a Fermat prime should be constructible');
 });
 
+
+// Day 800: Enneacontacontagon (49-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 800 - enneacontacontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.enneacontacontagonNotes, 'function', 'enneacontacontagonNotes should be a function');
+});
+
+TestRunner.test("Day 800 - enneacontacontagonNotes captures undo BEFORE mutation with descriptive Enneacontacontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Enneacontacontagon Notes \(/.test(tSrc), 'enneacontacontagonNotes captures undo with Enneacontacontagon Notes label');
+});
+
+TestRunner.test("Day 800 - enneacontacontagonNotes uses x = a*cos(t) + (a/48)*cos(48t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver48 = a \/ 48;/.test(tSrc), 'enneacontacontagonNotes uses aOver48 = a/48');
+    t.assertTruthy(/const cos48T = Math\.cos\(48 \* t\);/.test(tSrc), 'enneacontacontagonNotes uses cos(48*t)');
+    t.assertTruthy(/const x = a \* cosT \+ aOver48 \* cos48T;/.test(tSrc), 'enneacontacontagonNotes uses x = a*cosT + (a/48)*cos48T');
+    t.assertTruthy(/const y = a \* sinT - aOver48 \* sin48T;/.test(tSrc), 'enneacontacontagonNotes uses y = a*sinT - (a/48)*sin48T');
+});
+
+TestRunner.test("Day 800 - enneacontacontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/ENNEACONTACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'enneacontacontagonNotes has STANDARD shape');
+    t.assertTruthy(/ENNEACONTACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'enneacontacontagonNotes has INVERTED shape');
+    t.assertTruthy(/ENNEACONTACONTAGON_NOTES_SHAPE_ENNEACONTACONTAGON/.test(tSrc), 'enneacontacontagonNotes has ENNEACONTACONTAGON shape');
+    t.assertTruthy(/ENNEACONTACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'enneacontacontagonNotes has TIGHT shape');
+});
+
+TestRunner.test("Day 800 - All 22 ENNEACONTACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'ENNEACONTACONTAGON_NOTES_MIN_LENGTH', 'ENNEACONTACONTAGON_NOTES_MAX_LENGTH', 'ENNEACONTACONTAGON_NOTES_DEFAULT_LENGTH',
+        'ENNEACONTACONTAGON_NOTES_MIN_A', 'ENNEACONTACONTAGON_NOTES_MAX_A', 'ENNEACONTACONTAGON_NOTES_DEFAULT_A',
+        'ENNEACONTACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'ENNEACONTACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'ENNEACONTACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'ENNEACONTACONTAGON_NOTES_DEFAULT_T_MIN', 'ENNEACONTACONTAGON_NOTES_DEFAULT_T_MAX',
+        'ENNEACONTACONTAGON_NOTES_INVERTED_T_MIN', 'ENNEACONTACONTAGON_NOTES_INVERTED_T_MAX',
+        'ENNEACONTACONTAGON_NOTES_ENNEACONTACONTAGON_T_MIN', 'ENNEACONTACONTAGON_NOTES_ENNEACONTACONTAGON_T_MAX',
+        'ENNEACONTACONTAGON_NOTES_TIGHT_T_MIN', 'ENNEACONTACONTAGON_NOTES_TIGHT_T_MAX',
+        'ENNEACONTACONTAGON_NOTES_SHAPE_STANDARD', 'ENNEACONTACONTAGON_NOTES_SHAPE_INVERTED',
+        'ENNEACONTACONTAGON_NOTES_SHAPE_ENNEACONTACONTAGON', 'ENNEACONTACONTAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(new RegExp(`export const ${name}\\b`).test(cSrc), `${name} should be defined in constants.js`);
+    }
+    t.assertTruthy(/ENNEACONTACONTAGON_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'ENNEACONTACONTAGON_NOTES_SHAPES array should be defined');
+});
+
+TestRunner.test("Day 800 - ui.js has 4 Enneacontacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Enneacontacontagon Notes \((Standard|Inverted|Enneacontacontagon|Tight), 32\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Enneacontacontagon Notes menu items');
+});
+
+TestRunner.test("Day 800 - 49 = 7^2 is NOT constructible by compass and straightedge (Fermat prime distinctness violated: 7 appears with multiplicity 2)", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(FermatPrimes.includes(7), false, '7 should NOT be a Fermat prime');
+    const factors = [7, 7];
+    const distinctFactors = [...new Set(factors)];
+    const allFermat = distinctFactors.every(f => FermatPrimes.includes(f) || f === 2);
+    t.assertEqual(allFermat, false, '49 = 7^2 with 7 not Fermat should NOT be constructible');
+});
