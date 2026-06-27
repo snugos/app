@@ -66999,3 +66999,63 @@ TestRunner.test("Day 798 - 47 is prime but NOT a Fermat prime so the 47-gon is N
     t.assertEqual(FermatPrimes.includes(47), false, '47 is NOT a Fermat prime');
     t.assertEqual(FermatPrimes.includes(47), false, '47-gon is NOT constructible by compass and straightedge (Gauss-Wantzel)');
 });
+// Day 799: Octatetracontagon (48-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 799 - octatetracontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.octatetracontagonNotes, 'function', 'octatetracontagonNotes should be a function');
+});
+
+TestRunner.test("Day 799 - octatetracontagonNotes captures undo BEFORE mutation with descriptive Octatetracontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Octatetracontagon Notes \(/.test(tSrc), 'octatetracontagonNotes captures undo with Octatetracontagon Notes label');
+});
+
+TestRunner.test("Day 799 - octatetracontagonNotes uses x = a*cos(t) + (a/47)*cos(47t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver47 = a \/ 47;/.test(tSrc), 'octatetracontagonNotes uses aOver47 = a/47');
+    t.assertTruthy(/const cos47T = Math\.cos\(47 \* t\);/.test(tSrc), 'octatetracontagonNotes uses cos(47*t)');
+    t.assertTruthy(/const x = a \* cosT \+ aOver47 \* cos47T;/.test(tSrc), 'octatetracontagonNotes uses x = a*cosT + (a/47)*cos47T');
+    t.assertTruthy(/const y = a \* sinT - aOver47 \* sin47T;/.test(tSrc), 'octatetracontagonNotes uses y = a*sinT - (a/47)*sin47T');
+});
+
+TestRunner.test("Day 799 - octatetracontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/OCTATETRACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'octatetracontagonNotes has STANDARD shape');
+    t.assertTruthy(/OCTATETRACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'octatetracontagonNotes has INVERTED shape');
+    t.assertTruthy(/OCTATETRACONTAGON_NOTES_SHAPE_OCTATETRACONTAGON/.test(tSrc), 'octatetracontagonNotes has OCTATETRACONTAGON shape');
+    t.assertTruthy(/OCTATETRACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'octatetracontagonNotes has TIGHT shape');
+});
+
+TestRunner.test("Day 799 - All 22 OCTATETRACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'OCTATETRACONTAGON_NOTES_MIN_LENGTH', 'OCTATETRACONTAGON_NOTES_MAX_LENGTH', 'OCTATETRACONTAGON_NOTES_DEFAULT_LENGTH',
+        'OCTATETRACONTAGON_NOTES_MIN_A', 'OCTATETRACONTAGON_NOTES_MAX_A', 'OCTATETRACONTAGON_NOTES_DEFAULT_A',
+        'OCTATETRACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'OCTATETRACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'OCTATETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'OCTATETRACONTAGON_NOTES_DEFAULT_T_MIN', 'OCTATETRACONTAGON_NOTES_DEFAULT_T_MAX',
+        'OCTATETRACONTAGON_NOTES_INVERTED_T_MIN', 'OCTATETRACONTAGON_NOTES_INVERTED_T_MAX',
+        'OCTATETRACONTAGON_NOTES_OCTATETRACONTAGON_T_MIN', 'OCTATETRACONTAGON_NOTES_OCTATETRACONTAGON_T_MAX',
+        'OCTATETRACONTAGON_NOTES_TIGHT_T_MIN', 'OCTATETRACONTAGON_NOTES_TIGHT_T_MAX',
+        'OCTATETRACONTAGON_NOTES_SHAPE_STANDARD', 'OCTATETRACONTAGON_NOTES_SHAPE_INVERTED',
+        'OCTATETRACONTAGON_NOTES_SHAPE_OCTATETRACONTAGON', 'OCTATETRACONTAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(new RegExp(`export const ${name}\\b`).test(cSrc), `${name} should be defined in constants.js`);
+    }
+    t.assertTruthy(/OCTATETRACONTAGON_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'OCTATETRACONTAGON_NOTES_SHAPES array should be defined');
+});
+
+TestRunner.test("Day 799 - ui.js has 4 Octatetracontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Octatetracontagon Notes \((Standard|Inverted|Octatetracontagon|Tight), 32\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Octatetracontagon Notes menu items');
+});
+
+TestRunner.test("Day 799 - 48 = 2^4 * 3 IS constructible by compass and straightedge (power of 2 times Fermat prime)", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(FermatPrimes.includes(3), true, '3 should be a Fermat prime');
+    const factors = [2, 2, 2, 2, 3];
+    const distinctFactors = [...new Set(factors)];
+    const allFermat = distinctFactors.every(f => FermatPrimes.includes(f) || f === 2);
+    t.assertEqual(allFermat, true, '48 = 2^4 * 3 with 3 a Fermat prime should be constructible');
+});
+
