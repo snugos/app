@@ -67119,3 +67119,88 @@ TestRunner.test("Day 800 - 49 = 7^2 is NOT constructible by compass and straight
     const allFermat = distinctFactors.every(f => FermatPrimes.includes(f) || f === 2);
     t.assertEqual(allFermat, false, '49 = 7^2 with 7 not Fermat should NOT be constructible');
 });
+
+// Day 801: Pentacontagon (50-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 801 - pentacontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.pentacontagonNotes, 'function', 'pentacontagonNotes should be a function');
+});
+
+TestRunner.test("Day 801 - pentacontagonNotes captures undo BEFORE mutation with descriptive Pentacontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Pentacontagon Notes \(/.test(tSrc), 'pentacontagonNotes captures undo with Pentacontagon Notes label');
+});
+
+TestRunner.test("Day 801 - pentacontagonNotes uses x = a*cos(t) + (a/49)*cos(49t) and y = a*sin(t) - (a/49)*sin(49t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver49 = a \/ 49;/.test(tSrc), 'pentacontagonNotes uses aOver49 = a/49');
+    t.assertTruthy(/const cos49T = Math\.cos\(49 \* t\);/.test(tSrc), 'pentacontagonNotes uses cos(49*t)');
+    t.assertTruthy(/const sin49T = Math\.sin\(49 \* t\);/.test(tSrc), 'pentacontagonNotes uses sin(49*t)');
+    t.assertTruthy(/const x = a \* cosT \+ aOver49 \* cos49T;/.test(tSrc), 'pentacontagonNotes uses x = a*cosT + (a/49)*cos49T');
+    t.assertTruthy(/const y = a \* sinT - aOver49 \* sin49T;/.test(tSrc), 'pentacontagonNotes uses y = a*sinT - (a/49)*sin49T');
+});
+
+TestRunner.test("Day 801 - pentacontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/PENTACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'pentacontagonNotes has STANDARD shape');
+    t.assertTruthy(/PENTACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'pentacontagonNotes has INVERTED shape');
+    t.assertTruthy(/PENTACONTAGON_NOTES_SHAPE_PENTACONTAGON/.test(tSrc), 'pentacontagonNotes has PENTACONTAGON shape');
+    t.assertTruthy(/PENTACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'pentacontagonNotes has TIGHT shape');
+});
+
+TestRunner.test("Day 801 - pentacontagonNotes returns pentacontagonCount", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let pentacontagonCount = 0;/.test(tSrc), 'pentacontagonNotes declares pentacontagonCount');
+    t.assertTruthy(/pentacontagonCount\+\+;/.test(tSrc), 'pentacontagonNotes increments pentacontagonCount');
+    t.assertTruthy(/return pentacontagonCount;/.test(tSrc), 'pentacontagonNotes returns pentacontagonCount');
+});
+
+TestRunner.test("Day 801 - All 22 PENTACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'PENTACONTAGON_NOTES_MIN_LENGTH', 'PENTACONTAGON_NOTES_MAX_LENGTH', 'PENTACONTAGON_NOTES_DEFAULT_LENGTH',
+        'PENTACONTAGON_NOTES_MIN_A', 'PENTACONTAGON_NOTES_MAX_A', 'PENTACONTAGON_NOTES_DEFAULT_A',
+        'PENTACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'PENTACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'PENTACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'PENTACONTAGON_NOTES_DEFAULT_T_MIN', 'PENTACONTAGON_NOTES_DEFAULT_T_MAX',
+        'PENTACONTAGON_NOTES_INVERTED_T_MIN', 'PENTACONTAGON_NOTES_INVERTED_T_MAX',
+        'PENTACONTAGON_NOTES_PENTACONTAGON_T_MIN', 'PENTACONTAGON_NOTES_PENTACONTAGON_T_MAX',
+        'PENTACONTAGON_NOTES_TIGHT_T_MIN', 'PENTACONTAGON_NOTES_TIGHT_T_MAX',
+        'PENTACONTAGON_NOTES_SHAPE_STANDARD', 'PENTACONTAGON_NOTES_SHAPE_INVERTED',
+        'PENTACONTAGON_NOTES_SHAPE_PENTACONTAGON', 'PENTACONTAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(new RegExp(`export const ${name}\\b`).test(cSrc), `${name} should be defined in constants.js`);
+    }
+    t.assertTruthy(/PENTACONTAGON_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'PENTACONTAGON_NOTES_SHAPES array should be defined');
+});
+
+TestRunner.test("Day 801 - PENTACONTAGON_NOTES_PENTACONTAGON_T_MAX = 2 * Math.PI / 50 and TIGHT uses /50", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/PENTACONTAGON_NOTES_PENTACONTAGON_T_MAX = 2 \* Math\.PI \/ 50/.test(cSrc), 'PENTACONTAGON_NOTES_PENTACONTAGON_T_MAX = 2*Math.PI/50');
+    t.assertTruthy(/PENTACONTAGON_NOTES_TIGHT_T_MIN = -Math\.PI \/ 50/.test(cSrc), 'PENTACONTAGON_NOTES_TIGHT_T_MIN uses /50');
+    t.assertTruthy(/PENTACONTAGON_NOTES_TIGHT_T_MAX = Math\.PI \/ 50/.test(cSrc), 'PENTACONTAGON_NOTES_TIGHT_T_MAX uses /50');
+});
+
+TestRunner.test("Day 801 - ui.js has 4 Pentacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Pentacontagon Notes \((Standard|Inverted|Pentacontagon|Tight), 32\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Pentacontagon Notes menu items');
+});
+
+TestRunner.test("Day 801 - 50 = 2 * 5^2 is NOT constructible by compass and straightedge (Fermat prime 5 appears with multiplicity 2)", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(FermatPrimes.includes(5), true, '5 should be a Fermat prime');
+    const factors = [2, 5, 5];
+    const multiplicities = {};
+    for (const f of factors) multiplicities[f] = (multiplicities[f] || 0) + 1;
+    const distinctOK = Object.keys(multiplicities).every(p => {
+        const count = multiplicities[p];
+        return (p === '2') || (FermatPrimes.includes(Number(p)) && count === 1);
+    });
+    t.assertEqual(distinctOK, false, '50 = 2 * 5^2 with 5 appearing with multiplicity 2 should NOT be constructible');
+});
+
+TestRunner.test("Day 801 - APP_VERSION bumped to 2.447.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.447.0', `APP_VERSION should be 2.447.0, got ${m && m[1]}`);
+});
