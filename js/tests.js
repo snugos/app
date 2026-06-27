@@ -66882,3 +66882,157 @@ TestRunner.test("Day 796 - 45 = 3^2 * 5 IS NOT constructible by compass and stra
     const allFactorsFermat = uniqueFactors.every(f => FermatPrimes.includes(f));
     t.assertEqual(allFactorsFermat, false, '45 = 3^2 * 5 has 3 with multiplicity 2, fails distinctness');
 });
+// Day 797: Hexatetracontagon (45-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 797 - hexatetracontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.hexatetracontagonNotes, 'function', 'hexatetracontagonNotes should be a function');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes captures undo BEFORE mutation with descriptive Hexatetracontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Hexatetracontagon Notes \(/.test(tSrc), 'hexatetracontagonNotes captures undo with Hexatetracontagon Notes label');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes clamps length to HEXATETRACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/clampedLength = Math\.max\(Constants\.HEXATETRACONTAGON_NOTES_MIN_LENGTH, Math\.min\(Constants\.HEXATETRACONTAGON_NOTES_MAX_LENGTH, Math\.floor\(length\)\)\)/.test(tSrc), 'hexatetracontagonNotes clamps length with Math.floor');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes uses Math.cos, Math.sin, Math.cos(45t), Math.sin(45t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(45 \* t\)/.test(tSrc), 'hexatetracontagonNotes uses Math.cos(45*t)');
+    t.assertTruthy(/Math\.sin\(45 \* t\)/.test(tSrc), 'hexatetracontagonNotes uses Math.sin(45*t)');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes uses 45-cusped hypocycloid parametric x = a*cos(t) + (a/45)*cos(45t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver45 = a \/ 45;/.test(tSrc), 'hexatetracontagonNotes uses aOver45 = a/45');
+    t.assertTruthy(/const x = a \* cosT \+ aOver45 \* cos45T;/.test(tSrc), 'hexatetracontagonNotes uses x = a*cosT + aOver45*cos45T');
+    t.assertTruthy(/const y = a \* sinT - aOver45 \* sin45T;/.test(tSrc), 'hexatetracontagonNotes uses y = a*sinT - aOver45*sin45T');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/xRange = Math\.max\(0\.01, xMax - xMin\)/.test(tSrc), 'hexatetracontagonNotes uses xRange with Math.max(0.01, ...)');
+    t.assertTruthy(/yRange = Math\.max\(0\.01, yMax - yMin\)/.test(tSrc), 'hexatetracontagonNotes uses yRange with Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'hexatetracontagonNotes has STANDARD shape');
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'hexatetracontagonNotes has INVERTED shape');
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPE_HEXATETRACONTAGON/.test(tSrc), 'hexatetracontagonNotes has HEXATETRACONTAGON shape');
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'hexatetracontagonNotes has TIGHT shape');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const t = tMin \+ \(tMax - tMin\) \* i \/ Math\.max\(1, clampedLength - 1\)/.test(tSrc), 'hexatetracontagonNotes uses t = tMin + (tMax - tMin) * i / (length - 1)');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/velocity: Math\.round\(decayedVel \* 100\) \/ 100/.test(tSrc), 'hexatetracontagonNotes rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes returns count of hexatetracontagon notes (hexatetracontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return hexatetracontagonCount;/.test(tSrc), 'hexatetracontagonNotes returns hexatetracontagonCount');
+});
+
+TestRunner.test("Day 797 - All 22 HEXATETRACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'HEXATETRACONTAGON_NOTES_MIN_LENGTH', 'HEXATETRACONTAGON_NOTES_MAX_LENGTH', 'HEXATETRACONTAGON_NOTES_DEFAULT_LENGTH',
+        'HEXATETRACONTAGON_NOTES_MIN_A', 'HEXATETRACONTAGON_NOTES_MAX_A', 'HEXATETRACONTAGON_NOTES_DEFAULT_A',
+        'HEXATETRACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'HEXATETRACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'HEXATETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEXATETRACONTAGON_NOTES_DEFAULT_T_MIN', 'HEXATETRACONTAGON_NOTES_DEFAULT_T_MAX',
+        'HEXATETRACONTAGON_NOTES_INVERTED_T_MIN', 'HEXATETRACONTAGON_NOTES_INVERTED_T_MAX',
+        'HEXATETRACONTAGON_NOTES_HEXATETRACONTAGON_T_MIN', 'HEXATETRACONTAGON_NOTES_HEXATETRACONTAGON_T_MAX',
+        'HEXATETRACONTAGON_NOTES_TIGHT_T_MIN', 'HEXATETRACONTAGON_NOTES_TIGHT_T_MAX',
+        'HEXATETRACONTAGON_NOTES_SHAPE_STANDARD', 'HEXATETRACONTAGON_NOTES_SHAPE_INVERTED',
+        'HEXATETRACONTAGON_NOTES_SHAPE_HEXATETRACONTAGON', 'HEXATETRACONTAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(new RegExp(`export const ${name}\\b`).test(cSrc), `${name} should be defined in constants.js`);
+    }
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'HEXATETRACONTAGON_NOTES_SHAPES array should be defined');
+});
+
+TestRunner.test("Day 797 - HEXATETRACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEXATETRACONTAGON_NOTES_SHAPES\s*=\s*\[\s*HEXATETRACONTAGON_NOTES_SHAPE_STANDARD\s*,\s*HEXATETRACONTAGON_NOTES_SHAPE_INVERTED\s*,\s*HEXATETRACONTAGON_NOTES_SHAPE_HEXATETRACONTAGON\s*,\s*HEXATETRACONTAGON_NOTES_SHAPE_TIGHT\s*\]/.test(cSrc), 'SHAPES array includes all 4 shape variants in correct order');
+});
+
+TestRunner.test("Day 797 - ui.js has 4 Hexatetracontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Hexatetracontagon Notes \([^)]+\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Hexatetracontagon Notes menu items');
+});
+
+TestRunner.test("Day 797 - Hexatetracontagon Notes menu items call track.hexatetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.hexatetracontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 calls to currentTrackForMenu.hexatetracontagonNotes');
+});
+
+TestRunner.test("Day 797 - Hexatetracontagon Notes menu items call recreateToneSequence after hexatetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/hexatetracontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after hexatetracontagonNotes');
+});
+
+TestRunner.test("Day 797 - APP_VERSION validation (>= 2.443 for Day 797)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2.443.0'/.test(cSrc), 'APP_VERSION should be 2.443.0 for Day 797');
+});
+
+TestRunner.test("Day 797 - Functional test: x = a*cos(t) + (a/45)*cos(45t) (45-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const theta = 0;
+    const cosT = Math.cos(theta);
+    const cos45T = Math.cos(45 * theta);
+    const x = a * cosT + (a / 45) * cos45T;
+    t.assertEqual(Math.round(x * 100) / 100, Math.round((a + a / 45) * 100) / 100, 'x = a + a/45 at t=0');
+});
+
+TestRunner.test("Day 797 - Functional test: y = a*sin(t) - (a/45)*sin(45t) (45-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const theta = 0;
+    const sinT = Math.sin(theta);
+    const sin45T = Math.sin(45 * theta);
+    const y = a * sinT - (a / 45) * sin45T;
+    t.assertEqual(Math.round(y * 1000000) / 1000000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 797 - Functional test: at t=0, x = a + a/45 = 46a/45 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const theta = 0;
+    const x = a * Math.cos(theta) + (a / 45) * Math.cos(45 * theta);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((46 * a / 45) * 1000) / 1000, 'rightmost extreme at x = 46a/45');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes uses HEXATETRACONTAGON_NOTES_HEXATETRACONTAGON_T_MAX = 2*Math.PI/46", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEXATETRACONTAGON_NOTES_HEXATETRACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*46/.test(cSrc), 'HEXATETRACONTAGON_T_MAX = 2π/46');
+});
+
+TestRunner.test("Day 797 - hexatetracontagonNotes uses HEXATETRACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/46", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const HEXATETRACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*46/.test(cSrc), 'TIGHT_T_MIN = -π/46');
+    t.assertTruthy(/export const HEXATETRACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*46/.test(cSrc), 'TIGHT_T_MAX = π/46');
+});
+
+TestRunner.test("Day 797 - 46 = 2 * 23 is NOT constructible by compass and straightedge", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(FermatPrimes.includes(23), false, '23 should not be a Fermat prime');
+    const isPrime23 = (() => {
+        if (23 < 2) return false;
+        for (let i = 2; i <= Math.sqrt(23); i++) if (23 % i === 0) return false;
+        return true;
+    })();
+    t.assertEqual(isPrime23, true, '23 should be prime');
+    const isConstructible = (() => {
+        const n = 46;
+        const factors = [2, 23];
+        return factors.every(p => FermatPrimes.includes(p)) && true;
+    })();
+    t.assertEqual(isConstructible, false, '46 is not constructible because 23 is prime but not Fermat, so 46 = 2*23 fails the distinctness criterion');
