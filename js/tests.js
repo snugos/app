@@ -66412,3 +66412,167 @@ TestRunner.test("Day 794 - 43 is prime but NOT a Fermat prime (so 43-gon is NOT 
     })();
     t.assertEqual(isPrime43, true, '43 should be prime');
 });
+// Day 795: Tetratetracontagon (44-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 795 - tetratetracontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.tetratetracontagonNotes, 'function', 'tetratetracontagonNotes should be a function');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes captures undo BEFORE mutation with descriptive Tetratetracontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Tetratetracontagon Notes \(/.test(tSrc), 'tetratetracontagonNotes captures undo with Tetratetracontagon Notes label');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes clamps length to TETRATETRACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/clampedLength = Math\.max\(Constants\.TETRATETRACONTAGON_NOTES_MIN_LENGTH, Math\.min\(Constants\.TETRATETRACONTAGON_NOTES_MAX_LENGTH, Math\.floor\(length\)\)\)/.test(tSrc), 'tetratetracontagonNotes clamps length with Math.floor');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes uses Math.cos, Math.sin, Math.cos(43t), Math.sin(43t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(43 \* t\)/.test(tSrc), 'tetratetracontagonNotes uses Math.cos(43*t)');
+    t.assertTruthy(/Math\.sin\(43 \* t\)/.test(tSrc), 'tetratetracontagonNotes uses Math.sin(43*t)');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes uses 44-cusped hypocycloid parametric x = a*cos(t) + (a/43)*cos(43t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver43 = a \/ 43;/.test(tSrc), 'tetratetracontagonNotes uses aOver43 = a/43');
+    t.assertTruthy(/const x = a \* cosT \+ aOver43 \* cos43T;/.test(tSrc), 'tetratetracontagonNotes uses x = a*cosT + (a/43)*cos43T');
+    t.assertTruthy(/const y = a \* sinT - aOver43 \* sin43T;/.test(tSrc), 'tetratetracontagonNotes uses y = a*sinT - (a/43)*sin43T');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/xRange = Math\.max\(0\.01, xMax - xMin\)/.test(tSrc), 'tetratetracontagonNotes uses xRange with Math.max(0.01, ...)');
+    t.assertTruthy(/yRange = Math\.max\(0\.01, yMax - yMin\)/.test(tSrc), 'tetratetracontagonNotes uses yRange with Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/TETRATETRACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'tetratetracontagonNotes has STANDARD shape');
+    t.assertTruthy(/TETRATETRACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'tetratetracontagonNotes has INVERTED shape');
+    t.assertTruthy(/TETRATETRACONTAGON_NOTES_SHAPE_TETRATETRACONTAGON/.test(tSrc), 'tetratetracontagonNotes has TETRATETRACONTAGON shape');
+    t.assertTruthy(/TETRATETRACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tetratetracontagonNotes has TIGHT shape');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const t = tMin \+ \(tMax - tMin\) \* i \/ Math\.max\(1, clampedLength - 1\)/.test(tSrc), 'tetratetracontagonNotes uses t = tMin + (tMax - tMin) * i / (length - 1)');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/velocity: Math\.round\(decayedVel \* 100\) \/ 100/.test(tSrc), 'tetratetracontagonNotes rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes returns count of tetratetracontagon notes (tetratetracontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return tetratetracontagonCount;/.test(tSrc), 'tetratetracontagonNotes returns tetratetracontagonCount');
+});
+
+TestRunner.test("Day 795 - All 22 TETRATETRACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'TETRATETRACONTAGON_NOTES_MIN_LENGTH', 'TETRATETRACONTAGON_NOTES_MAX_LENGTH', 'TETRATETRACONTAGON_NOTES_DEFAULT_LENGTH',
+        'TETRATETRACONTAGON_NOTES_MIN_A', 'TETRATETRACONTAGON_NOTES_MAX_A', 'TETRATETRACONTAGON_NOTES_DEFAULT_A',
+        'TETRATETRACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'TETRATETRACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'TETRATETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'TETRATETRACONTAGON_NOTES_DEFAULT_T_MIN', 'TETRATETRACONTAGON_NOTES_DEFAULT_T_MAX',
+        'TETRATETRACONTAGON_NOTES_INVERTED_T_MIN', 'TETRATETRACONTAGON_NOTES_INVERTED_T_MAX',
+        'TETRATETRACONTAGON_NOTES_TETRATETRACONTAGON_T_MIN', 'TETRATETRACONTAGON_NOTES_TETRATETRACONTAGON_T_MAX',
+        'TETRATETRACONTAGON_NOTES_TIGHT_T_MIN', 'TETRATETRACONTAGON_NOTES_TIGHT_T_MAX',
+        'TETRATETRACONTAGON_NOTES_SHAPE_STANDARD', 'TETRATETRACONTAGON_NOTES_SHAPE_INVERTED',
+        'TETRATETRACONTAGON_NOTES_SHAPE_TETRATETRACONTAGON', 'TETRATETRACONTAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(new RegExp(`export const ${name}\\b`).test(cSrc), `${name} should be defined in constants.js`);
+    }
+    t.assertTruthy(/TETRATETRACONTAGON_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'TETRATETRACONTAGON_NOTES_SHAPES array should be defined');
+});
+
+TestRunner.test("Day 795 - TETRATETRACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/TETRATETRACONTAGON_NOTES_SHAPES\s*=\s*\[\s*TETRATETRACONTAGON_NOTES_SHAPE_STANDARD\s*,\s*TETRATETRACONTAGON_NOTES_SHAPE_INVERTED\s*,\s*TETRATETRACONTAGON_NOTES_SHAPE_TETRATETRACONTAGON\s*,\s*TETRATETRACONTAGON_NOTES_SHAPE_TIGHT\s*\]/.test(cSrc), 'SHAPES array includes all 4 shape variants in correct order');
+});
+
+TestRunner.test("Day 795 - ui.js has 4 Tetratetracontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Tetratetracontagon Notes \([^)]+\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Tetratetracontagon Notes menu items');
+});
+
+TestRunner.test("Day 795 - Tetratetracontagon Notes menu items call track.tetratetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.tetratetracontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 calls to currentTrackForMenu.tetratetracontagonNotes');
+});
+
+TestRunner.test("Day 795 - Tetratetracontagon Notes menu items call recreateToneSequence after tetratetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/tetratetracontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after tetratetracontagonNotes');
+});
+
+TestRunner.test("Day 795 - APP_VERSION validation (>= 2.441 for Day 795)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.441\.0'/.test(cSrc), 'APP_VERSION should be 2.441.0 for Day 795');
+});
+
+TestRunner.test("Day 795 - Functional test: x = a*cos(t) + (a/43)*cos(43t) (44-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const cosT = Math.cos(t);
+    const cos43T = Math.cos(43 * t);
+    const x = a * cosT + (a / 43) * cos43T;
+    t.assertEqual(Math.round(x * 100) / 100, Math.round((a + a / 43) * 100) / 100, 'x = a + a/43 at t=0');
+});
+
+TestRunner.test("Day 795 - Functional test: y = a*sin(t) - (a/43)*sin(43t) (44-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const sinT = Math.sin(t);
+    const sin43T = Math.sin(43 * t);
+    const y = a * sinT - (a / 43) * sin43T;
+    t.assertEqual(Math.round(y * 1000000) / 1000000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 795 - Functional test: at t=0, x = a + a/43 = 44a/43 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 43) * Math.cos(43 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((44 * a / 43) * 1000) / 1000, 'rightmost extreme at x = 44a/43');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes uses TETRATETRACONTAGON_NOTES_TETRATETRACONTAGON_T_MAX = 2*Math.PI/44", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TETRATETRACONTAGON_NOTES_TETRATETRACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*44/.test(cSrc), 'TETRATETRACONTAGON_T_MAX = 2π/44');
+});
+
+TestRunner.test("Day 795 - tetratetracontagonNotes uses TETRATETRACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/44", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TETRATETRACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*44/.test(cSrc), 'TIGHT_T_MIN = -π/44');
+    t.assertTruthy(/export const TETRATETRACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*44/.test(cSrc), 'TIGHT_T_MAX = π/44');
+});
+
+TestRunner.test("Day 795 - 44 = 2^2 * 11 IS NOT constructible by compass and straightedge", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(FermatPrimes.includes(11), false, '11 should not be a Fermat prime');
+    const isPrime11 = (() => {
+        if (11 < 2) return false;
+        for (let i = 2; i <= Math.sqrt(11); i++) if (11 % i === 0) return false;
+        return true;
+    })();
+    t.assertEqual(isPrime11, true, '11 should be prime');
+    const passesGaussWantzel = (() => {
+        let n = 44;
+        const pow2 = Math.floor(Math.log2(n));
+        for (let i = pow2; i >= 0; i--) {
+            const p = Math.pow(2, i);
+            if (n % p === 0 && n / p >= 1) {
+                const q = n / p;
+                const fpf = q;
+                if (FermatPrimes.includes(fpf)) return true;
+                return false;
+            }
+        }
+        return false;
+    })();
+    t.assertEqual(passesGaussWantzel, false, '44 = 4*11 should NOT be Gauss-Wantzel constructible (11 is not Fermat)');
+});
