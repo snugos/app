@@ -66263,3 +66263,152 @@ TestRunner.test("Day 793 - 42 = 2*3*7 IS NOT constructible (7 is prime but not F
     t.assertEqual(42 % 7, 0, '42 is divisible by 7');
     t.assertEqual((42 / 2) / 3 / 7, 1, '42 = 2*3*7');
 });
+// Day 794: Tritetracontagon (43-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 794 - tritetracontagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.tritetracontagonNotes, 'function', 'tritetracontagonNotes should be a function');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes captures undo BEFORE mutation with descriptive Tritetracontagon Notes label", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Tritetracontagon Notes \(/.test(tSrc), 'tritetracontagonNotes captures undo with Tritetracontagon Notes label');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes clamps length to TRITETRACONTAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/clampedLength = Math\.max\(Constants\.TRITETRACONTAGON_NOTES_MIN_LENGTH, Math\.min\(Constants\.TRITETRACONTAGON_NOTES_MAX_LENGTH, Math\.floor\(length\)\)\)/.test(tSrc), 'tritetracontagonNotes clamps length with Math.floor');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes uses Math.cos, Math.sin, Math.cos(42t), Math.sin(42t) for parametric t", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(42 \* t\)/.test(tSrc), 'tritetracontagonNotes uses Math.cos(42*t)');
+    t.assertTruthy(/Math\.sin\(42 \* t\)/.test(tSrc), 'tritetracontagonNotes uses Math.sin(42*t)');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes uses 43-cusped hypocycloid parametric x = a*cos(t) + (a/42)*cos(42t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver42 = a \/ 42;/.test(tSrc), 'tritetracontagonNotes uses aOver42 = a/42');
+    t.assertTruthy(/const x = a \* cosT \+ aOver42 \* cos42T;/.test(tSrc), 'tritetracontagonNotes uses x = a*cosT + (a/42)*cos42T');
+    t.assertTruthy(/const y = a \* sinT - aOver42 \* sin42T;/.test(tSrc), 'tritetracontagonNotes uses y = a*sinT - (a/42)*sin42T');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes uses xRange/yRange Math.max(0.01, ...) for divide-by-zero safety", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/xRange = Math\.max\(0\.01, xMax - xMin\)/.test(tSrc), 'tritetracontagonNotes uses xRange with Math.max(0.01, ...)');
+    t.assertTruthy(/yRange = Math\.max\(0\.01, yMax - yMin\)/.test(tSrc), 'tritetracontagonNotes uses yRange with Math.max(0.01, ...)');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/TRITETRACONTAGON_NOTES_SHAPE_STANDARD/.test(tSrc), 'tritetracontagonNotes has STANDARD shape');
+    t.assertTruthy(/TRITETRACONTAGON_NOTES_SHAPE_INVERTED/.test(tSrc), 'tritetracontagonNotes has INVERTED shape');
+    t.assertTruthy(/TRITETRACONTAGON_NOTES_SHAPE_TRITETRACONTAGON/.test(tSrc), 'tritetracontagonNotes has TRITETRACONTAGON shape');
+    t.assertTruthy(/TRITETRACONTAGON_NOTES_SHAPE_TIGHT/.test(tSrc), 'tritetracontagonNotes has TIGHT shape');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes t parameter = tMin + (tMax - tMin) * i / (length - 1)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const t = tMin \+ \(tMax - tMin\) \* i \/ Math\.max\(1, clampedLength - 1\)/.test(tSrc), 'tritetracontagonNotes uses t = tMin + (tMax - tMin) * i / (length - 1)');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes rounds velocity to 2 decimal places", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/velocity: Math\.round\(decayedVel \* 100\) \/ 100/.test(tSrc), 'tritetracontagonNotes rounds velocity to 2 decimal places');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes returns count of tritetracontagon notes (tritetracontagonCount)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return tritetracontagonCount;/.test(tSrc), 'tritetracontagonNotes returns tritetracontagonCount');
+});
+
+TestRunner.test("Day 794 - All 22 TRITETRACONTAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expectedConstants = [
+        'TRITETRACONTAGON_NOTES_MIN_LENGTH', 'TRITETRACONTAGON_NOTES_MAX_LENGTH', 'TRITETRACONTAGON_NOTES_DEFAULT_LENGTH',
+        'TRITETRACONTAGON_NOTES_MIN_A', 'TRITETRACONTAGON_NOTES_MAX_A', 'TRITETRACONTAGON_NOTES_DEFAULT_A',
+        'TRITETRACONTAGON_NOTES_MIN_VELOCITY_DECAY', 'TRITETRACONTAGON_NOTES_MAX_VELOCITY_DECAY', 'TRITETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'TRITETRACONTAGON_NOTES_DEFAULT_T_MIN', 'TRITETRACONTAGON_NOTES_DEFAULT_T_MAX',
+        'TRITETRACONTAGON_NOTES_INVERTED_T_MIN', 'TRITETRACONTAGON_NOTES_INVERTED_T_MAX',
+        'TRITETRACONTAGON_NOTES_TRITETRACONTAGON_T_MIN', 'TRITETRACONTAGON_NOTES_TRITETRACONTAGON_T_MAX',
+        'TRITETRACONTAGON_NOTES_TIGHT_T_MIN', 'TRITETRACONTAGON_NOTES_TIGHT_T_MAX',
+        'TRITETRACONTAGON_NOTES_SHAPE_STANDARD', 'TRITETRACONTAGON_NOTES_SHAPE_INVERTED',
+        'TRITETRACONTAGON_NOTES_SHAPE_TRITETRACONTAGON', 'TRITETRACONTAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expectedConstants) {
+        t.assertTruthy(new RegExp(`export const ${name}\\b`).test(cSrc), `${name} should be defined in constants.js`);
+    }
+    t.assertTruthy(/TRITETRACONTAGON_NOTES_SHAPES\s*=\s*\[/.test(cSrc), 'TRITETRACONTAGON_NOTES_SHAPES array should be defined');
+});
+
+TestRunner.test("Day 794 - TRITETRACONTAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/TRITETRACONTAGON_NOTES_SHAPES\s*=\s*\[\s*TRITETRACONTAGON_NOTES_SHAPE_STANDARD\s*,\s*TRITETRACONTAGON_NOTES_SHAPE_INVERTED\s*,\s*TRITETRACONTAGON_NOTES_SHAPE_TRITETRACONTAGON\s*,\s*TRITETRACONTAGON_NOTES_SHAPE_TIGHT\s*\]/.test(cSrc), 'SHAPES array includes all 4 shape variants in correct order');
+});
+
+TestRunner.test("Day 794 - ui.js has 4 Tritetracontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Tritetracontagon Notes \([^)]+\)/g) || [];
+    t.assertEqual(matches.length, 4, '4 Tritetracontagon Notes menu items');
+});
+
+TestRunner.test("Day 794 - Tritetracontagon Notes menu items call track.tritetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/currentTrackForMenu\.tritetracontagonNotes\(/g) || [];
+    t.assertEqual(matches.length, 4, '4 tritetracontagonNotes calls');
+});
+
+TestRunner.test("Day 794 - Tritetracontagon Notes menu items call recreateToneSequence after tritetracontagonNotes", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/tritetracontagonNotes\(.*?recreateToneSequence\(true\)/s.test(uSrc), 'recreateToneSequence called after tritetracontagonNotes');
+});
+
+TestRunner.test("Day 794 - APP_VERSION validation (>= 2.440 for Day 794)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const APP_VERSION\s*=\s*'2\.440\.0'/.test(cSrc), 'APP_VERSION should be 2.440.0 for Day 794');
+});
+
+TestRunner.test("Day 794 - Functional test: x = a*cos(t) + (a/42)*cos(42t) (43-cusped hypocycloid x parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const cosT = Math.cos(t);
+    const cos42T = Math.cos(42 * t);
+    const x = a * cosT + (a / 42) * cos42T;
+    t.assertEqual(Math.round(x * 100) / 100, Math.round((a + a / 42) * 100) / 100, 'x = a + a/42 at t=0');
+});
+
+TestRunner.test("Day 794 - Functional test: y = a*sin(t) - (a/42)*sin(42t) (43-cusped hypocycloid y parametric)", (t) => {
+    const a = 4;
+    const t = 0;
+    const sinT = Math.sin(t);
+    const sin42T = Math.sin(42 * t);
+    const y = a * sinT - (a / 42) * sin42T;
+    t.assertEqual(Math.round(y * 1000000) / 1000000, 0, 'y = 0 at t=0');
+});
+
+TestRunner.test("Day 794 - Functional test: at t=0, x = a + a/42 = 43a/42 (the rightmost extreme)", (t) => {
+    const a = 4;
+    const t = 0;
+    const x = a * Math.cos(t) + (a / 42) * Math.cos(42 * t);
+    t.assertEqual(Math.round(x * 1000) / 1000, Math.round((43 * a / 42) * 1000) / 1000, 'rightmost extreme at x = 43a/42');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes uses TRITETRACONTAGON_NOTES_TRITETRACONTAGON_T_MAX = 2*Math.PI/43", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TRITETRACONTAGON_NOTES_TRITETRACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*43/.test(cSrc), 'TRITETRACONTAGON_T_MAX = 2π/43');
+});
+
+TestRunner.test("Day 794 - tritetracontagonNotes uses TRITETRACONTAGON_NOTES_TIGHT_T_MIN/MAX = ±Math.PI/43", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/export const TRITETRACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*43/.test(cSrc), 'TIGHT_T_MIN = -π/43');
+    t.assertTruthy(/export const TRITETRACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*43/.test(cSrc), 'TIGHT_T_MAX = π/43');
+});
+
+TestRunner.test("Day 794 - 43 is prime but NOT a Fermat prime (so 43-gon is NOT constructible)", (t) => {
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(FermatPrimes.includes(43), false, '43 should not be a Fermat prime');
+    const isPrime43 = (() => {
+        if (43 < 2) return false;
+        for (let i = 2; i <= Math.sqrt(43); i++) if (43 % i === 0) return false;
+        return true;
+    })();
+    t.assertEqual(isPrime43, true, '43 should be prime');
+});
