@@ -14973,7 +14973,6 @@ export class Track {
 
         return pentatetracontagonCount;
     }
-
     hexatetracontagonNotes(length = Constants.HEXATETRACONTAGON_NOTES_DEFAULT_LENGTH, scale = Constants.HEXATETRACONTAGON_NOTES_DEFAULT_A, velocityDecay = Constants.HEXATETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.HEXATETRACONTAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
         if (this.type === 'Audio') return 0;
         const activeSeq = this.getActiveSequence();
@@ -15293,4 +15292,966 @@ export class Track {
 
         return octatetracontagonCount;
     }
+    octatetracontagonNotes(length = Constants.OCTATETRACONTAGON_NOTES_DEFAULT_LENGTH, scale = Constants.OCTATETRACONTAGON_NOTES_DEFAULT_A, velocityDecay = Constants.OCTATETRACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.OCTATETRACONTAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} octatetracontagonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.OCTATETRACONTAGON_NOTES_MIN_LENGTH, Math.min(Constants.OCTATETRACONTAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.OCTATETRACONTAGON_NOTES_MIN_A, Math.min(Constants.OCTATETRACONTAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.OCTATETRACONTAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.OCTATETRACONTAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.OCTATETRACONTAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.OCTATETRACONTAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.OCTATETRACONTAGON_NOTES_SHAPE_STANDARD]: [Constants.OCTATETRACONTAGON_NOTES_DEFAULT_T_MIN, Constants.OCTATETRACONTAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.OCTATETRACONTAGON_NOTES_SHAPE_INVERTED]: [Constants.OCTATETRACONTAGON_NOTES_INVERTED_T_MIN, Constants.OCTATETRACONTAGON_NOTES_INVERTED_T_MAX],
+            [Constants.OCTATETRACONTAGON_NOTES_SHAPE_OCTATETRACONTAGON]: [Constants.OCTATETRACONTAGON_NOTES_OCTATETRACONTAGON_T_MIN, Constants.OCTATETRACONTAGON_NOTES_OCTATETRACONTAGON_T_MAX],
+            [Constants.OCTATETRACONTAGON_NOTES_SHAPE_TIGHT]: [Constants.OCTATETRACONTAGON_NOTES_TIGHT_T_MIN, Constants.OCTATETRACONTAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.OCTATETRACONTAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Octatetracontagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let octatetracontagonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver47 = a / 47;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos47T = Math.cos(47 * t);
+            const sin47T = Math.sin(47 * t);
+            const x = a * cosT + aOver47 * cos47T;
+            const y = a * sinT - aOver47 * sin47T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            octatetracontagonCount++;
+        }
+
+        return octatetracontagonCount;
+    }
+    enneacontacontagonNotes(length = Constants.ENNEACONTACONTAGON_NOTES_DEFAULT_LENGTH, scale = Constants.ENNEACONTACONTAGON_NOTES_DEFAULT_A, velocityDecay = Constants.ENNEACONTACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.ENNEACONTACONTAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} enneacontacontagonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.ENNEACONTACONTAGON_NOTES_MIN_LENGTH, Math.min(Constants.ENNEACONTACONTAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.ENNEACONTACONTAGON_NOTES_MIN_A, Math.min(Constants.ENNEACONTACONTAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.ENNEACONTACONTAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.ENNEACONTACONTAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.ENNEACONTACONTAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.ENNEACONTACONTAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.ENNEACONTACONTAGON_NOTES_SHAPE_STANDARD]: [Constants.ENNEACONTACONTAGON_NOTES_DEFAULT_T_MIN, Constants.ENNEACONTACONTAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.ENNEACONTACONTAGON_NOTES_SHAPE_INVERTED]: [Constants.ENNEACONTACONTAGON_NOTES_INVERTED_T_MIN, Constants.ENNEACONTACONTAGON_NOTES_INVERTED_T_MAX],
+            [Constants.ENNEACONTACONTAGON_NOTES_SHAPE_ENNEACONTACONTAGON]: [Constants.ENNEACONTACONTAGON_NOTES_ENNEACONTACONTAGON_T_MIN, Constants.ENNEACONTACONTAGON_NOTES_ENNEACONTACONTAGON_T_MAX],
+            [Constants.ENNEACONTACONTAGON_NOTES_SHAPE_TIGHT]: [Constants.ENNEACONTACONTAGON_NOTES_TIGHT_T_MIN, Constants.ENNEACONTACONTAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.ENNEACONTACONTAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Enneacontacontagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let enneacontacontagonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver48 = a / 48;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos48T = Math.cos(48 * t);
+            const sin48T = Math.sin(48 * t);
+            const x = a * cosT + aOver48 * cos48T;
+            const y = a * sinT - aOver48 * sin48T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            enneacontacontagonCount++;
+        }
+
+        return enneacontacontagonCount;
+    }
+    pentacontagonNotes(length = Constants.PENTACONTAGON_NOTES_DEFAULT_LENGTH, scale = Constants.PENTACONTAGON_NOTES_DEFAULT_A, velocityDecay = Constants.PENTACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.PENTACONTAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} pentacontagonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.PENTACONTAGON_NOTES_MIN_LENGTH, Math.min(Constants.PENTACONTAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.PENTACONTAGON_NOTES_MIN_A, Math.min(Constants.PENTACONTAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.PENTACONTAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.PENTACONTAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.PENTACONTAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.PENTACONTAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.PENTACONTAGON_NOTES_SHAPE_STANDARD]: [Constants.PENTACONTAGON_NOTES_DEFAULT_T_MIN, Constants.PENTACONTAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.PENTACONTAGON_NOTES_SHAPE_INVERTED]: [Constants.PENTACONTAGON_NOTES_INVERTED_T_MIN, Constants.PENTACONTAGON_NOTES_INVERTED_T_MAX],
+            [Constants.PENTACONTAGON_NOTES_SHAPE_PENTACONTAGON]: [Constants.PENTACONTAGON_NOTES_PENTACONTAGON_T_MIN, Constants.PENTACONTAGON_NOTES_PENTACONTAGON_T_MAX],
+            [Constants.PENTACONTAGON_NOTES_SHAPE_TIGHT]: [Constants.PENTACONTAGON_NOTES_TIGHT_T_MIN, Constants.PENTACONTAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.PENTACONTAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Pentacontagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let pentacontagonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver49 = a / 49;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos49T = Math.cos(49 * t);
+            const sin49T = Math.sin(49 * t);
+            const x = a * cosT + aOver49 * cos49T;
+            const y = a * sinT - aOver49 * sin49T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            pentacontagonCount++;
+        }
+
+        return pentacontagonCount;
+    }
+    pentacontahenagonNotes(length = Constants.PENTACONTAHENAGON_NOTES_DEFAULT_LENGTH, scale = Constants.PENTACONTAHENAGON_NOTES_DEFAULT_A, velocityDecay = Constants.PENTACONTAHENAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.PENTACONTAHENAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} pentacontahenagonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.PENTACONTAHENAGON_NOTES_MIN_LENGTH, Math.min(Constants.PENTACONTAHENAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.PENTACONTAHENAGON_NOTES_MIN_A, Math.min(Constants.PENTACONTAHENAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.PENTACONTAHENAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.PENTACONTAHENAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.PENTACONTAHENAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.PENTACONTAHENAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.PENTACONTAHENAGON_NOTES_SHAPE_STANDARD]: [Constants.PENTACONTAHENAGON_NOTES_DEFAULT_T_MIN, Constants.PENTACONTAHENAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.PENTACONTAHENAGON_NOTES_SHAPE_INVERTED]: [Constants.PENTACONTAHENAGON_NOTES_INVERTED_T_MIN, Constants.PENTACONTAHENAGON_NOTES_INVERTED_T_MAX],
+            [Constants.PENTACONTAHENAGON_NOTES_SHAPE_PENTACONTAHENAGON]: [Constants.PENTACONTAHENAGON_NOTES_PENTACONTAHENAGON_T_MIN, Constants.PENTACONTAHENAGON_NOTES_PENTACONTAHENAGON_T_MAX],
+            [Constants.PENTACONTAHENAGON_NOTES_SHAPE_TIGHT]: [Constants.PENTACONTAHENAGON_NOTES_TIGHT_T_MIN, Constants.PENTACONTAHENAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.PENTACONTAHENAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Pentacontahenagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let pentacontahenagonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver50 = a / 50;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos50T = Math.cos(50 * t);
+            const sin50T = Math.sin(50 * t);
+            const x = a * cosT + aOver50 * cos50T;
+            const y = a * sinT - aOver50 * sin50T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            pentacontahenagonCount++;
+        }
+
+        return pentacontahenagonCount;
+    }
+    pentacontadigonNotes(length = Constants.PENTACONTADIGON_NOTES_DEFAULT_LENGTH, scale = Constants.PENTACONTADIGON_NOTES_DEFAULT_A, velocityDecay = Constants.PENTACONTADIGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.PENTACONTADIGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} pentacontadigonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.PENTACONTADIGON_NOTES_MIN_LENGTH, Math.min(Constants.PENTACONTADIGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.PENTACONTADIGON_NOTES_MIN_A, Math.min(Constants.PENTACONTADIGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.PENTACONTADIGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.PENTACONTADIGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.PENTACONTADIGON_NOTES_SHAPES.includes(shape) ? shape : Constants.PENTACONTADIGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.PENTACONTADIGON_NOTES_SHAPE_STANDARD]: [Constants.PENTACONTADIGON_NOTES_DEFAULT_T_MIN, Constants.PENTACONTADIGON_NOTES_DEFAULT_T_MAX],
+            [Constants.PENTACONTADIGON_NOTES_SHAPE_INVERTED]: [Constants.PENTACONTADIGON_NOTES_INVERTED_T_MIN, Constants.PENTACONTADIGON_NOTES_INVERTED_T_MAX],
+            [Constants.PENTACONTADIGON_NOTES_SHAPE_PENTACONTADIGON]: [Constants.PENTACONTADIGON_NOTES_PENTACONTADIGON_T_MIN, Constants.PENTACONTADIGON_NOTES_PENTACONTADIGON_T_MAX],
+            [Constants.PENTACONTADIGON_NOTES_SHAPE_TIGHT]: [Constants.PENTACONTADIGON_NOTES_TIGHT_T_MIN, Constants.PENTACONTADIGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.PENTACONTADIGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Pentacontadigon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let pentacontadigonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver51 = a / 51;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos51T = Math.cos(51 * t);
+            const sin51T = Math.sin(51 * t);
+            const x = a * cosT + aOver51 * cos51T;
+            const y = a * sinT - aOver51 * sin51T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            pentacontadigonCount++;
+        }
+
+        return pentacontadigonCount;
+    }
+
+    pentacontatetragonNotes(length = Constants.PENTACONTATETRAGON_NOTES_DEFAULT_LENGTH, scale = Constants.PENTACONTATETRAGON_NOTES_DEFAULT_A, velocityDecay = Constants.PENTACONTATETRAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.PENTACONTATETRAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} pentacontatetragonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.PENTACONTATETRAGON_NOTES_MIN_LENGTH, Math.min(Constants.PENTACONTATETRAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.PENTACONTATETRAGON_NOTES_MIN_A, Math.min(Constants.PENTACONTATETRAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.PENTACONTATETRAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.PENTACONTATETRAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.PENTACONTATETRAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.PENTACONTATETRAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.PENTACONTATETRAGON_NOTES_SHAPE_STANDARD]: [Constants.PENTACONTATETRAGON_NOTES_DEFAULT_T_MIN, Constants.PENTACONTATETRAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.PENTACONTATETRAGON_NOTES_SHAPE_INVERTED]: [Constants.PENTACONTATETRAGON_NOTES_INVERTED_T_MIN, Constants.PENTACONTATETRAGON_NOTES_INVERTED_T_MAX],
+            [Constants.PENTACONTATETRAGON_NOTES_SHAPE_PENTACONTATETRAGON]: [Constants.PENTACONTATETRAGON_NOTES_PENTACONTATETRAGON_T_MIN, Constants.PENTACONTATETRAGON_NOTES_PENTACONTATETRAGON_T_MAX],
+            [Constants.PENTACONTATETRAGON_NOTES_SHAPE_TIGHT]: [Constants.PENTACONTATETRAGON_NOTES_TIGHT_T_MIN, Constants.PENTACONTATETRAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.PENTACONTATETRAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Pentacontatetragon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let pentacontatetragonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver52 = a / 52;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos52T = Math.cos(52 * t);
+            const sin52T = Math.sin(52 * t);
+            const x = a * cosT + aOver52 * cos52T;
+            const y = a * sinT - aOver52 * sin52T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            pentacontatetragonCount++;
+        }
+
+        return pentacontatetragonCount;
+    }
+
+
+    pentacontapentagonNotes(length = Constants.PENTACONTAPENTAGON_NOTES_DEFAULT_LENGTH, scale = Constants.PENTACONTAPENTAGON_NOTES_DEFAULT_A, velocityDecay = Constants.PENTACONTAPENTAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.PENTACONTAPENTAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} pentacontapentagonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.PENTACONTAPENTAGON_NOTES_MIN_LENGTH, Math.min(Constants.PENTACONTAPENTAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.PENTACONTAPENTAGON_NOTES_MIN_A, Math.min(Constants.PENTACONTAPENTAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.PENTACONTAPENTAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.PENTACONTAPENTAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.PENTACONTAPENTAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.PENTACONTAPENTAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.PENTACONTAPENTAGON_NOTES_SHAPE_STANDARD]: [Constants.PENTACONTAPENTAGON_NOTES_DEFAULT_T_MIN, Constants.PENTACONTAPENTAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.PENTACONTAPENTAGON_NOTES_SHAPE_INVERTED]: [Constants.PENTACONTAPENTAGON_NOTES_INVERTED_T_MIN, Constants.PENTACONTAPENTAGON_NOTES_INVERTED_T_MAX],
+            [Constants.PENTACONTAPENTAGON_NOTES_SHAPE_PENTACONTAPENTAGON]: [Constants.PENTACONTAPENTAGON_NOTES_PENTACONTAPENTAGON_T_MIN, Constants.PENTACONTAPENTAGON_NOTES_PENTACONTAPENTAGON_T_MAX],
+            [Constants.PENTACONTAPENTAGON_NOTES_SHAPE_TIGHT]: [Constants.PENTACONTAPENTAGON_NOTES_TIGHT_T_MIN, Constants.PENTACONTAPENTAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.PENTACONTAPENTAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Pentacontapentagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let pentacontapentagonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver53 = a / 53;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos53T = Math.cos(53 * t);
+            const sin53T = Math.sin(53 * t);
+            const x = a * cosT + aOver53 * cos53T;
+            const y = a * sinT - aOver53 * sin53T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            pentacontapentagonCount++;
+        }
+
+        return pentacontapentagonCount;
+    }
+
+
+    pentacontahexagonNotes(length = Constants.PENTACONTAHEXAGON_NOTES_DEFAULT_LENGTH, scale = Constants.PENTACONTAHEXAGON_NOTES_DEFAULT_A, velocityDecay = Constants.PENTACONTAHEXAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.PENTACONTAHEXAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} pentacontahexagonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.PENTACONTAHEXAGON_NOTES_MIN_LENGTH, Math.min(Constants.PENTACONTAHEXAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.PENTACONTAHEXAGON_NOTES_MIN_A, Math.min(Constants.PENTACONTAHEXAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.PENTACONTAHEXAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.PENTACONTAHEXAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.PENTACONTAHEXAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.PENTACONTAHEXAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.PENTACONTAHEXAGON_NOTES_SHAPE_STANDARD]: [Constants.PENTACONTAHEXAGON_NOTES_DEFAULT_T_MIN, Constants.PENTACONTAHEXAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.PENTACONTAHEXAGON_NOTES_SHAPE_INVERTED]: [Constants.PENTACONTAHEXAGON_NOTES_INVERTED_T_MIN, Constants.PENTACONTAHEXAGON_NOTES_INVERTED_T_MAX],
+            [Constants.PENTACONTAHEXAGON_NOTES_SHAPE_PENTACONTAHEXAGON]: [Constants.PENTACONTAHEXAGON_NOTES_PENTACONTAHEXAGON_T_MIN, Constants.PENTACONTAHEXAGON_NOTES_PENTACONTAHEXAGON_T_MAX],
+            [Constants.PENTACONTAHEXAGON_NOTES_SHAPE_TIGHT]: [Constants.PENTACONTAHEXAGON_NOTES_TIGHT_T_MIN, Constants.PENTACONTAHEXAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.PENTACONTAHEXAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Pentacontahexagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let pentacontahexagonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver54 = a / 54;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos54T = Math.cos(54 * t);
+            const sin54T = Math.sin(54 * t);
+            const x = a * cosT + aOver54 * cos54T;
+            const y = a * sinT - aOver54 * sin54T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            pentacontahexagonCount++;
+        }
+
+        return pentacontahexagonCount;
+    }
+
+
+    pentacontaheptagonNotes(length = Constants.PENTACONTAHEPTAGON_NOTES_DEFAULT_LENGTH, scale = Constants.PENTACONTAHEPTAGON_NOTES_DEFAULT_A, velocityDecay = Constants.PENTACONTAHEPTAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.PENTACONTAHEPTAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} pentacontaheptagonNotes] No active sequence found.`);
+            return 0;
+        }
+
+        const clampedLength = Math.max(Constants.PENTACONTAHEPTAGON_NOTES_MIN_LENGTH, Math.min(Constants.PENTACONTAHEPTAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.PENTACONTAHEPTAGON_NOTES_MIN_A, Math.min(Constants.PENTACONTAHEPTAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.PENTACONTAHEPTAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.PENTACONTAHEPTAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.PENTACONTAHEPTAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.PENTACONTAHEPTAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.PENTACONTAHEPTAGON_NOTES_SHAPE_STANDARD]: [Constants.PENTACONTAHEPTAGON_NOTES_DEFAULT_T_MIN, Constants.PENTACONTAHEPTAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.PENTACONTAHEPTAGON_NOTES_SHAPE_INVERTED]: [Constants.PENTACONTAHEPTAGON_NOTES_INVERTED_T_MIN, Constants.PENTACONTAHEPTAGON_NOTES_INVERTED_T_MAX],
+            [Constants.PENTACONTAHEPTAGON_NOTES_SHAPE_PENTACONTAHEPTAGON]: [Constants.PENTACONTAHEPTAGON_NOTES_PENTACONTAHEPTAGON_T_MIN, Constants.PENTACONTAHEPTAGON_NOTES_PENTACONTAHEPTAGON_T_MAX],
+            [Constants.PENTACONTAHEPTAGON_NOTES_SHAPE_TIGHT]: [Constants.PENTACONTAHEPTAGON_NOTES_TIGHT_T_MIN, Constants.PENTACONTAHEPTAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.PENTACONTAHEPTAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Pentacontaheptagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let pentacontaheptagonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver55 = a / 55;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos55T = Math.cos(55 * t);
+            const sin55T = Math.sin(55 * t);
+            const x = a * cosT + aOver55 * cos55T;
+            const y = a * sinT - aOver55 * sin55T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            pentacontaheptagonCount++;
+        }
+
+        return pentacontaheptagonCount;
+    }
+
 }
