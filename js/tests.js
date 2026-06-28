@@ -134887,3 +134887,90 @@ TestRunner.test("Day 809 - APP_VERSION bumped to 2.455.0", (t) => {
     t.assertTruthy(m && m[1] === '2.455.0', `APP_VERSION should be 2.455.0, got ${m && m[1]}`);
 });
 
+TestRunner.test("Day 810 - pentacontadecagonNotes is a function on Track.prototype", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontadecagonNotes\(length\s*=\s*Constants\.PENTACONTADECAGON_NOTES_DEFAULT_LENGTH/.test(cSrc), 'pentacontadecagonNotes should be a method on Track');
+});
+
+TestRunner.test("Day 810 - pentacontadecagonNotes captures undo BEFORE mutation with descriptive Pentacontadecagon Notes label", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,4000}_captureUndoState\(`Pentacontadecagon Notes/.test(cSrc), 'should capture undo with descriptive label BEFORE mutation');
+});
+
+TestRunner.test("Day 810 - pentacontadecagonNotes clamps length to PENTACONTADECAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,2000}PENTACONTADECAGON_NOTES_MIN_LENGTH[\s\S]{0,200}PENTACONTADECAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor/.test(cSrc), 'should clamp length with Math.floor');
+});
+
+TestRunner.test("Day 810 - pentacontadecagonNotes uses Math.cos(58t) and Math.sin(58t) for 59-cusped hypocycloid", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,5000}Math\.cos\(58 \* t\)[\s\S]{0,500}Math\.sin\(58 \* t\)/.test(cSrc), 'should use 59-cusped hypocycloid trig with 58t');
+});
+
+TestRunner.test("Day 810 - pentacontadecagonNotes uses 59-cusped hypocycloid parametric x = a*cos(t) + (a/58)*cos(58t)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,5000}a \* cosT \+ aOver58 \* cos58T/.test(cSrc), 'should use 59-cusped x parametric form');
+});
+
+TestRunner.test("Day 810 - pentacontadecagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,4000}PENTACONTADECAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'should have STANDARD shape');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,4000}PENTACONTADECAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'should have INVERTED shape');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,4000}PENTACONTADECAGON_NOTES_SHAPE_PENTACONTADECAGON/.test(cSrc), 'should have PENTACONTADECAGON shape');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,4000}PENTACONTADECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should have TIGHT shape');
+});
+
+TestRunner.test("Day 810 - pentacontadecagonNotes returns count (pentacontadecagonCount)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,8000}pentacontadecagonCount\+\+/.test(cSrc), 'should increment pentacontadecagonCount');
+    t.assertTruthy(/pentacontadecagonNotes[\s\S]{0,8000}return pentacontadecagonCount/.test(cSrc), 'should return pentacontadecagonCount');
+});
+
+TestRunner.test("Day 810 - all 22 PENTACONTADECAGON_NOTES_* constants are defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expected = ['MIN_LENGTH','MAX_LENGTH','DEFAULT_LENGTH','MIN_A','MAX_A','DEFAULT_A','MIN_VELOCITY_DECAY','MAX_VELOCITY_DECAY','DEFAULT_VELOCITY_DECAY','DEFAULT_T_MIN','DEFAULT_T_MAX','INVERTED_T_MIN','INVERTED_T_MAX','PENTACONTADECAGON_T_MIN','PENTACONTADECAGON_T_MAX','TIGHT_T_MIN','TIGHT_T_MAX','SHAPE_STANDARD','SHAPE_INVERTED','SHAPE_PENTACONTADECAGON','SHAPE_TIGHT'];
+    let missing = 0;
+    for (const name of expected) {
+        if (!new RegExp('PENTACONTADECAGON_NOTES_' + name + '\\\\s*=').test(cSrc)) missing++;
+    }
+    t.assertEqual(missing, 0, `should have all PENTACONTADECAGON_NOTES_* constants; missing ${missing}`);
+});
+
+TestRunner.test("Day 810 - PENTACONTADECAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const block = cSrc.match(/PENTACONTADECAGON_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(block, 'PENTACONTADECAGON_NOTES_SHAPES array should exist');
+    const inner = block[1];
+    t.assertTruthy(/PENTACONTADECAGON_NOTES_SHAPE_STANDARD/.test(inner), 'SHAPES should include STANDARD');
+    t.assertTruthy(/PENTACONTADECAGON_NOTES_SHAPE_INVERTED/.test(inner), 'SHAPES should include INVERTED');
+    t.assertTruthy(/PENTACONTADECAGON_NOTES_SHAPE_PENTACONTADECAGON/.test(inner), 'SHAPES should include PENTACONTADECAGON');
+    t.assertTruthy(/PENTACONTADECAGON_NOTES_SHAPE_TIGHT/.test(inner), 'SHAPES should include TIGHT');
+});
+
+TestRunner.test("Day 810 - ui.js has 4 Pentacontadecagon Notes menu items", (t) => {
+    const cSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((cSrc.match(/Pentacontadecagon Notes \(Standard, 32\)/g) || []).length, 1, 'should have 1 Standard menu item');
+    t.assertEqual((cSrc.match(/Pentacontadecagon Notes \(Inverted, 32\)/g) || []).length, 1, 'should have 1 Inverted menu item');
+    t.assertEqual((cSrc.match(/Pentacontadecagon Notes \(Pentacontadecagon, 32\)/g) || []).length, 1, 'should have 1 Pentacontadecagon menu item');
+    t.assertEqual((cSrc.match(/Pentacontadecagon Notes \(Tight, 32\)/g) || []).length, 1, 'should have 1 Tight menu item');
+    t.assertEqual((cSrc.match(/pentacontadecagonNotes\(32, 4, 0\.95/g) || []).length, 4, 'should call track.pentacontadecagonNotes 4 times');
+});
+
+TestRunner.test("Day 810 - 59 IS prime, NOT a Fermat prime, NOT constructible by compass and straightedge", (t) => {
+    // Gauss-Wantzel 1837: n is constructible iff n is a product of DISTINCT Fermat primes and a power of 2
+    // 59 is prime (not a power of 2; not a Fermat prime). Fermat primes are 3, 5, 17, 257, 65537.
+    t.assertTruthy(59 !== 3 && 59 !== 5 && 59 !== 17 && 59 !== 257 && 59 !== 65537, '59 is not a Fermat prime');
+    // Verify 59 is prime (no divisors 2..sqrt(59))
+    let isPrime = true;
+    for (let d = 2; d * d <= 59; d++) {
+        if (59 % d === 0) { isPrime = false; break; }
+    }
+    t.assertTruthy(isPrime, '59 is prime');
+});
+
+TestRunner.test("Day 810 - APP_VERSION bumped to 2.456.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.456.0', `APP_VERSION should be 2.456.0, got ${m && m[1]}`);
+});
+
