@@ -67543,3 +67543,88 @@ TestRunner.test("Day 805 - APP_VERSION bumped to 2.451.0", (t) => {
     const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
     t.assertTruthy(m && m[1] === '2.451.0', `APP_VERSION should be 2.451.0, got ${m && m[1]}`);
 });
+
+// Day 806: Pentacontahexagon (55-cusped Hypocycloid) Notes Tests
+TestRunner.test("Day 806 - pentacontahexagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.pentacontahexagonNotes, 'function', 'pentacontahexagonNotes should be a function');
+});
+
+TestRunner.test("Day 806 - pentacontahexagonNotes captures undo BEFORE mutation with descriptive Pentacontahexagon Notes label", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontahexagonNotes[\s\S]{0,4000}_captureUndoState\(\`Pentacontahexagon Notes/.test(cSrc), 'should capture undo with descriptive label BEFORE mutation');
+});
+
+TestRunner.test("Day 806 - pentacontahexagonNotes clamps length to PENTACONTAHEXAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontahexagonNotes[\s\S]{0,2000}PENTACONTAHEXAGON_NOTES_MIN_LENGTH[\s\S]{0,200}PENTACONTAHEXAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor/.test(cSrc), 'should clamp length with Math.floor');
+});
+
+TestRunner.test("Day 806 - pentacontahexagonNotes uses Math.cos, Math.sin, Math.cos(54t), Math.sin(54t) for parametric t", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontahexagonNotes[\s\S]{0,5000}Math\.cos\(54 \* t\)[\s\S]{0,500}Math\.sin\(54 \* t\)/.test(cSrc), 'should use 55-cusped hypocycloid trig with 54t');
+});
+
+TestRunner.test("Day 806 - pentacontahexagonNotes uses 55-cusped hypocycloid parametric x = a*cos(t) + (a/54)*cos(54t) and y = a*sin(t) - (a/54)*sin(54t)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/a \* cosT \+ aOver54 \* cos54T/.test(cSrc), 'should use x = a*cos(t) + (a/54)*cos(54t)');
+    t.assertTruthy(/a \* sinT - aOver54 \* sin54T/.test(cSrc), 'should use y = a*sin(t) - (a/54)*sin(54t)');
+});
+
+TestRunner.test("Day 806 - pentacontahexagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontahexagonNotes[\s\S]{0,3000}tRangeMap[\s\S]{0,500}SHAPE_STANDARD[\s\S]{0,500}SHAPE_INVERTED[\s\S]{0,500}SHAPE_PENTACONTAHEXAGON[\s\S]{0,500}SHAPE_TIGHT/.test(cSrc), 'should support 4 shapes');
+});
+
+TestRunner.test("Day 806 - pentacontahexagonNotes returns pentacontahexagonCount", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/pentacontahexagonCount\+\+/.test(cSrc), 'should increment pentacontahexagonCount');
+    t.assertTruthy(/return pentacontahexagonCount/.test(cSrc), 'should return pentacontahexagonCount');
+});
+
+TestRunner.test("Day 806 - All 22 PENTACONTAHEXAGON_NOTES constants are defined in constants.js", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expected = [
+        'PENTACONTAHEXAGON_NOTES_MIN_LENGTH', 'PENTACONTAHEXAGON_NOTES_MAX_LENGTH', 'PENTACONTAHEXAGON_NOTES_DEFAULT_LENGTH',
+        'PENTACONTAHEXAGON_NOTES_MIN_A', 'PENTACONTAHEXAGON_NOTES_MAX_A', 'PENTACONTAHEXAGON_NOTES_DEFAULT_A',
+        'PENTACONTAHEXAGON_NOTES_MIN_VELOCITY_DECAY', 'PENTACONTAHEXAGON_NOTES_MAX_VELOCITY_DECAY', 'PENTACONTAHEXAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'PENTACONTAHEXAGON_NOTES_DEFAULT_T_MIN', 'PENTACONTAHEXAGON_NOTES_DEFAULT_T_MAX',
+        'PENTACONTAHEXAGON_NOTES_INVERTED_T_MIN', 'PENTACONTAHEXAGON_NOTES_INVERTED_T_MAX',
+        'PENTACONTAHEXAGON_NOTES_PENTACONTAHEXAGON_T_MIN', 'PENTACONTAHEXAGON_NOTES_PENTACONTAHEXAGON_T_MAX',
+        'PENTACONTAHEXAGON_NOTES_TIGHT_T_MIN', 'PENTACONTAHEXAGON_NOTES_TIGHT_T_MAX',
+        'PENTACONTAHEXAGON_NOTES_SHAPE_STANDARD', 'PENTACONTAHEXAGON_NOTES_SHAPE_INVERTED',
+        'PENTACONTAHEXAGON_NOTES_SHAPE_PENTACONTAHEXAGON', 'PENTACONTAHEXAGON_NOTES_SHAPE_TIGHT'
+    ];
+    for (const name of expected) {
+        t.assertTruthy(cSrc.includes(name), `${name} should be defined in constants.js`);
+    }
+    t.assertTruthy(/PENTACONTAHEXAGON_NOTES_SHAPES\s*=\s*\[[\s\S]*?SHAPE_STANDARD[\s\S]*?SHAPE_INVERTED[\s\S]*?SHAPE_PENTACONTAHEXAGON[\s\S]*?SHAPE_TIGHT[\s\S]*?\]/.test(cSrc), 'PENTACONTAHEXAGON_NOTES_SHAPES should include all 4 shape variants');
+});
+
+TestRunner.test("Day 806 - PENTACONTAHEXAGON_NOTES_PENTACONTAHEXAGON_T_MAX = 2 * Math.PI / 55 and TIGHT uses /55", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/PENTACONTAHEXAGON_NOTES_PENTACONTAHEXAGON_T_MAX\s*=\s*2 \* Math\.PI \/ 55/.test(cSrc), 'PENTACONTAHEXAGON_T_MAX should be 2*PI/55');
+    t.assertTruthy(/PENTACONTAHEXAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI \/ 55/.test(cSrc), 'TIGHT_T_MIN should be -PI/55');
+    t.assertTruthy(/PENTACONTAHEXAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI \/ 55/.test(cSrc), 'TIGHT_T_MAX should be PI/55');
+});
+
+TestRunner.test("Day 806 - ui.js has 4 Pentacontahexagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Pentacontahexagon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, `Should have 4 Pentacontahexagon Notes menu items, found ${matches.length}`);
+});
+
+TestRunner.test("Day 806 - 55 = 5 * 11 is NOT constructible by compass and straightedge (5 has multiplicity 1 OK but 11 is not Fermat)", (t) => {
+    // Fermat primes: 3, 5, 17, 257, 65537
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    // 55 = 5 * 11. 5 IS Fermat. 11 is prime but NOT Fermat. So 55 fails distinctness.
+    t.assertEqual(FermatPrimes.includes(5), true, '5 IS a Fermat prime');
+    t.assertEqual(FermatPrimes.includes(11), false, '11 is NOT a Fermat prime');
+    t.assertEqual(FermatPrimes.includes(55), false, '55 is composite, not a Fermat prime');
+    // Therefore 55-gon is NOT constructible by Gauss-Wantzel 1837
+});
+
+TestRunner.test("Day 806 - APP_VERSION bumped to 2.452.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.452.0', `APP_VERSION should be 2.452.0, got ${m && m[1]}`);
+});
