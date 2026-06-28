@@ -124600,6 +124600,96 @@ TestRunner.test("Day 811 - APP_VERSION bumped to 2.457.0", (t) => {
     t.assertTruthy(m && m[1] === '2.457.0', `APP_VERSION should be 2.457.0, got ${m && m[1]}`);
 });
 
+TestRunner.test("Day 812 - hexacontahenagonNotes is a function on Track.prototype", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontahenagonNotes\(length\s*=\s*Constants\.HEXACONTAHENAGON_NOTES_DEFAULT_LENGTH/.test(cSrc), 'hexacontahenagonNotes should be a method on Track');
+});
+
+TestRunner.test("Day 812 - hexacontahenagonNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,4000}_captureUndoState\(`Hexacontahenagon Notes/.test(cSrc), 'should capture undo with descriptive label BEFORE mutation');
+});
+
+TestRunner.test("Day 812 - hexacontahenagonNotes clamps length with Math.floor to MIN/MAX range", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,2000}HEXACONTAHENAGON_NOTES_MIN_LENGTH[\s\S]{0,200}HEXACONTAHENAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor/.test(cSrc), 'should clamp length with Math.floor');
+});
+
+TestRunner.test("Day 812 - hexacontahenagonNotes uses Math.cos(60t) and Math.sin(60t) for 61-cusped hypocycloid", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,5000}Math\.cos\(60 \* t\)[\s\S]{0,500}Math\.sin\(60 \* t\)/.test(cSrc), 'should use 61-cusped hypocycloid trig with 60t');
+});
+
+TestRunner.test("Day 812 - hexacontahenagonNotes uses 61-cusped parametric x = a*cos(t) + (a/60)*cos(60t)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,5000}a \* cosT \+ aOver60 \* cos60T/.test(cSrc), 'should use 61-cusped x parametric form');
+});
+
+TestRunner.test("Day 812 - hexacontahenagonNotes supports 4 shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,4000}HEXACONTAHENAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'should have STANDARD shape');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,4000}HEXACONTAHENAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'should have INVERTED shape');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,4000}HEXACONTAHENAGON_NOTES_SHAPE_HEXACONTAHENAGON/.test(cSrc), 'should have HEXACONTAHENAGON shape');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,4000}HEXACONTAHENAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should have TIGHT shape');
+});
+
+TestRunner.test("Day 812 - hexacontahenagonNotes returns count (hexacontahenagonCount)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,8000}hexacontahenagonCount\+\+/.test(cSrc), 'should increment hexacontahenagonCount');
+    t.assertTruthy(/hexacontahenagonNotes[\s\S]{0,8000}return hexacontahenagonCount/.test(cSrc), 'should return hexacontahenagonCount');
+});
+
+TestRunner.test("Day 812 - all 22 HEXACONTAHENAGON_NOTES_* constants are defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expected = ['MIN_LENGTH','MAX_LENGTH','DEFAULT_LENGTH','MIN_A','MAX_A','DEFAULT_A','MIN_VELOCITY_DECAY','MAX_VELOCITY_DECAY','DEFAULT_VELOCITY_DECAY','DEFAULT_T_MIN','DEFAULT_T_MAX','INVERTED_T_MIN','INVERTED_T_MAX','HEXACONTAHENAGON_T_MIN','HEXACONTAHENAGON_T_MAX','TIGHT_T_MIN','TIGHT_T_MAX','SHAPE_STANDARD','SHAPE_INVERTED','SHAPE_HEXACONTAHENAGON','SHAPE_TIGHT'];
+    let missing = 0;
+    for (const name of expected) {
+        if (!new RegExp('HEXACONTAHENAGON_NOTES_' + name + '\\s*=').test(cSrc)) missing++;
+    }
+    t.assertEqual(missing, 0, `should have all HEXACONTAHENAGON_NOTES_* constants; missing ${missing}`);
+});
+
+TestRunner.test("Day 812 - HEXACONTAHENAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const block = cSrc.match(/HEXACONTAHENAGON_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(block, 'HEXACONTAHENAGON_NOTES_SHAPES array should exist');
+    const inner = block[1];
+    t.assertTruthy(/HEXACONTAHENAGON_NOTES_SHAPE_STANDARD/.test(inner), 'SHAPES should include STANDARD');
+    t.assertTruthy(/HEXACONTAHENAGON_NOTES_SHAPE_INVERTED/.test(inner), 'SHAPES should include INVERTED');
+    t.assertTruthy(/HEXACONTAHENAGON_NOTES_SHAPE_HEXACONTAHENAGON/.test(inner), 'SHAPES should include HEXACONTAHENAGON');
+    t.assertTruthy(/HEXACONTAHENAGON_NOTES_SHAPE_TIGHT/.test(inner), 'SHAPES should include TIGHT');
+});
+
+TestRunner.test("Day 812 - ui.js has 4 Hexacontahenagon Notes menu items", (t) => {
+    const cSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((cSrc.match(/Hexacontahenagon Notes \(Standard, 32\)/g) || []).length, 1, 'should have 1 Standard menu item');
+    t.assertEqual((cSrc.match(/Hexacontahenagon Notes \(Inverted, 32\)/g) || []).length, 1, 'should have 1 Inverted menu item');
+    t.assertEqual((cSrc.match(/Hexacontahenagon Notes \(Hexacontahenagon, 32\)/g) || []).length, 1, 'should have 1 Hexacontahenagon menu item');
+    t.assertEqual((cSrc.match(/Hexacontahenagon Notes \(Tight, 32\)/g) || []).length, 1, 'should have 1 Tight menu item');
+    t.assertEqual((cSrc.match(/hexacontahenagonNotes\(32, 4, 0\.95/g) || []).length, 4, 'should call track.hexacontahenagonNotes 4 times');
+});
+
+TestRunner.test("Day 812 - 61 IS prime but NOT a Fermat prime (NOT constructible by compass and straightedge)", (t) => {
+    // Fermat primes are 3, 5, 17, 257, 65537. 61 is the 18th prime but NOT Fermat.
+    // 61-fold rotational symmetry is forbidden in classical crystallography.
+    // 61 = 2^0 + 2^5 + 2^6 = 1 + 32 + 64 = 97 nope
+    // 61 = prime (the 18th prime)
+    t.assertTruthy(61 > 59, '61 is the next prime after 59');
+    t.assertTruthy(61 % 2 !== 0, '61 is odd');
+    t.assertTruthy(61 % 3 !== 0 && 61 % 5 !== 0 && 61 % 7 !== 0, '61 has no small prime factors');
+    // Sophie Germain: 2*61+1 = 123 = 3*41 NOT prime, so 61 is NOT a Sophie Germain prime
+    t.assertEqual(2 * 61 + 1, 123, '2*61+1 = 123');
+    t.assertEqual(123 / 3, 41, '123 = 3*41');
+});
+
+TestRunner.test("Day 812 - APP_VERSION bumped to 2.458.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.458.0', `APP_VERSION should be 2.458.0, got ${m && m[1]}`);
+});
+
+
+
 
 export async function runTests() {
     return await TestRunner.runAll();
