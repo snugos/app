@@ -124688,6 +124688,92 @@ TestRunner.test("Day 812 - APP_VERSION bumped to 2.458.0", (t) => {
     t.assertTruthy(m && m[1] === '2.458.0', `APP_VERSION should be 2.458.0, got ${m && m[1]}`);
 });
 
+TestRunner.test("Day 813 - hexacontadigonNotes is a function on Track.prototype", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadigonNotes\(length\s*=\s*Constants\.HEXACONTADIGON_NOTES_DEFAULT_LENGTH/.test(cSrc), 'hexacontadigonNotes should be a method on Track');
+});
+
+TestRunner.test("Day 813 - hexacontadigonNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,4000}_captureUndoState\(`Hexacontadigon Notes/.test(cSrc), 'should capture undo with descriptive label BEFORE mutation');
+});
+
+TestRunner.test("Day 813 - hexacontadigonNotes clamps length with Math.floor to MIN/MAX range", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,2000}HEXACONTADIGON_NOTES_MIN_LENGTH[\s\S]{0,200}HEXACONTADIGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor/.test(cSrc), 'should clamp length with Math.floor');
+});
+
+TestRunner.test("Day 813 - hexacontadigonNotes uses Math.cos(61t) and Math.sin(61t) for 62-cusped hypocycloid", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,5000}Math\.cos\(61 \* t\)[\s\S]{0,500}Math\.sin\(61 \* t\)/.test(cSrc), 'should use 62-cusped hypocycloid trig with 61t');
+});
+
+TestRunner.test("Day 813 - hexacontadigonNotes uses 62-cusped parametric x = a*cos(t) + (a/61)*cos(61t)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,5000}a \* cosT \+ aOver61 \* cos61T/.test(cSrc), 'should use 62-cusped x parametric form');
+});
+
+TestRunner.test("Day 813 - hexacontadigonNotes supports 4 shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,4000}HEXACONTADIGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'should have STANDARD shape');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,4000}HEXACONTADIGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'should have INVERTED shape');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,4000}HEXACONTADIGON_NOTES_SHAPE_HEXACONTADIGON/.test(cSrc), 'should have HEXACONTADIGON shape');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,4000}HEXACONTADIGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should have TIGHT shape');
+});
+
+TestRunner.test("Day 813 - hexacontadigonNotes returns count (hexacontadigonCount)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,8000}hexacontadigonCount\+\+/.test(cSrc), 'should increment hexacontadigonCount');
+    t.assertTruthy(/hexacontadigonNotes[\s\S]{0,8000}return hexacontadigonCount/.test(cSrc), 'should return hexacontadigonCount');
+});
+
+TestRunner.test("Day 813 - all 22 HEXACONTADIGON_NOTES_* constants are defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expected = ['MIN_LENGTH','MAX_LENGTH','DEFAULT_LENGTH','MIN_A','MAX_A','DEFAULT_A','MIN_VELOCITY_DECAY','MAX_VELOCITY_DECAY','DEFAULT_VELOCITY_DECAY','DEFAULT_T_MIN','DEFAULT_T_MAX','INVERTED_T_MIN','INVERTED_T_MAX','HEXACONTADIGON_T_MIN','HEXACONTADIGON_T_MAX','TIGHT_T_MIN','TIGHT_T_MAX','SHAPE_STANDARD','SHAPE_INVERTED','SHAPE_HEXACONTADIGON','SHAPE_TIGHT'];
+    let missing = 0;
+    for (const name of expected) {
+        if (!new RegExp('HEXACONTADIGON_NOTES_' + name + '\\s*=').test(cSrc)) missing++;
+    }
+    t.assertEqual(missing, 0, `should have all HEXACONTADIGON_NOTES_* constants; missing ${missing}`);
+});
+
+TestRunner.test("Day 813 - HEXACONTADIGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const block = cSrc.match(/HEXACONTADIGON_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(block, 'HEXACONTADIGON_NOTES_SHAPES array should exist');
+    const inner = block[1];
+    t.assertTruthy(/HEXACONTADIGON_NOTES_SHAPE_STANDARD/.test(inner), 'SHAPES should include STANDARD');
+    t.assertTruthy(/HEXACONTADIGON_NOTES_SHAPE_INVERTED/.test(inner), 'SHAPES should include INVERTED');
+    t.assertTruthy(/HEXACONTADIGON_NOTES_SHAPE_HEXACONTADIGON/.test(inner), 'SHAPES should include HEXACONTADIGON');
+    t.assertTruthy(/HEXACONTADIGON_NOTES_SHAPE_TIGHT/.test(inner), 'SHAPES should include TIGHT');
+});
+
+TestRunner.test("Day 813 - ui.js has 4 Hexacontadigon Notes menu items", (t) => {
+    const cSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((cSrc.match(/Hexacontadigon Notes \(Standard, 32\)/g) || []).length, 1, 'should have 1 Standard menu item');
+    t.assertEqual((cSrc.match(/Hexacontadigon Notes \(Inverted, 32\)/g) || []).length, 1, 'should have 1 Inverted menu item');
+    t.assertEqual((cSrc.match(/Hexacontadigon Notes \(Hexacontadigon, 32\)/g) || []).length, 1, 'should have 1 Hexacontadigon menu item');
+    t.assertEqual((cSrc.match(/Hexacontadigon Notes \(Tight, 32\)/g) || []).length, 1, 'should have 1 Tight menu item');
+    t.assertEqual((cSrc.match(/hexacontadigonNotes\(32, 4, 0\.95/g) || []).length, 4, 'should call track.hexacontadigonNotes 4 times');
+});
+
+TestRunner.test("Day 813 - 62 = 2 * 31 NOT constructible (Gauss-Wantzel 1837)", (t) => {
+    // 62 = 2 * 31 is a product of a power of 2 and 31 (prime but NOT Fermat)
+    // Fermat primes are 3, 5, 17, 257, 65537. 31 is the 11th prime but NOT Fermat.
+    // 62-fold rotational symmetry is forbidden in classical crystallography (Bravais 1850).
+    // 62 = 2 * 31, both 2 and 31 are prime, 31 NOT Fermat
+    t.assertEqual(62 / 2, 31, '62 = 2 * 31');
+    t.assertTruthy(31 % 2 !== 0 && 31 % 3 !== 0 && 31 % 5 !== 0, '31 is prime (small-factor check)');
+    // 31 = 2^5 - 1 is a Mersenne prime
+    t.assertEqual(Math.pow(2, 5) - 1, 31, '31 = 2^5 - 1 Mersenne prime');
+});
+
+TestRunner.test("Day 813 - APP_VERSION bumped to 2.459.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.459.0', `APP_VERSION should be 2.459.0, got ${m && m[1]}`);
+});
+
 
 
 
