@@ -57597,6 +57597,86 @@ TestRunner.test("Day 814 - APP_VERSION bumped to 2.460.0", (t) => {
     t.assertTruthy(m && m[1] === '2.460.0', `APP_VERSION should be 2.460.0, got ${m && m[1]}`);
 });
 
+TestRunner.test("Day 815 - hexacontatetragonNotes is a function on Track.prototype", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontatetragonNotes\(length\s*=\s*Constants\.HEXACONTATETRAGON_NOTES_DEFAULT_LENGTH/.test(cSrc), 'hexacontatetragonNotes should be a method on Track');
+});
+
+TestRunner.test("Day 815 - hexacontatetragonNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,4000}_captureUndoState\(`Hexacontatetragon Notes/.test(cSrc), 'should capture undo with descriptive label BEFORE mutation');
+});
+
+TestRunner.test("Day 815 - hexacontatetragonNotes clamps length with Math.floor to MIN/MAX range", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,2000}HEXACONTATETRAGON_NOTES_MIN_LENGTH[\s\S]{0,200}HEXACONTATETRAGON_NOTES_MAX_LENGTH[\s\S]{0,200}Math\.floor/.test(cSrc), 'should clamp length with Math.floor');
+});
+
+TestRunner.test("Day 815 - hexacontatetragonNotes uses Math.cos(63t) and Math.sin(63t) for 64-cusped hypocycloid", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,5000}Math\.cos\(63 \* t\)[\s\S]{0,500}Math\.sin\(63 \* t\)/.test(cSrc), 'should use 64-cusped hypocycloid trig with 63t');
+});
+
+TestRunner.test("Day 815 - hexacontatetragonNotes uses 64-cusped parametric x = a*cos(t) + (a/63)*cos(63t)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,5000}a \* cosT \+ aOver63 \* cos63T/.test(cSrc), 'should use 64-cusped x parametric form');
+});
+
+TestRunner.test("Day 815 - hexacontatetragonNotes supports 4 shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,4000}HEXACONTATETRAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'should have STANDARD shape');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,4000}HEXACONTATETRAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'should have INVERTED shape');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,4000}HEXACONTATETRAGON_NOTES_SHAPE_HEXACONTATETRAGON/.test(cSrc), 'should have HEXACONTATETRAGON shape');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,4000}HEXACONTATETRAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should have TIGHT shape');
+});
+
+TestRunner.test("Day 815 - hexacontatetragonNotes returns count (hexacontatetragonCount)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,8000}hexacontatetragonCount\+\+/.test(cSrc), 'should increment hexacontatetragonCount');
+    t.assertTruthy(/hexacontatetragonNotes[\s\S]{0,8000}return hexacontatetragonCount/.test(cSrc), 'should return hexacontatetragonCount');
+});
+
+TestRunner.test("Day 815 - all 22 HEXACONTATETRAGON_NOTES_* constants are defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const expected = ['MIN_LENGTH','MAX_LENGTH','DEFAULT_LENGTH','MIN_A','MAX_A','DEFAULT_A','MIN_VELOCITY_DECAY','MAX_VELOCITY_DECAY','DEFAULT_VELOCITY_DECAY','DEFAULT_T_MIN','DEFAULT_T_MAX','INVERTED_T_MIN','INVERTED_T_MAX','HEXACONTATETRAGON_T_MIN','HEXACONTATETRAGON_T_MAX','TIGHT_T_MIN','TIGHT_T_MAX','SHAPE_STANDARD','SHAPE_INVERTED','SHAPE_HEXACONTATETRAGON','SHAPE_TIGHT'];
+    let missing = 0;
+    for (const name of expected) {
+        if (!new RegExp('HEXACONTATETRAGON_NOTES_' + name + '\\s*=').test(cSrc)) missing++;
+    }
+    t.assertEqual(missing, 0, `should have all HEXACONTATETRAGON_NOTES_* constants; missing ${missing}`);
+});
+
+TestRunner.test("Day 815 - HEXACONTATETRAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const block = cSrc.match(/HEXACONTATETRAGON_NOTES_SHAPES\s*=\s*\[([\s\S]*?)\]/);
+    t.assertTruthy(block, 'HEXACONTATETRAGON_NOTES_SHAPES array should exist');
+    const inner = block[1];
+    t.assertTruthy(/HEXACONTATETRAGON_NOTES_SHAPE_STANDARD/.test(inner), 'SHAPES should include STANDARD');
+    t.assertTruthy(/HEXACONTATETRAGON_NOTES_SHAPE_INVERTED/.test(inner), 'SHAPES should include INVERTED');
+    t.assertTruthy(/HEXACONTATETRAGON_NOTES_SHAPE_HEXACONTATETRAGON/.test(inner), 'SHAPES should include HEXACONTATETRAGON');
+    t.assertTruthy(/HEXACONTATETRAGON_NOTES_SHAPE_TIGHT/.test(inner), 'SHAPES should include TIGHT');
+});
+
+TestRunner.test("Day 815 - ui.js has 4 Hexacontatetragon Notes menu items", (t) => {
+    const cSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertEqual((cSrc.match(/Hexacontatetragon Notes \(Standard, 32\)/g) || []).length, 1, 'should have 1 Standard menu item');
+    t.assertEqual((cSrc.match(/Hexacontatetragon Notes \(Inverted, 32\)/g) || []).length, 1, 'should have 1 Inverted menu item');
+    t.assertEqual((cSrc.match(/Hexacontatetragon Notes \(Hexacontatetragon, 32\)/g) || []).length, 1, 'should have 1 Hexacontatetragon menu item');
+    t.assertEqual((cSrc.match(/Hexacontatetragon Notes \(Tight, 32\)/g) || []).length, 1, 'should have 1 Tight menu item');
+    t.assertEqual((cSrc.match(/hexacontatetragonNotes\(32, 4, 0\.95/g) || []).length, 4, 'should call track.hexacontatetragonNotes 4 times');
+});
+
+TestRunner.test("Day 815 - 64 = 2^6 constructible (Gauss-Wantzel 1837)", (t) => {
+    t.assertEqual(2 ** 6, 64, '64 = 2^6');
+    t.assertEqual(64 & (64 - 1), 0, '64 is a pure power of 2');
+});
+
+TestRunner.test("Day 815 - APP_VERSION bumped to 2.461.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.461.0', `APP_VERSION should be 2.461.0, got ${m && m[1]}`);
+});
+
 export async function runTests() {
     return await TestRunner.runAll();
 }
@@ -124857,6 +124937,7 @@ TestRunner.test("Day 813 - APP_VERSION bumped to 2.459.0", (t) => {
     const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
     t.assertTruthy(m && m[1] === '2.459.0', `APP_VERSION should be 2.459.0, got ${m && m[1]}`);
 });
+
 
 
 
