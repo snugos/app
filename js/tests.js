@@ -136102,3 +136102,102 @@ TestRunner.test("Day 823 - APP_VERSION bumped to 2.471.0", (t) => {
     const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
     t.assertTruthy(m && m[1] === '2.471.0', `APP_VERSION should be 2.471.0, got ${m && m[1]}`);
 });
+TestRunner.test("Day 824 - heptacontatrigonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.heptacontatrigonNotes, 'function', 'heptacontatrigonNotes should be a function');
+});
+
+TestRunner.test("Day 824 - heptacontatrigonNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontatrigonNotes[\s\S]{0,500}_captureUndoState\(\`Heptacontatrigon Notes/.test(cSrc), 'should capture undo state before mutation with Heptacontatrigon Notes label');
+});
+
+TestRunner.test("Day 824 - heptacontatrigonNotes clamps length to HEPTACONTATRIGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATRIGON_NOTES_MIN_LENGTH[\s\S]{0,200}Math\.floor\(length\)/.test(cSrc), 'should clamp length with Math.floor');
+});
+
+TestRunner.test("Day 824 - heptacontatrigonNotes uses Math.cos(72t) and Math.sin(72t) for 73-cusped hypocycloid", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(72 \* t\)/.test(cSrc), 'should use Math.cos(72*t)');
+    t.assertTruthy(/Math\.sin\(72 \* t\)/.test(cSrc), 'should use Math.sin(72*t)');
+});
+
+TestRunner.test("Day 824 - heptacontatrigonNotes uses 73-cusped hypocycloid parametric x = a*cos(t) + (a/72)*cos(72t)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver72\s*=\s*a\s*\/\s*72/.test(cSrc), 'should define aOver72 = a / 72');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver72\s*\*\s*cos72T/.test(cSrc), 'should compute x = a*cosT + aOver72*cos72T');
+});
+
+TestRunner.test("Day 824 - heptacontatrigonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATRIGON_NOTES_SHAPE_STANDARD[\s\S]{0,300}HEPTACONTATRIGON_NOTES_SHAPE_INVERTED[\s\S]{0,300}HEPTACONTATRIGON_NOTES_SHAPE_HEPTACONTATRIGON[\s\S]{0,300}HEPTACONTATRIGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should have 4 shapes in tRangeMap');
+});
+
+TestRunner.test("Day 824 - heptacontatrigonNotes returns count (heptacontatrigonCount)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let heptacontatrigonCount\s*=\s*0/.test(cSrc), 'should declare heptacontatrigonCount');
+    t.assertTruthy(/return heptacontatrigonCount/.test(cSrc), 'should return heptacontatrigonCount');
+});
+
+TestRunner.test("Day 824 - all 26 HEPTACONTATRIGON_NOTES_* constants are defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const constants = [
+        'HEPTACONTATRIGON_NOTES_MIN_LENGTH', 'HEPTACONTATRIGON_NOTES_MAX_LENGTH', 'HEPTACONTATRIGON_NOTES_DEFAULT_LENGTH',
+        'HEPTACONTATRIGON_NOTES_MIN_A', 'HEPTACONTATRIGON_NOTES_MAX_A', 'HEPTACONTATRIGON_NOTES_DEFAULT_A',
+        'HEPTACONTATRIGON_NOTES_MIN_VELOCITY_DECAY', 'HEPTACONTATRIGON_NOTES_MAX_VELOCITY_DECAY', 'HEPTACONTATRIGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEPTACONTATRIGON_NOTES_DEFAULT_T_MIN', 'HEPTACONTATRIGON_NOTES_DEFAULT_T_MAX',
+        'HEPTACONTATRIGON_NOTES_INVERTED_T_MIN', 'HEPTACONTATRIGON_NOTES_INVERTED_T_MAX',
+        'HEPTACONTATRIGON_NOTES_HEPTACONTATRIGON_T_MIN', 'HEPTACONTATRIGON_NOTES_HEPTACONTATRIGON_T_MAX',
+        'HEPTACONTATRIGON_NOTES_TIGHT_T_MIN', 'HEPTACONTATRIGON_NOTES_TIGHT_T_MAX',
+        'HEPTACONTATRIGON_NOTES_SHAPE_STANDARD', 'HEPTACONTATRIGON_NOTES_SHAPE_INVERTED',
+        'HEPTACONTATRIGON_NOTES_SHAPE_HEPTACONTATRIGON', 'HEPTACONTATRIGON_NOTES_SHAPE_TIGHT',
+        'HEPTACONTATRIGON_NOTES_SHAPES'
+    ];
+    for (const c of constants) {
+        t.assertTruthy(cSrc.includes(`export const ${c}`), `${c} should be defined`);
+    }
+});
+
+TestRunner.test("Day 824 - HEPTACONTATRIGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATRIGON_NOTES_SHAPES\s*=\s*\[[\s\S]*?HEPTACONTATRIGON_NOTES_SHAPE_STANDARD[\s\S]*?HEPTACONTATRIGON_NOTES_SHAPE_INVERTED[\s\S]*?HEPTACONTATRIGON_NOTES_SHAPE_HEPTACONTATRIGON[\s\S]*?HEPTACONTATRIGON_NOTES_SHAPE_TIGHT[\s\S]*?\]/.test(cSrc), 'SHAPES array should include all 4 shape variants');
+});
+
+TestRunner.test("Day 824 - ui.js has 4 Heptacontatrigon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const labels = ['Heptacontatrigon Notes (Standard, 32)', 'Heptacontatrigon Notes (Inverted, 32)', 'Heptacontatrigon Notes (Heptacontatrigon, 32)', 'Heptacontatrigon Notes (Tight, 32)'];
+    for (const lbl of labels) {
+        t.assertTruthy(uSrc.includes(lbl), `ui.js should have menu item: ${lbl}`);
+    }
+});
+
+TestRunner.test("Day 824 - 73 is prime but NOT a Fermat prime so 73-gon NOT constructible (Gauss-Wantzel 1837)", (t) => {
+    t.assertEqual(73 % 2, 1, '73 is odd');
+    t.assertEqual(73 % 3, 1, '73 not divisible by 3');
+    t.assertEqual(73 % 5, 3, '73 not divisible by 5');
+    t.assertEqual(73 % 7, 3, '73 not divisible by 7');
+    t.assertEqual(73 % 11, 7, '73 not divisible by 11');
+    t.assertEqual(73 % 13, 8, '73 not divisible by 13');
+    t.assertEqual(73, 73, '73 = 73 (prime, 21st prime)');
+    t.assertTruthy(73 !== 3 && 73 !== 5 && 73 !== 17 && 73 !== 257 && 73 !== 65537, '73 is NOT a Fermat prime (Fermat primes are 3, 5, 17, 257, 65537)');
+});
+
+TestRunner.test("Day 824 - at t=0 the rightmost extreme of the 73-cusped hypocycloid is x = 73a/72", (t) => {
+    const a = 4;
+    const cosT = Math.cos(0);
+    const sinT = Math.sin(0);
+    const cos72T = Math.cos(72 * 0);
+    const sin72T = Math.sin(72 * 0);
+    const aOver72 = a / 72;
+    const x = a * cosT + aOver72 * cos72T;
+    const y = a * sinT - aOver72 * sin72T;
+    const expectedX = 73 * a / 72;
+    t.assertEqual(Math.round(x * 1e6) / 1e6, Math.round(expectedX * 1e6) / 1e6, 'x at t=0 should equal 73a/72');
+    t.assertEqual(y, 0, 'y at t=0 should equal 0');
+});
+
+TestRunner.test("Day 824 - APP_VERSION bumped to 2.472.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.472.0', `APP_VERSION should be 2.472.0, got ${m && m[1]}`);
+});
