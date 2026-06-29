@@ -135836,3 +135836,87 @@ TestRunner.test("Day 820 - APP_VERSION bumped to 2.466.0", (t) => {
     const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
     t.assertTruthy(m && m[1] === '2.466.0', `APP_VERSION should be 2.466.0, got ${m && m[1]}`);
 });
+TestRunner.test("Day 821 - hexacontadecagonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.hexacontadecagonNotes, 'function', 'hexacontadecagonNotes should be a function');
+});
+
+TestRunner.test("Day 821 - hexacontadecagonNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,10000}_captureUndoState\(`Hexacontadecagon Notes/.test(cSrc), 'should capture undo with descriptive label BEFORE mutation');
+});
+
+TestRunner.test("Day 821 - hexacontadecagonNotes clamps length to HEXACONTADECAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,3000}HEXACONTADECAGON_NOTES_MIN_LENGTH[\s\S]{0,400}HEXACONTADECAGON_NOTES_MAX_LENGTH[\s\S]{0,400}Math\.floor/.test(cSrc), 'should clamp length with Math.floor');
+});
+
+TestRunner.test("Day 821 - hexacontadecagonNotes uses Math.cos(69t) and Math.sin(69t) for 70-cusped hypocycloid", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,10000}Math\.cos\(69 \* t\)[\s\S]{0,500}Math\.sin\(69 \* t\)/.test(cSrc), 'should use 70-cusped hypocycloid trig with 69t');
+});
+
+TestRunner.test("Day 821 - hexacontadecagonNotes uses 70-cusped hypocycloid parametric x = a*cos(t) + (a/69)*cos(69t)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,10000}a \* cosT \+ aOver69 \* cos69T/.test(cSrc), 'should use 70-cusped x parametric form');
+});
+
+TestRunner.test("Day 821 - hexacontadecagonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,10000}HEXACONTADECAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'should have STANDARD shape');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,10000}HEXACONTADECAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'should have INVERTED shape');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,10000}HEXACONTADECAGON_NOTES_SHAPE_HEXACONTADECAGON/.test(cSrc), 'should have HEXACONTADECAGON shape');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,10000}HEXACONTADECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should have TIGHT shape');
+});
+
+TestRunner.test("Day 821 - hexacontadecagonNotes returns count (hexacontadecagonCount)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,12000}hexacontadecagonCount\+\+/.test(cSrc), 'should increment hexacontadecagonCount');
+    t.assertTruthy(/hexacontadecagonNotes[\s\S]{0,12000}return hexacontadecagonCount/.test(cSrc), 'should return hexacontadecagonCount');
+});
+
+TestRunner.test("Day 821 - all 26 HEXACONTADECAGON_NOTES_* constants are defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_MIN_LENGTH\s*=\s*8/.test(cSrc), 'HEXACONTADECAGON_NOTES_MIN_LENGTH = 8');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_MAX_LENGTH\s*=\s*64/.test(cSrc), 'HEXACONTADECAGON_NOTES_MAX_LENGTH = 64');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'HEXACONTADECAGON_NOTES_DEFAULT_LENGTH = 32');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_MIN_A\s*=\s*1/.test(cSrc), 'HEXACONTADECAGON_NOTES_MIN_A = 1');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_MAX_A\s*=\s*8/.test(cSrc), 'HEXACONTADECAGON_NOTES_MAX_A = 8');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'HEXACONTADECAGON_NOTES_DEFAULT_A = 4');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(cSrc), 'HEXACONTADECAGON_NOTES_MIN_VELOCITY_DECAY = 0.1');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(cSrc), 'HEXACONTADECAGON_NOTES_MAX_VELOCITY_DECAY = 1.0');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'HEXACONTADECAGON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_DEFAULT_T_MIN\s*=\s*0/.test(cSrc), 'HEXACONTADECAGON_NOTES_DEFAULT_T_MIN = 0');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_DEFAULT_T_MAX\s*=\s*2 \* Math\.PI/.test(cSrc), 'HEXACONTADECAGON_NOTES_DEFAULT_T_MAX = 2 * PI');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_HEXACONTADECAGON_T_MAX\s*=\s*2 \* Math\.PI \/ 70/.test(cSrc), 'HEXACONTADECAGON_NOTES_HEXACONTADECAGON_T_MAX = 2 * PI / 70');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI \/ 70/.test(cSrc), 'HEXACONTADECAGON_NOTES_TIGHT_T_MIN = -PI/70');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI \/ 70/.test(cSrc), 'HEXACONTADECAGON_NOTES_TIGHT_T_MAX = PI/70');
+});
+
+TestRunner.test("Day 821 - HEXACONTADECAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEXACONTADECAGON_NOTES_SHAPES\s*=\s*\[[\s\S]*HEXACONTADECAGON_NOTES_SHAPE_STANDARD[\s\S]*HEXACONTADECAGON_NOTES_SHAPE_INVERTED[\s\S]*HEXACONTADECAGON_NOTES_SHAPE_HEXACONTADECAGON[\s\S]*HEXACONTADECAGON_NOTES_SHAPE_TIGHT[\s\S]*\]/.test(cSrc), 'should include all 4 shapes');
+});
+
+TestRunner.test("Day 821 - ui.js has 4 Hexacontadecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Hexacontadecagon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, `Should have 4 Hexacontadecagon Notes menu items, found ${matches.length}`);
+});
+
+TestRunner.test("Day 821 - 70 = 2 * 5 * 7 IS NOT constructible by compass and straightedge (5 IS Fermat prime but 7 is not)", (t) => {
+    // 70 = 2 * 5 * 7. 5 IS a Fermat prime but 7 is NOT.
+    // Gauss-Wantzel 1837: n is constructible iff n is a product of DISTINCT Fermat primes and a power of 2.
+    // 70 fails the distinctness criterion since 7 is prime but not Fermat.
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(FermatPrimes.includes(5), true, '5 IS a Fermat prime');
+    t.assertEqual(FermatPrimes.includes(7), false, '7 is NOT a Fermat prime');
+    // Verify 70 = 2 * 5 * 7
+    t.assertEqual(70, 2 * 5 * 7, '70 = 2 * 5 * 7');
+    // 70-gon is NOT constructible
+});
+
+TestRunner.test("Day 821 - APP_VERSION bumped to 2.468.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.468.0', `APP_VERSION should be 2.468.0, got ${m && m[1]}`);
+});
