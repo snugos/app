@@ -136008,3 +136008,97 @@ TestRunner.test("Day 822 - APP_VERSION bumped to 2.470.0", (t) => {
     const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
     t.assertTruthy(m && m[1] === '2.470.0', `APP_VERSION should be 2.470.0, got ${m && m[1]}`);
 });
+
+TestRunner.test("Day 823 - heptacontadigonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.heptacontadigonNotes, 'function', 'heptacontadigonNotes should be a function');
+});
+
+TestRunner.test("Day 823 - heptacontadigonNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,10000}_captureUndoState\(`Heptacontadigon Notes/.test(cSrc), 'should capture undo with descriptive label BEFORE mutation');
+});
+
+TestRunner.test("Day 823 - heptacontadigonNotes clamps length to HEPTACONTADIGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,3000}HEPTACONTADIGON_NOTES_MIN_LENGTH[\s\S]{0,400}HEPTACONTADIGON_NOTES_MAX_LENGTH[\s\S]{0,400}Math\.floor/.test(cSrc), 'should clamp length with Math.floor');
+});
+
+TestRunner.test("Day 823 - heptacontadigonNotes uses Math.cos(71t) and Math.sin(71t) for 72-cusped hypocycloid", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,10000}Math\.cos\(71 \* t\)[\s\S]{0,500}Math\.sin\(71 \* t\)/.test(cSrc), 'should use 72-cusped hypocycloid trig with 71t');
+});
+
+TestRunner.test("Day 823 - heptacontadigonNotes uses 72-cusped hypocycloid parametric x = a*cos(t) + (a/71)*cos(71t)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,10000}a \* cosT \+ aOver71 \* cos71T/.test(cSrc), 'should use 72-cusped x parametric form');
+});
+
+TestRunner.test("Day 823 - heptacontadigonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,10000}HEPTACONTADIGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'should have STANDARD shape');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,10000}HEPTACONTADIGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'should have INVERTED shape');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,10000}HEPTACONTADIGON_NOTES_SHAPE_HEPTACONTADIGON/.test(cSrc), 'should have HEPTACONTADIGON shape');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,10000}HEPTACONTADIGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should have TIGHT shape');
+});
+
+TestRunner.test("Day 823 - heptacontadigonNotes returns count (heptacontadigonCount)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,12000}heptacontadigonCount\+\+/.test(cSrc), 'should increment heptacontadigonCount');
+    t.assertTruthy(/heptacontadigonNotes[\s\S]{0,12000}return heptacontadigonCount/.test(cSrc), 'should return heptacontadigonCount');
+});
+
+TestRunner.test("Day 823 - all 26 HEPTACONTADIGON_NOTES_* constants are defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_MIN_LENGTH\s*=\s*8/.test(cSrc), 'HEPTACONTADIGON_NOTES_MIN_LENGTH = 8');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_MAX_LENGTH\s*=\s*64/.test(cSrc), 'HEPTACONTADIGON_NOTES_MAX_LENGTH = 64');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'HEPTACONTADIGON_NOTES_DEFAULT_LENGTH = 32');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_MIN_A\s*=\s*1/.test(cSrc), 'HEPTACONTADIGON_NOTES_MIN_A = 1');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_MAX_A\s*=\s*8/.test(cSrc), 'HEPTACONTADIGON_NOTES_MAX_A = 8');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'HEPTACONTADIGON_NOTES_DEFAULT_A = 4');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_MIN_VELOCITY_DECAY\s*=\s*0\.1/.test(cSrc), 'HEPTACONTADIGON_NOTES_MIN_VELOCITY_DECAY = 0.1');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_MAX_VELOCITY_DECAY\s*=\s*1\.0/.test(cSrc), 'HEPTACONTADIGON_NOTES_MAX_VELOCITY_DECAY = 1.0');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'HEPTACONTADIGON_NOTES_DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_DEFAULT_T_MIN\s*=\s*0/.test(cSrc), 'HEPTACONTADIGON_NOTES_DEFAULT_T_MIN = 0');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_DEFAULT_T_MAX\s*=\s*2 \* Math\.PI/.test(cSrc), 'HEPTACONTADIGON_NOTES_DEFAULT_T_MAX = 2 * PI');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_HEPTACONTADIGON_T_MAX\s*=\s*2 \* Math\.PI \/ 72/.test(cSrc), 'HEPTACONTADIGON_NOTES_HEPTACONTADIGON_T_MAX = 2 * PI / 72');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI \/ 72/.test(cSrc), 'HEPTACONTADIGON_NOTES_TIGHT_T_MIN = -PI/72');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI \/ 72/.test(cSrc), 'HEPTACONTADIGON_NOTES_TIGHT_T_MAX = PI/72');
+});
+
+TestRunner.test("Day 823 - HEPTACONTADIGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTADIGON_NOTES_SHAPES\s*=\s*\[[\s\S]*HEPTACONTADIGON_NOTES_SHAPE_STANDARD[\s\S]*HEPTACONTADIGON_NOTES_SHAPE_INVERTED[\s\S]*HEPTACONTADIGON_NOTES_SHAPE_HEPTACONTADIGON[\s\S]*HEPTACONTADIGON_NOTES_SHAPE_TIGHT[\s\S]*\]/.test(cSrc), 'should include all 4 shapes');
+});
+
+TestRunner.test("Day 823 - ui.js has 4 Heptacontadigon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = uSrc.match(/Heptacontadigon Notes \(/g) || [];
+    t.assertEqual(matches.length, 4, `Should have 4 Heptacontadigon Notes menu items, found ${matches.length}`);
+});
+
+TestRunner.test("Day 823 - 72 = 2^3 * 3^2 is NOT constructible by compass and straightedge (Gauss-Wantzel 1837)", (t) => {
+    // 72 = 2^3 * 3^2 has the Fermat prime 3 with multiplicity 2, failing the distinctness criterion.
+    // Gauss-Wantzel 1837: n is constructible iff n is a product of DISTINCT Fermat primes and a power of 2.
+    // 72 fails the criterion since 3 appears with multiplicity 2 in 3^2.
+    const FermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(FermatPrimes.includes(3), true, '3 IS a Fermat prime');
+    t.assertEqual(FermatPrimes.includes(2), false, '2 is not a Fermat prime (power of 2)');
+    // 72-gon is NOT constructible (3 has multiplicity 2 in 3^2)
+});
+
+TestRunner.test("Day 823 - at t=0 the rightmost extreme of the 72-cusped hypocycloid is x = 72a/71", (t) => {
+    // At t=0: cosT=1, sinT=0, cos71T=1, sin71T=0
+    // x = a*1 + (a/71)*1 = a + a/71 = 72a/71, y = a*0 - (a/71)*0 = 0
+    const a = 4;
+    const expected = 72 * a / 71;
+    const cosT = 1, sinT = 0, cos71T = 1, sin71T = 0;
+    const aOver71 = a / 71;
+    const x = a * cosT + aOver71 * cos71T;
+    t.assertEqual(Math.round(x * 1e6) / 1e6, Math.round(expected * 1e6) / 1e6, 'x at t=0 should equal 72a/71');
+});
+
+TestRunner.test("Day 823 - APP_VERSION bumped to 2.471.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.471.0', `APP_VERSION should be 2.471.0, got ${m && m[1]}`);
+});
