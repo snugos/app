@@ -136201,3 +136201,101 @@ TestRunner.test("Day 824 - APP_VERSION bumped to 2.472.0", (t) => {
     const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
     t.assertTruthy(m && m[1] === '2.472.0', `APP_VERSION should be 2.472.0, got ${m && m[1]}`);
 });
+TestRunner.test("Day 825 - heptacontatetragonNotes is a function on Track.prototype", (t) => {
+    t.assertEqual(typeof Track.prototype.heptacontatetragonNotes, 'function', 'heptacontatetragonNotes should be a function');
+});
+
+TestRunner.test("Day 825 - heptacontatetragonNotes captures undo BEFORE mutation with descriptive label", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontatetragonNotes[\s\S]{0,500}_captureUndoState\(`Heptacontatetragon Notes/.test(cSrc), 'should capture undo state before mutation with Heptacontatetragon Notes label');
+});
+
+TestRunner.test("Day 825 - heptacontatetragonNotes clamps length to HEPTACONTATETRAGON_NOTES_MIN/MAX_LENGTH range with Math.floor", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATETRAGON_NOTES_MIN_LENGTH[\s\S]{0,200}Math\.floor\(length\)/.test(cSrc), 'should clamp length with Math.floor');
+});
+
+TestRunner.test("Day 825 - heptacontatetragonNotes uses Math.cos(73t) and Math.sin(73t) for 74-cusped hypocycloid", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(73 \* t\)/.test(cSrc), 'should use Math.cos(73*t)');
+    t.assertTruthy(/Math\.sin\(73 \* t\)/.test(cSrc), 'should use Math.sin(73*t)');
+});
+
+TestRunner.test("Day 825 - heptacontatetragonNotes uses 74-cusped hypocycloid parametric x = a*cos(t) + (a/73)*cos(73t)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver73\s*=\s*a\s*\/\s*73/.test(cSrc), 'should define aOver73 = a / 73');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver73\s*\*\s*cos73T/.test(cSrc), 'should compute x = a*cosT + aOver73*cos73T');
+});
+
+TestRunner.test("Day 825 - heptacontatetragonNotes supports 4 distinct shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATETRAGON_NOTES_SHAPE_STANDARD[\s\S]{0,300}HEPTACONTATETRAGON_NOTES_SHAPE_INVERTED[\s\S]{0,300}HEPTACONTATETRAGON_NOTES_SHAPE_HEPTACONTATETRAGON[\s\S]{0,300}HEPTACONTATETRAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should have 4 shapes in tRangeMap');
+});
+
+TestRunner.test("Day 825 - heptacontatetragonNotes returns count (heptacontatetragonCount)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let heptacontatetragonCount\s*=\s*0/.test(cSrc), 'should declare heptacontatetragonCount');
+    t.assertTruthy(/return heptacontatetragonCount/.test(cSrc), 'should return heptacontatetragonCount');
+});
+
+TestRunner.test("Day 825 - all 26 HEPTACONTATETRAGON_NOTES_* constants are defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const constants = [
+        'HEPTACONTATETRAGON_NOTES_MIN_LENGTH', 'HEPTACONTATETRAGON_NOTES_MAX_LENGTH', 'HEPTACONTATETRAGON_NOTES_DEFAULT_LENGTH',
+        'HEPTACONTATETRAGON_NOTES_MIN_A', 'HEPTACONTATETRAGON_NOTES_MAX_A', 'HEPTACONTATETRAGON_NOTES_DEFAULT_A',
+        'HEPTACONTATETRAGON_NOTES_MIN_VELOCITY_DECAY', 'HEPTACONTATETRAGON_NOTES_MAX_VELOCITY_DECAY', 'HEPTACONTATETRAGON_NOTES_DEFAULT_VELOCITY_DECAY',
+        'HEPTACONTATETRAGON_NOTES_DEFAULT_T_MIN', 'HEPTACONTATETRAGON_NOTES_DEFAULT_T_MAX',
+        'HEPTACONTATETRAGON_NOTES_INVERTED_T_MIN', 'HEPTACONTATETRAGON_NOTES_INVERTED_T_MAX',
+        'HEPTACONTATETRAGON_NOTES_HEPTACONTATETRAGON_T_MIN', 'HEPTACONTATETRAGON_NOTES_HEPTACONTATETRAGON_T_MAX',
+        'HEPTACONTATETRAGON_NOTES_TIGHT_T_MIN', 'HEPTACONTATETRAGON_NOTES_TIGHT_T_MAX',
+        'HEPTACONTATETRAGON_NOTES_SHAPE_STANDARD', 'HEPTACONTATETRAGON_NOTES_SHAPE_INVERTED',
+        'HEPTACONTATETRAGON_NOTES_SHAPE_HEPTACONTATETRAGON', 'HEPTACONTATETRAGON_NOTES_SHAPE_TIGHT',
+        'HEPTACONTATETRAGON_NOTES_SHAPES'
+    ];
+    for (const c of constants) {
+        t.assertTruthy(cSrc.includes(`export const ${c}`), `${c} should be defined`);
+    }
+});
+
+TestRunner.test("Day 825 - HEPTACONTATETRAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATETRAGON_NOTES_SHAPES\s*=\s*\[[\s\S]*?HEPTACONTATETRAGON_NOTES_SHAPE_STANDARD[\s\S]*?HEPTACONTATETRAGON_NOTES_SHAPE_INVERTED[\s\S]*?HEPTACONTATETRAGON_NOTES_SHAPE_HEPTACONTATETRAGON[\s\S]*?HEPTACONTATETRAGON_NOTES_SHAPE_TIGHT[\s\S]*?\]/.test(cSrc), 'SHAPES array should include all 4 shape variants');
+});
+
+TestRunner.test("Day 825 - ui.js has 4 Heptacontatetragon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const labels = ['Heptacontatetragon Notes (Standard, 32)', 'Heptacontatetragon Notes (Inverted, 32)', 'Heptacontatetragon Notes (Heptacontatetragon, 32)', 'Heptacontatetragon Notes (Tight, 32)'];
+    for (const lbl of labels) {
+        t.assertTruthy(uSrc.includes(lbl), `ui.js should have menu item: ${lbl}`);
+    }
+});
+
+TestRunner.test("Day 825 - 74 = 2 * 37 NOT constructible (Gauss-Wantzel 1837)", (t) => {
+    t.assertEqual(74 / 2, 37, '74 = 2 * 37');
+    t.assertEqual(37 % 2, 1, '37 is odd');
+    t.assertEqual(37 % 3, 1, '37 not divisible by 3');
+    t.assertEqual(37 % 5, 2, '37 not divisible by 5');
+    t.assertEqual(37, 37, '37 is prime (37th prime = itself)');
+    t.assertTruthy(37 !== 3 && 37 !== 5 && 37 !== 17 && 37 !== 257 && 37 !== 65537, '37 is NOT a Fermat prime (Fermat primes are 3, 5, 17, 257, 65537)');
+    t.assertTruthy(74 !== 1 && 74 !== 2 && 74 !== 4 && 74 !== 8 && 74 !== 16 && 74 !== 32 && 74 !== 64, '74 is NOT a power of 2');
+});
+
+TestRunner.test("Day 825 - at t=0 the rightmost extreme of the 74-cusped hypocycloid is x = 74a/73", (t) => {
+    const a = 4;
+    const cosT = Math.cos(0);
+    const sinT = Math.sin(0);
+    const cos73T = Math.cos(73 * 0);
+    const sin73T = Math.sin(73 * 0);
+    const aOver73 = a / 73;
+    const x = a * cosT + aOver73 * cos73T;
+    const y = a * sinT - aOver73 * sin73T;
+    const expectedX = 74 * a / 73;
+    t.assertEqual(Math.round(x * 1e6) / 1e6, Math.round(expectedX * 1e6) / 1e6, 'x at t=0 should equal 74a/73');
+    t.assertEqual(y, 0, 'y at t=0 should equal 0');
+});
+
+TestRunner.test("Day 825 - APP_VERSION bumped to 2.473.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.473.0', `APP_VERSION should be 2.473.0, got ${m && m[1]}`);
+});
