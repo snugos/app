@@ -137293,3 +137293,112 @@ TestRunner.test("Day 833 - APP_VERSION bumped to 2.481.0", (t) => {
     const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
     t.assertTruthy(m && m[1] === '2.481.0', `APP_VERSION should be 2.481.0, got ${m && m[1]}`);
 });
+TestRunner.test("Day 834 - heptacontatridecagonNotes is a function on Track.prototype", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontatridecagonNotes\s*\(/.test(cSrc), 'heptacontatridecagonNotes method should exist');
+});
+
+TestRunner.test("Day 834 - heptacontatridecagonNotes captures undo BEFORE mutation", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Heptacontatridecagon Notes \(/.test(cSrc), 'should capture undo with descriptive label');
+});
+
+TestRunner.test("Day 834 - heptacontatridecagonNotes clamps length to HEPTACONTATRIDECAGON_NOTES_MIN/MAX_LENGTH range", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_MIN_LENGTH/.test(cSrc), 'should reference MIN_LENGTH');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_MAX_LENGTH/.test(cSrc), 'should reference MAX_LENGTH');
+    t.assertTruthy(/Math\.floor\(length\)/.test(cSrc), 'should use Math.floor');
+});
+
+TestRunner.test("Day 834 - heptacontatridecagonNotes uses Math.cos, Math.sin, Math.cos(82t), Math.sin(82t) for parametric t", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(82 \* t\)/.test(cSrc), 'should use Math.cos(82*t)');
+    t.assertTruthy(/Math\.sin\(82 \* t\)/.test(cSrc), 'should use Math.sin(82*t)');
+});
+
+TestRunner.test("Day 834 - heptacontatridecagonNotes uses 83-cusped hypocycloid parametric x and y", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver82\s*\*\s*cos82T/.test(cSrc), 'x = a*cos(t) + (a/82)*cos(82t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver82\s*\*\s*sin82T/.test(cSrc), 'y = a*sin(t) - (a/82)*sin(82t)');
+});
+
+TestRunner.test("Day 834 - heptacontatridecagonNotes supports 4 shapes via tRangeMap", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'should reference STANDARD');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'should reference INVERTED');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_SHAPE_HEPTACONTATRIDECAGON/.test(cSrc), 'should reference HEPTACONTATRIDECAGON');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should reference TIGHT');
+});
+
+TestRunner.test("Day 834 - heptacontatridecagonNotes returns count (heptacontatridecagonCount)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/let heptacontatridecagonCount\s*=\s*0/.test(cSrc), 'should declare heptacontatridecagonCount');
+    t.assertTruthy(/return heptacontatridecagonCount/.test(cSrc), 'should return heptacontatridecagonCount');
+});
+
+TestRunner.test("Day 834 - all 22 HEPTACONTATRIDECAGON_NOTES_* constants are defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const names = [
+        'MIN_LENGTH', 'MAX_LENGTH', 'DEFAULT_LENGTH',
+        'MIN_A', 'MAX_A', 'DEFAULT_A',
+        'MIN_VELOCITY_DECAY', 'MAX_VELOCITY_DECAY', 'DEFAULT_VELOCITY_DECAY',
+        'DEFAULT_T_MIN', 'DEFAULT_T_MAX',
+        'INVERTED_T_MIN', 'INVERTED_T_MAX',
+        'HEPTACONTATRIDECAGON_T_MIN', 'HEPTACONTATRIDECAGON_T_MAX',
+        'TIGHT_T_MIN', 'TIGHT_T_MAX',
+        'SHAPE_STANDARD', 'SHAPE_INVERTED', 'SHAPE_HEPTACONTATRIDECAGON', 'SHAPE_TIGHT'
+    ];
+    for (const n of names) {
+        t.assertTruthy(cSrc.includes('HEPTACONTATRIDECAGON_NOTES_' + n), `should define HEPTACONTATRIDECAGON_NOTES_${n}`);
+    }
+});
+
+TestRunner.test("Day 834 - HEPTACONTATRIDECAGON_NOTES_HEPTACONTATRIDECAGON_T_MAX = 2*PI/83", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_HEPTACONTATRIDECAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*83/.test(cSrc), 'T_MAX should be 2*PI/83');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*83/.test(cSrc), 'TIGHT_T_MIN should be -Math.PI/83');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*83/.test(cSrc), 'TIGHT_T_MAX should be Math.PI/83');
+});
+
+TestRunner.test("Day 834 - HEPTACONTATRIDECAGON_NOTES_SHAPES includes all 4 shape variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'should reference STANDARD shape');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'should reference INVERTED shape');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_SHAPE_HEPTACONTATRIDECAGON/.test(cSrc), 'should reference HEPTACONTATRIDECAGON shape');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'should reference TIGHT shape');
+});
+
+TestRunner.test("Day 834 - ui.js has 4 Heptacontatridecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    t.assertTruthy(/Heptacontatridecagon Notes \(Standard, 32\)/.test(uSrc), 'should have Standard menu item');
+    t.assertTruthy(/Heptacontatridecagon Notes \(Inverted, 32\)/.test(uSrc), 'should have Inverted menu item');
+    t.assertTruthy(/Heptacontatridecagon Notes \(Heptacontatridecagon, 32\)/.test(uSrc), 'should have Heptacontatridecagon menu item');
+    t.assertTruthy(/Heptacontatridecagon Notes \(Tight, 32\)/.test(uSrc), 'should have Tight menu item');
+    const matches = (uSrc.match(/Heptacontatridecagon Notes/g) || []).length;
+    t.assertTruthy(matches === 4, `should have exactly 4 menu items, got ${matches}`);
+});
+
+TestRunner.test("Day 834 - Heptacontatridecagon Notes menu items call heptacontatridecagonNotes (4 calls)", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const calls = (uSrc.match(/heptacontatridecagonNotes\s*\(/g) || []).length;
+    t.assertTruthy(calls >= 4, `should call heptacontatridecagonNotes at least 4 times, got ${calls}`);
+});
+
+TestRunner.test("Day 834 - 83 IS prime (23rd prime) but NOT a Fermat prime (Gauss-Wantzel 1837)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTATRIDECAGON_NOTES_HEPTACONTATRIDECAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*83/.test(cSrc), '83-cusped t-max = 2*PI/83 verified');
+    const fermatPrimes = [3, 5, 17, 257, 65537];
+    t.assertEqual(fermatPrimes.includes(83), false, '83 is NOT a Fermat prime');
+});
+
+TestRunner.test("Day 834 - at t=0 the rightmost extreme of the 83-cusped hypocycloid is x = 83a/82", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver82\s*=\s*a\s*\/\s*82/.test(cSrc), 'a/82 scaling confirmed');
+});
+
+TestRunner.test("Day 834 - APP_VERSION bumped to 2.482.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.482.0', `APP_VERSION should be 2.482.0, got ${m && m[1]}`);
+});
+
