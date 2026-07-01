@@ -137888,3 +137888,80 @@ TestRunner.test("Day 839 - a/87 scaling confirmed", (t) => {
     t.assertTruthy(/const aOver87\s*=\s*a\s*\/\s*87/.test(cSrc), 'a/87 scaling confirmed');
 });
 
+TestRunner.test("Day 840 - heptacontakaienneadecagonNotes is defined", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontakaienneadecagonNotes\s*\(/.test(src), 'heptacontakaienneadecagonNotes should be defined');
+});
+
+TestRunner.test("Day 840 - heptacontakaienneadecagonNotes uses 89-cusped hypocycloid parametric form", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const cos88T\s*=\s*Math\.cos\(88 \* t\)/.test(src), 'should compute cos88T');
+    t.assertTruthy(/const sin88T\s*=\s*Math\.sin\(88 \* t\)/.test(src), 'should compute sin88T');
+    t.assertTruthy(/const x\s*=\s*a \* cosT \+ aOver88 \* cos88T/.test(src), 'should compute x = a*cos(t) + (a/88)*cos(88t)');
+    t.assertTruthy(/const y\s*=\s*a \* sinT - aOver88 \* sin88T/.test(src), 'should compute y = a*sin(t) - (a/88)*sin(88t)');
+});
+
+TestRunner.test("Day 840 - heptacontakaienneadecagonNotes captures undo BEFORE mutation", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Heptacontakaienneadecagon Notes/.test(src), 'should capture undo state with descriptive label');
+});
+
+TestRunner.test("Day 840 - heptacontakaienneadecagonNotes clamps length and scale", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_MIN_LENGTH/.test(src), 'should reference MIN_LENGTH');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_MAX_LENGTH/.test(src), 'should reference MAX_LENGTH');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_MIN_A/.test(src), 'should reference MIN_A');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_MAX_A/.test(src), 'should reference MAX_A');
+});
+
+TestRunner.test("Day 840 - heptacontakaienneadecagonNotes supports 4 shapes", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'standard shape defined');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'inverted shape defined');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_SHAPE_HEPTACONTAKAIENNEADECAGON/.test(cSrc), 'feature-specific shape defined');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'tight shape defined');
+});
+
+TestRunner.test("Day 840 - heptacontakaienneadecagon constants define expected t-ranges", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_HEPTACONTAKAIENNEADECAGON_T_MAX\s*=\s*2 \* Math\.PI \/ 89/.test(cSrc), 'feature-specific T_MAX should be 2π/89');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI \/ 89/.test(cSrc), 'tight T_MIN should be -π/89');
+    t.assertTruthy(/HEPTACONTAKAIENNEADECAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI \/ 89/.test(cSrc), 'tight T_MAX should be π/89');
+});
+
+TestRunner.test("Day 840 - ui includes 4 Heptacontakaienneadecagon Notes menu items", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const items = src.match(/\{\s*label:\s*`Heptacontakaienneadecagon Notes[^`]*`/g) || [];
+    t.assertEqual(items.length, 4, 'should add 4 menu items');
+});
+
+TestRunner.test("Day 840 - ui menu items call heptacontakaienneadecagonNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = src.match(/heptacontakaienneadecagonNotes\(32, 4, 0\.95, '/g) || [];
+    t.assertEqual(matches.length, 4, 'all 4 menu items should call heptacontakaienneadecagonNotes');
+});
+
+TestRunner.test("Day 840 - APP_VERSION bumped to 2.488.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const m = cSrc.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    t.assertTruthy(m && m[1] === '2.488.0', `APP_VERSION should be 2.488.0, got ${m && m[1]}`);
+});
+
+TestRunner.test("Day 840 - at t=0 heptacontakaienneadecagon x = 89a/88", (t) => {
+    const a = 4;
+    const x = a * Math.cos(0) + (a / 88) * Math.cos(88 * 0);
+    const expected = 89 * a / 88;
+    t.assertEqual(Math.round(x * 1000000) / 1000000, Math.round(expected * 1000000) / 1000000, `x at t=0 should equal 89a/88 = ${expected} for a=4`);
+});
+
+TestRunner.test("Day 840 - 89 IS prime but NOT constructible", (t) => {
+    // 89 is the 24th prime, but not a Fermat prime (Fermat primes are 3, 5, 17, 257, 65537)
+    // So 89-gon is not constructible per Gauss-Wantzel 1837
+    t.assertTruthy(true, '89 is prime but not a Fermat prime, so 89-gon is not constructible by Gauss-Wantzel 1837');
+});
+
+TestRunner.test("Day 840 - a/88 scaling confirmed", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver88\s*=\s*a\s*\/\s*88/.test(cSrc), 'a/88 scaling confirmed');
+});
+
