@@ -138107,4 +138107,70 @@ TestRunner.test("Day 842 - APP_VERSION bumped to 2.490.0", (t) => {
     t.assertTruthy(/APP_VERSION\s*=\s*'2\.490\.0'/.test(cSrc), 'APP_VERSION should be 2.490.0');
 });
 
+TestRunner.test("Day 843 - heptacontadikosexagonNotes is defined", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontadikosexagonNotes\s*\(/.test(src), 'heptacontadikosexagonNotes should be defined');
+});
+
+TestRunner.test("Day 843 - heptacontadikosexagonNotes uses 92-cusped hypocycloid parametric form", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/a\s*\*\s*cosT\s*\+\s*aOver91\s*\*\s*cos91T/.test(src), 'should use x = a*cos(t) + (a/91)*cos(91t)');
+    t.assertTruthy(/a\s*\*\s*sinT\s*-\s*aOver91\s*\*\s*sin91T/.test(src), 'should use y = a*sin(t) - (a/91)*sin(91t)');
+});
+
+TestRunner.test("Day 843 - heptacontadikosexagonNotes captures undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Heptacontadikosexagon Notes/.test(src), 'should capture undo with Heptacontadikosexagon label');
+});
+
+TestRunner.test("Day 843 - heptacontadikosexagonNotes clamps length to MIN/MAX bounds", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTADIKOSEXAGON_NOTES_MIN_LENGTH/.test(src) && /HEPTACONTADIKOSEXAGON_NOTES_MAX_LENGTH/.test(src), 'should clamp length to MIN/MAX_LENGTH');
+});
+
+TestRunner.test("Day 843 - heptacontadikosexagonNotes clamps scale to MIN/MAX bounds", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTADIKOSEXAGON_NOTES_MIN_A/.test(src) && /HEPTACONTADIKOSEXAGON_NOTES_MAX_A/.test(src), 'should clamp scale to MIN/MAX_A');
+});
+
+TestRunner.test("Day 843 - heptacontadikosexagonNotes validates shape via SHAPES array", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTADIKOSEXAGON_NOTES_SHAPES\.includes\(shape\)/.test(src), 'should validate shape via SHAPES array');
+});
+
+TestRunner.test("Day 843 - heptacontadikosexagonNotes t parameter formula", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max/.test(src), 'should compute t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)');
+});
+
+TestRunner.test("Day 843 - heptacontadikosexagonNotes returns count", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return heptacontadikosexagonCount/.test(src), 'should return heptacontadikosexagonCount');
+});
+
+TestRunner.test("Day 843 - HEPTACONTADIKOSEXAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTADIKOSEXAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HEPTACONTADIKOSEXAGON_NOTES_HEPTACONTADIKOSEXAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*92/.test(cSrc), 'T_MAX should be 2*PI/92');
+});
+
+TestRunner.test("Day 843 - HEPTACONTADIKOSEXAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTADIKOSEXAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HEPTACONTADIKOSEXAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HEPTACONTADIKOSEXAGON_NOTES_SHAPE_HEPTACONTADIKOSEXAGON/.test(cSrc), 'HEPTACONTADIKOSEXAGON shape defined');
+    t.assertTruthy(/HEPTACONTADIKOSEXAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+
+TestRunner.test("Day 843 - ui.js has 4 Heptacontadikosexagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Heptacontadikosexagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Heptacontadikosexagon Notes menu items');
+});
+
+TestRunner.test("Day 843 - APP_VERSION bumped to 2.491.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.491\.0'/.test(cSrc), 'APP_VERSION should be 2.491.0');
+});
+
 
