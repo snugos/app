@@ -138041,4 +138041,70 @@ TestRunner.test("Day 841 - a/89 scaling confirmed", (t) => {
     const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/const aOver89\s*=\s*a\s*\/\s*89/.test(cSrc), 'a/89 scaling confirmed');
 });
+TestRunner.test("Day 842 - heptacontahenicosagonNotes is defined", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontahenicosagonNotes\s*\(/.test(src), 'heptacontahenicosagonNotes should be defined');
+});
+
+TestRunner.test("Day 842 - heptacontahenicosagonNotes uses 91-cusped hypocycloid parametric form", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/a\s*\*\s*Math\.cos\(\s*t\s*\)\s*\+\s*aOver90\s*\*\s*Math\.cos\(\s*90\s*\*\s*t\s*\)/.test(src), 'should use x = a*cos(t) + (a/90)*cos(90t)');
+    t.assertTruthy(/a\s*\*\s*Math\.sin\(\s*t\s*\)\s*-\s*aOver90\s*\*\s*Math\.sin\(\s*90\s*\*\s*t\s*\)/.test(src), 'should use y = a*sin(t) - (a/90)*sin(90t)');
+});
+
+TestRunner.test("Day 842 - heptacontahenicosagonNotes captures undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(\s*`Heptacontahenicosagon Notes/.test(src), 'should capture undo with Heptacontahenicosagon Notes label');
+});
+
+TestRunner.test("Day 842 - heptacontahenicosagonNotes clamps length to MIN/MAX bounds", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAHENICOSAGON_NOTES_MIN_LENGTH/.test(src) && /HEPTACONTAHENICOSAGON_NOTES_MAX_LENGTH/.test(src), 'should clamp length to MIN/MAX_LENGTH');
+});
+
+TestRunner.test("Day 842 - heptacontahenicosagonNotes clamps scale to MIN/MAX bounds", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAHENICOSAGON_NOTES_MIN_A/.test(src) && /HEPTACONTAHENICOSAGON_NOTES_MAX_A/.test(src), 'should clamp scale to MIN/MAX_A');
+});
+
+TestRunner.test("Day 842 - heptacontahenicosagonNotes validates shape via SHAPES array", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAHENICOSAGON_NOTES_SHAPES\.includes\(shape\)/.test(src), 'should validate shape via SHAPES array');
+});
+
+TestRunner.test("Day 842 - heptacontahenicosagonNotes supports 4 distinct shapes", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAHENICOSAGON_NOTES_SHAPE_STANDARD/.test(src), 'should have STANDARD shape');
+    t.assertTruthy(/HEPTACONTAHENICOSAGON_NOTES_SHAPE_INVERTED/.test(src), 'should have INVERTED shape');
+    t.assertTruthy(/HEPTACONTAHENICOSAGON_NOTES_SHAPE_HEPTACONTAHENICOSAGON/.test(src), 'should have HEPTACONTAHENICOSAGON shape');
+    t.assertTruthy(/HEPTACONTAHENICOSAGON_NOTES_SHAPE_TIGHT/.test(src), 'should have TIGHT shape');
+});
+
+TestRunner.test("Day 842 - heptacontahenicosagonNotes uses Math.floor for length and scale", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.floor\(length\)/.test(src), 'should Math.floor length');
+    t.assertTruthy(/Math\.floor\(scale\)/.test(src), 'should Math.floor scale');
+});
+
+TestRunner.test("Day 842 - heptacontahenicosagonNotes returns heptacontahenicosagonCount", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return\s+heptacontahenicosagonCount/.test(src), 'should return heptacontahenicosagonCount');
+});
+
+TestRunner.test("Day 842 - ui menu items call heptacontahenicosagonNotes", (t) => {
+    const src = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = src.match(/heptacontahenicosagonNotes\(32, 4, 0\.95, '/g) || [];
+    t.assertEqual(matches.length, 4, 'all 4 menu items should call heptacontahenicosagonNotes');
+});
+
+TestRunner.test("Day 842 - a/90 scaling confirmed", (t) => {
+    const cSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/const aOver90\s*=\s*a\s*\/\s*90/.test(cSrc), 'a/90 scaling confirmed');
+});
+
+TestRunner.test("Day 842 - APP_VERSION bumped to 2.490.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.490\.0'/.test(cSrc), 'APP_VERSION should be 2.490.0');
+});
+
 
