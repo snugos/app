@@ -138497,6 +138497,66 @@ TestRunner.test("Day 848 - HEPTACONTAHEPTAXAGON_NOTES_SHAPES includes all 4 vari
     t.assertTruthy(/HEPTACONTAHEPTAXAGON_NOTES_SHAPE_HEPTACONTAHEPTAXAGON/.test(cSrc), 'HEPTACONTAHEPTAXAGON shape defined');
     t.assertTruthy(/HEPTACONTAHEPTAXAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
 });
+TestRunner.test("Day 849 - heptacontaoctaxagonNotes is defined", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/heptacontaoctaxagonNotes\s*\(/.test(src), 'heptacontaoctaxagonNotes should be defined');
+});
+
+TestRunner.test("Day 849 - heptacontaoctaxagonNotes uses 98-cusped hypocycloid parametric form", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/a\s*\*\s*cosT\s*\+\s*aOver97\s*\*\s*cos97T/.test(src), 'should use x = a*cos(t) + (a/97)*cos(97t)');
+    t.assertTruthy(/a\s*\*\s*sinT\s*-\s*aOver97\s*\*\s*sin97T/.test(src), 'should use y = a*sin(t) - (a/97)*sin(97t)');
+});
+
+TestRunner.test("Day 849 - heptacontaoctaxagonNotes captures undo with descriptive label", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/_captureUndoState\(`Heptacontaoctaxagon Notes/.test(src), 'should capture undo with Heptacontaoctaxagon label');
+});
+
+TestRunner.test("Day 849 - heptacontaoctaxagonNotes clamps length to MIN/MAX bounds", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAOCTAXAGON_NOTES_MIN_LENGTH/.test(src) && /HEPTACONTAOCTAXAGON_NOTES_MAX_LENGTH/.test(src), 'should clamp length to MIN/MAX_LENGTH');
+});
+
+TestRunner.test("Day 849 - heptacontaoctaxagonNotes clamps scale to MIN/MAX bounds", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAOCTAXAGON_NOTES_MIN_A/.test(src) && /HEPTACONTAOCTAXAGON_NOTES_MAX_A/.test(src), 'should clamp scale to MIN/MAX_A');
+});
+
+TestRunner.test("Day 849 - heptacontaoctaxagonNotes validates shape via SHAPES array", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAOCTAXAGON_NOTES_SHAPES\.includes\(shape\)/.test(src), 'should validate shape via SHAPES array');
+});
+
+TestRunner.test("Day 849 - heptacontaoctaxagonNotes t parameter formula", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max/.test(src), 'should compute t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)');
+});
+
+TestRunner.test("Day 849 - heptacontaoctaxagonNotes returns count", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return heptacontaoctaxagonCount/.test(src), 'should return heptacontaoctaxagonCount');
+});
+
+TestRunner.test("Day 849 - HEPTACONTAOCTAXAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAOCTAXAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HEPTACONTAOCTAXAGON_NOTES_HEPTACONTAOCTAXAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*98/.test(cSrc), 'T_MAX should be 2*PI/98');
+});
+
+TestRunner.test("Day 849 - HEPTACONTAOCTAXAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HEPTACONTAOCTAXAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HEPTACONTAOCTAXAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HEPTACONTAOCTAXAGON_NOTES_SHAPE_HEPTACONTAOCTAXAGON/.test(cSrc), 'HEPTACONTAOCTAXAGON shape defined');
+    t.assertTruthy(/HEPTACONTAOCTAXAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+
+TestRunner.test("Day 849 - APP_VERSION bumped to 2.497.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.497\.0'/.test(cSrc), 'APP_VERSION should be 2.497.0');
+});
+
 
 TestRunner.test("Day 848 - ui.js has 4 Heptacontaheptaxagon Notes menu items", (t) => {
     const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
