@@ -7,7 +7,7 @@
   - `js/tests.js`: Added Day 851 Hectogon test block with 12 tests
   - `AGENTS.md`: Updated with this entry (prepended)
   - `scripts/day851_hectogon.py`: Reproducibility script (verified output: x at t=0 = 4.040404 = 100a/99, 100 = 2² * 5² NOT constructible per Gauss-Wantzel 1837 since 5 has multiplicity 2 in 25, R/r=100, 3.6° cusp intervals EXACT, 32/32 finite samples for all 4 shapes, xRange=4.0404 yRange=4.0070 non-degenerate)
-- **Pre-existing Bug Fix**: None this run.
+- **Pre-existing Bug Fix**: Removed duplicate Day 850 Heptacontaeptaxagon test block in `js/tests.js`. The previous run had left two copies of the 12-test block (lines 138638-138702 were an exact duplicate of lines 138561-138625), resulting in 24 Day 850 test entries. Removed the duplicate (66 lines including trailing blank lines), keeping the canonical 12-test block. Total Day 850 tests: 12 (down from 24 with the duplicate). Same class of regression that the bug-checker is meant to catch (Day 850 / Day 841 / Day 827 / Day 808 / Day 812 / Day 763 / Day 757 / Day 765 test-block duplication bugs).
 - **Feature Details**:
   - **hectogonNotes** (`js/Track.js`): For each active note, places `clampedLength` samples along a hectogon (100-cusped hypocycloid) curve. For sample `i` in 0..clampedLength-1, computes `t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)`, then `cosT = Math.cos(t)`, `sinT = Math.sin(t)`, `cos99T = Math.cos(99 * t)`, `sin99T = Math.sin(99 * t)`, then `x = a*cosT + (a/99)*cos99T` and `y = a*sinT - (a/99)*sin99T`. Skips non-finite samples, captures undo BEFORE mutation, reuses the existing sample normalization / note placement pattern, and returns `hectogonCount`.
   - **Hectogon Notes Menu Items** (`js/ui.js`): 4 items:
