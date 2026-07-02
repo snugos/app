@@ -18636,7 +18636,7 @@ export class Track {
         const tMin = tRange[0];
         const tMax = tRange[1];
 
-        this._captureUndoState(\);
+        this._captureUndoState(`Heptacontaheptagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
 
         const numRows = activeSeq.data.length;
         const totalSteps = activeSeq.length;
