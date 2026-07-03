@@ -138988,6 +138988,49 @@ TestRunner.test("Day 857 - APP_VERSION bumped to 2.505.0", (t) => {
     t.assertTruthy(/APP_VERSION\s*=\s*'2\.505\.0'/.test(cSrc), 'APP_VERSION should be 2.505.0');
 });
 
+TestRunner.test("Day 858 - hectoheptagonNotes method exists in Track.js", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectoheptagonNotes\s*\(/.test(tSrc), 'hectoheptagonNotes method should be defined');
+});
+
+TestRunner.test("Day 858 - hectoheptagonNotes t parameter formula", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos\(106\s*\*\s*t\)/.test(tSrc), 'should use cos(106 * t) for N=107');
+    t.assertTruthy(/sin\(106\s*\*\s*t\)/.test(tSrc), 'should use sin(106 * t) for N=107');
+    t.assertTruthy(/aOver106\s*=\s*a\s*\/\s*106/.test(tSrc), 'should use aOver106 = a / 106');
+});
+
+TestRunner.test("Day 858 - hectoheptagonNotes returns count", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return\s+hectoheptagonCount/.test(tSrc), 'should return hectoheptagonCount');
+});
+
+TestRunner.test("Day 858 - HECTOHEPTAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_HECTOHEPTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*107/.test(cSrc), 'T_MAX should be 2*PI/107');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*107/.test(cSrc), 'TIGHT_T_MIN should be -PI/107');
+});
+
+TestRunner.test("Day 858 - HECTOHEPTAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_SHAPE_HECTOHEPTAGON/.test(cSrc), 'HECTOHEPTAGON shape defined');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+
+TestRunner.test("Day 858 - ui.js has 4 Hectoheptagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectoheptagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectoheptagon Notes menu items');
+});
+
+TestRunner.test("Day 858 - APP_VERSION bumped to 2.506.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.506\.0'/.test(cSrc), 'APP_VERSION should be 2.506.0');
+});
+
 TestRunner.test("Day 857 - hectohexagonNotes method exists in Track.js", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/hectohexagonNotes\s*\(/.test(tSrc), 'hectohexagonNotes method should be defined');
@@ -139032,4 +139075,47 @@ TestRunner.test("Day 857 - ui.js has 4 Hectohexagon Notes menu items", (t) => {
 TestRunner.test("Day 857 - APP_VERSION bumped to 2.505.0", (t) => {
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*'2\.505\.0'/.test(cSrc), 'APP_VERSION should be 2.505.0');
+});
+
+TestRunner.test("Day 858 - hectoheptagonNotes method exists in Track.js", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectoheptagonNotes\s*\(/.test(tSrc), 'hectoheptagonNotes method should be defined');
+});
+
+TestRunner.test("Day 858 - hectoheptagonNotes t parameter formula", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos\(106\s*\*\s*t\)/.test(tSrc), 'should use cos(106 * t) for N=107');
+    t.assertTruthy(/sin\(106\s*\*\s*t\)/.test(tSrc), 'should use sin(106 * t) for N=107');
+    t.assertTruthy(/aOver106\s*=\s*a\s*\/\s*106/.test(tSrc), 'should use aOver106 = a / 106');
+});
+
+TestRunner.test("Day 858 - hectoheptagonNotes returns count", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return\s+hectoheptagonCount/.test(tSrc), 'should return hectoheptagonCount');
+});
+
+TestRunner.test("Day 858 - HECTOHEPTAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_HECTOHEPTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*107/.test(cSrc), 'T_MAX should be 2*PI/107');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*107/.test(cSrc), 'TIGHT_T_MIN should be -PI/107');
+});
+
+TestRunner.test("Day 858 - HECTOHEPTAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_SHAPE_HECTOHEPTAGON/.test(cSrc), 'HECTOHEPTAGON shape defined');
+    t.assertTruthy(/HECTOHEPTAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+
+TestRunner.test("Day 858 - ui.js has 4 Hectoheptagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectoheptagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectoheptagon Notes menu items');
+});
+
+TestRunner.test("Day 858 - APP_VERSION bumped to 2.506.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.506\.0'/.test(cSrc), 'APP_VERSION should be 2.506.0');
 });
