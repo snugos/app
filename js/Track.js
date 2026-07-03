@@ -21493,4 +21493,111 @@ export class Track {
     }
 
 
+    hectotetragonNotes(length = Constants.HECTOTETRAGON_NOTES_DEFAULT_LENGTH, scale = Constants.HECTOTETRAGON_NOTES_DEFAULT_A, velocityDecay = Constants.HECTOTETRAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.HECTOTETRAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+        if (this.type === 'audio') return 0;
+        const activeSeq = typeof this.getActiveSequence === 'function' ? this.getActiveSequence() : null;
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id}] hectotetragonNotes: no active sequence`);
+            return 0;
+        }
+        const clampedLength = Math.max(Constants.HECTOTETRAGON_NOTES_MIN_LENGTH, Math.min(Constants.HECTOTETRAGON_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.HECTOTETRAGON_NOTES_MIN_A, Math.min(Constants.HECTOTETRAGON_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.HECTOTETRAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.HECTOTETRAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.HECTOTETRAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.HECTOTETRAGON_NOTES_SHAPE_STANDARD;
+
+        const tRangeMap = {
+            [Constants.HECTOTETRAGON_NOTES_SHAPE_STANDARD]: [Constants.HECTOTETRAGON_NOTES_DEFAULT_T_MIN, Constants.HECTOTETRAGON_NOTES_DEFAULT_T_MAX],
+            [Constants.HECTOTETRAGON_NOTES_SHAPE_INVERTED]: [Constants.HECTOTETRAGON_NOTES_INVERTED_T_MIN, Constants.HECTOTETRAGON_NOTES_INVERTED_T_MAX],
+            [Constants.HECTOTETRAGON_NOTES_SHAPE_HECTOTETRAGON]: [Constants.HECTOTETRAGON_NOTES_HECTOTETRAGON_T_MIN, Constants.HECTOTETRAGON_NOTES_HECTOTETRAGON_T_MAX],
+            [Constants.HECTOTETRAGON_NOTES_SHAPE_TIGHT]: [Constants.HECTOTETRAGON_NOTES_TIGHT_T_MIN, Constants.HECTOTETRAGON_NOTES_TIGHT_T_MAX]
+        };
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.HECTOTETRAGON_NOTES_SHAPE_STANDARD];
+        const tMin = tRange[0];
+        const tMax = tRange[1];
+
+        this._captureUndoState(`Hectotetragon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        let hectotetragonCount = 0;
+        const defaultVel = Constants.defaultVelocity || 0.7;
+        const newNotes = [];
+
+        const samples = [];
+        const a = clampedA;
+        const aOver103 = a / 103;
+        for (let i = 0; i < clampedLength; i++) {
+            const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
+            const cosT = Math.cos(t);
+            const sinT = Math.sin(t);
+            const cos103T = Math.cos(103 * t);
+            const sin103T = Math.sin(103 * t);
+            const x = a * cosT + aOver103 * cos103T;
+            const y = a * sinT - aOver103 * sin103T;
+            if (!isFinite(x) || !isFinite(y)) continue;
+            samples.push({ x, y });
+        }
+
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        for (const p of samples) {
+            if (p.x < xMin) xMin = p.x;
+            if (p.x > xMax) xMax = p.x;
+            if (p.y < yMin) yMin = p.y;
+            if (p.y > yMax) yMax = p.y;
+        }
+        if (!isFinite(xMin)) { xMin = -a; xMax = a; yMin = -a; yMax = a; }
+        const xRange = Math.max(0.01, xMax - xMin);
+        const yRange = Math.max(0.01, yMax - yMin);
+        const colScale = (clampedLength - 1) / xRange;
+        const rowScale = (clampedLength - 1) / (2 * yRange);
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (!stepData || !stepData.active) continue;
+
+                const origVel = (stepData.velocity !== undefined) ? stepData.velocity : defaultVel;
+
+                for (let i = 0; i < samples.length; i++) {
+                    const pt = samples[i];
+                    const rowOffset = Math.max(-(clampedLength - 1) / 2, Math.min((clampedLength - 1) / 2, Math.round((pt.y - yMin) * rowScale - (clampedLength - 1) / 2)));
+                    const colOffset = Math.max(0, Math.min(clampedLength - 1, Math.round((pt.x - xMin) * colScale)));
+                    const targetRow = rowIndex + rowOffset;
+                    const targetCol = col + colOffset;
+
+                    if (targetRow < 0 || targetRow >= numRows) continue;
+                    if (targetCol < 0 || targetCol >= totalSteps) continue;
+                    if (skipOccupied && activeSeq.data[targetRow] && activeSeq.data[targetRow][targetCol] && activeSeq.data[targetRow][targetCol].active) continue;
+                    if (targetRow === rowIndex && targetCol === col) continue;
+
+                    const decayedVel = Math.max(0.05, Math.min(1.0, origVel * Math.pow(clampedDecay, i)));
+                    newNotes.push({
+                        rowIndex: targetRow,
+                        col: targetCol,
+                        velocity: Math.round(decayedVel * 100) / 100,
+                        probability: stepData.probability
+                    });
+                }
+            }
+        }
+
+        for (const note of newNotes) {
+            if (!activeSeq.data[note.rowIndex]) {
+                activeSeq.data[note.rowIndex] = Array(totalSteps).fill(null);
+            }
+            activeSeq.data[note.rowIndex][note.col] = {
+                active: true,
+                velocity: note.velocity,
+                probability: note.probability
+            };
+            hectotetragonCount++;
+        }
+
+        return hectotetragonCount;
+    }
+
+
 }
