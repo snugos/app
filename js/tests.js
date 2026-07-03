@@ -139118,6 +139118,50 @@ TestRunner.test("Day 860 - APP_VERSION bumped to 2.508.0", (t) => {
 });
 
 
+TestRunner.test("Day 861 - hectodecagonNotes method exists in Track.js", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectodecagonNotes\s*\(/.test(tSrc), 'hectodecagonNotes method should be defined');
+});
+
+TestRunner.test("Day 861 - hectodecagonNotes t parameter formula uses cos(109t) and sin(109t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(\s*109\s*\*\s*t\s*\)/.test(tSrc), 'should use cos(109*t)');
+    t.assertTruthy(/Math\.sin\(\s*109\s*\*\s*t\s*\)/.test(tSrc), 'should use sin(109*t)');
+    t.assertTruthy(/aOver109\s*=\s*a\s*\/\s*109/.test(tSrc), 'should compute aOver109 = a/109');
+});
+
+TestRunner.test("Day 861 - hectodecagonNotes returns count", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return\s+hectodecagonCount/.test(tSrc), 'should return hectodecagonCount');
+});
+
+TestRunner.test("Day 861 - HECTODECAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTODECAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTODECAGON_NOTES_HECTODECAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*110/.test(cSrc), 'T_MAX should be 2*PI/110');
+    t.assertTruthy(/HECTODECAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*110/.test(cSrc), 'TIGHT_T_MIN should be -PI/110');
+});
+
+TestRunner.test("Day 861 - HECTODECAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTODECAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTODECAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTODECAGON_NOTES_SHAPE_HECTODECAGON/.test(cSrc), 'HECTODECAGON shape defined');
+    t.assertTruthy(/HECTODECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+
+TestRunner.test("Day 861 - ui.js has 4 Hectodecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectodecagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectodecagon Notes menu items');
+});
+
+TestRunner.test("Day 861 - APP_VERSION bumped to 2.509.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.509\.0'/.test(cSrc), 'APP_VERSION should be 2.509.0');
+});
+
+
 TestRunner.test("Day 857 - hectohexagonNotes method exists in Track.js", (t) => {
     const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
     t.assertTruthy(/hectohexagonNotes\s*\(/.test(tSrc), 'hectohexagonNotes method should be defined');
