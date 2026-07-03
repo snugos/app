@@ -138751,3 +138751,51 @@ TestRunner.test("Day 852 - APP_VERSION bumped to 2.500.0", (t) => {
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*'2\.500\.0'/.test(cSrc), 'APP_VERSION should be 2.500.0');
 });
+
+TestRunner.test("Day 853 - hectodiagonNotes method exists in Track.js", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectodiagonNotes\s*\(/.test(src), 'hectodiagonNotes method should be defined');
+});
+
+TestRunner.test("Day 853 - hectodiagonNotes t parameter formula", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/tMin\s*\+\s*\(tMax\s*-\s*tMin\)\s*\*\s*i\s*\/\s*Math\.max/.test(src), 'should compute t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1)');
+});
+
+TestRunner.test("Day 853 - hectodiagonNotes uses cos(101t) and sin(101t)", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(101\s*\*\s*t\)/.test(src), 'should compute cos(101t)');
+    t.assertTruthy(/Math\.sin\(101\s*\*\s*t\)/.test(src), 'should compute sin(101t)');
+    t.assertTruthy(/aOver101\s*=\s*a\s*\/\s*101/.test(src), 'should define aOver101 = a/101');
+});
+
+TestRunner.test("Day 853 - hectodiagonNotes returns count", (t) => {
+    const src = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return hectodiagonCount/.test(src), 'should return hectodiagonCount');
+});
+
+TestRunner.test("Day 853 - HECTODIAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTODIAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTODIAGON_NOTES_HECTODIAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*102/.test(cSrc), 'T_MAX should be 2*PI/102');
+    t.assertTruthy(/HECTODIAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*102/.test(cSrc), 'TIGHT_T_MIN should be -PI/102');
+});
+
+TestRunner.test("Day 853 - HECTODIAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTODIAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTODIAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTODIAGON_NOTES_SHAPE_HECTODIAGON/.test(cSrc), 'HECTODIAGON shape defined');
+    t.assertTruthy(/HECTODIAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+
+TestRunner.test("Day 853 - ui.js has 4 Hectodiagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectodiagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectodiagon Notes menu items');
+});
+
+TestRunner.test("Day 853 - APP_VERSION bumped to 2.501.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.501\.0'/.test(cSrc), 'APP_VERSION should be 2.501.0');
+});
