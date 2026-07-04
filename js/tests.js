@@ -139489,3 +139489,40 @@ TestRunner.test("Day 867 - APP_VERSION bumped to 2.515.0", (t) => {
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*'2\.515\.0'/.test(cSrc), 'APP_VERSION should be 2.515.0');
 });
+
+TestRunner.test("Day 868 - hectoheptadecagonNotes method exists in Track.js", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectoheptadecagonNotes\s*\(/.test(tSrc), 'hectoheptadecagonNotes method should be defined');
+});
+TestRunner.test("Day 868 - hectoheptadecagonNotes t parameter formula uses cos(116t) and sin(116t)", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/Math\.cos\(\s*116\s*\*\s*t\s*\)/.test(tSrc), 'should use cos(116*t)');
+    t.assertTruthy(/Math\.sin\(\s*116\s*\*\s*t\s*\)/.test(tSrc), 'should use sin(116*t)');
+    t.assertTruthy(/aOver116\s*=\s*a\s*\/\s*116/.test(tSrc), 'should compute aOver116 = a/116');
+});
+TestRunner.test("Day 868 - hectoheptadecagonNotes returns count", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/return\s+hectoheptadecagonCount/.test(tSrc), 'should return hectoheptadecagonCount');
+});
+TestRunner.test("Day 868 - HECTOHEPTADECAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOHEPTADECAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOHEPTADECAGON_NOTES_HECTOHEPTADECAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*117/.test(cSrc), 'T_MAX should be 2*PI/117');
+    t.assertTruthy(/HECTOHEPTADECAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*117/.test(cSrc), 'TIGHT_T_MIN should be -PI/117');
+});
+TestRunner.test("Day 868 - HECTOHEPTADECAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOHEPTADECAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOHEPTADECAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOHEPTADECAGON_NOTES_SHAPE_HECTOHEPTADECAGON/.test(cSrc), 'HECTOHEPTADECAGON shape defined');
+    t.assertTruthy(/HECTOHEPTADECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 868 - ui.js has Hectoheptadecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectoheptadecagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectoheptadecagon Notes menu items');
+});
+TestRunner.test("Day 868 - APP_VERSION bumped to 2.516.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.516\.0'/.test(cSrc), 'APP_VERSION should be 2.516.0');
+});
