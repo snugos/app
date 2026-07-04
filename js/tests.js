@@ -139562,3 +139562,44 @@ TestRunner.test("Day 869 - APP_VERSION bumped to 2.517.0", (t) => {
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/APP_VERSION\s*=\s*'2\.517\.0'/.test(cSrc), 'APP_VERSION should be 2.517.0');
 });
+TestRunner.test("Day 870 - hectoenneadecagonNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectoenneadecagonNotes\s*\(/.test(tSrc), 'hectoenneadecagonNotes method should be defined');
+    t.assertTruthy(/return\s+hectoenneadecagonCount/.test(tSrc), 'should return hectoenneadecagonCount');
+});
+TestRunner.test("Day 870 - HECTOENNEADECAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOENNEADECAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOENNEADECAGON_NOTES_HECTOENNEADECAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*119/.test(cSrc), 'T_MAX should be 2*PI/119');
+    t.assertTruthy(/HECTOENNEADECAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*119/.test(cSrc), 'TIGHT_T_MIN should be -PI/119');
+});
+TestRunner.test("Day 870 - HECTOENNEADECAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOENNEADECAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOENNEADECAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOENNEADECAGON_NOTES_SHAPE_HECTOENNEADECAGON/.test(cSrc), 'HECTOENNEADECAGON shape defined');
+    t.assertTruthy(/HECTOENNEADECAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 870 - ui.js has Hectoenneadecagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectoenneadecagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectoenneadecagon Notes menu items');
+});
+TestRunner.test("Day 870 - APP_VERSION bumped to 2.518.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.518\.0'/.test(cSrc), 'APP_VERSION should be 2.518.0');
+});
+TestRunner.test("Day 870 - parametric formula uses 118·t and a/118", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos118T\s*=\s*Math\.cos\(118\s*\*\s*t\)/.test(tSrc), 'should compute cos(118·t)');
+    t.assertTruthy(/sin118T\s*=\s*Math\.sin\(118\s*\*\s*t\)/.test(tSrc), 'should compute sin(118·t)');
+    t.assertTruthy(/aOver118\s*=\s*a\s*\/\s*118/.test(tSrc), 'should compute a/118 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver118\s*\*\s*cos118T/.test(tSrc), 'should compute x = a·cos(t) + (a/118)·cos(118t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver118\s*\*\s*sin118T/.test(tSrc), 'should compute y = a·sin(t) - (a/118)·sin(118t)');
+});
+TestRunner.test("Day 870 - 119 is NOT constructible per Gauss-Wantzel 1837", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOENNEADECAGON_NOTES_HECTOENNEADECAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*119/.test(cSrc), 'T_MAX should be 2·PI/119');
+    t.assertTruthy(/aOver118\s*=\s*a\s*\/\s*118/.test(tSrc), 'should use a/118 as small-circle radius (so R = 119a/118, R/r = 119)');
+});
