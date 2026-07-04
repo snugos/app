@@ -139603,3 +139603,44 @@ TestRunner.test("Day 870 - 119 is NOT constructible per Gauss-Wantzel 1837", (t)
     t.assertTruthy(/HECTOENNEADECAGON_NOTES_HECTOENNEADECAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*119/.test(cSrc), 'T_MAX should be 2·PI/119');
     t.assertTruthy(/aOver118\s*=\s*a\s*\/\s*118/.test(tSrc), 'should use a/118 as small-circle radius (so R = 119a/118, R/r = 119)');
 });
+TestRunner.test("Day 871 - hectoeicosagonNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectoeicosagonNotes\s*\(/.test(tSrc), 'hectoeicosagonNotes method should be defined');
+    t.assertTruthy(/return\s+hectoeicosagonCount/.test(tSrc), 'should return hectoeicosagonCount');
+});
+TestRunner.test("Day 871 - HECTOEICOSAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOEICOSAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOEICOSAGON_NOTES_HECTOEICOSAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*120/.test(cSrc), 'T_MAX should be 2*PI/120');
+    t.assertTruthy(/HECTOEICOSAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*120/.test(cSrc), 'TIGHT_T_MIN should be -PI/120');
+});
+TestRunner.test("Day 871 - HECTOEICOSAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOEICOSAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOEICOSAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOEICOSAGON_NOTES_SHAPE_HECTOEICOSAGON/.test(cSrc), 'HECTOEICOSAGON shape defined');
+    t.assertTruthy(/HECTOEICOSAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 871 - ui.js has Hectoeicosagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectoeicosagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectoeicosagon Notes menu items');
+});
+TestRunner.test("Day 871 - APP_VERSION bumped to 2.519.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.519\.0'/.test(cSrc), 'APP_VERSION should be 2.519.0');
+});
+TestRunner.test("Day 871 - parametric formula uses 119·t and a/119", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos119T\s*=\s*Math\.cos\(119\s*\*\s*t\)/.test(tSrc), 'should compute cos(119·t)');
+    t.assertTruthy(/sin119T\s*=\s*Math\.sin\(119\s*\*\s*t\)/.test(tSrc), 'should compute sin(119·t)');
+    t.assertTruthy(/aOver119\s*=\s*a\s*\/\s*119/.test(tSrc), 'should compute a/119 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver119\s*\*\s*cos119T/.test(tSrc), 'should compute x = a·cos(t) + (a/119)·cos(119t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver119\s*\*\s*sin119T/.test(tSrc), 'should compute y = a·sin(t) - (a/119)·sin(119t)');
+});
+TestRunner.test("Day 871 - 120 IS constructible per Gauss-Wantzel 1837 (2^3 * 3 * 5)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOEICOSAGON_NOTES_HECTOEICOSAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*120/.test(cSrc), 'T_MAX should be 2·PI/120');
+    t.assertTruthy(/aOver119\s*=\s*a\s*\/\s*119/.test(tSrc), 'should use a/119 as small-circle radius (so R = 120a/119, R/r = 120)');
+});
