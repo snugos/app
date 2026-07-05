@@ -140020,3 +140020,51 @@ TestRunner.test("Day 879 - hectoicosikaioctagon is the 28th value in the 100+ po
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_HECTOICOSIKAIOCTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*128/.test(cSrc), '128 sides');
 });
+// Day 880 Hectoicosikaienneagon (129-cusped Hypocycloid) tests - 129 = 3 * 43 NOT constructible per Gauss-Wantzel 1837 (43 is prime but not Fermat, despite 3 being a Fermat prime)
+// R/r=129, parametric x = a*cos(t) + (a/128)*cos(128t), y = a*sin(t) - (a/128)*sin(128t)
+
+TestRunner.test("Day 880 - hectoicosikaienneagonNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectoicosikaienneagonNotes\s*\(/.test(tSrc), 'hectoicosikaienneagonNotes method should be defined');
+    t.assertTruthy(/return\s+hectoicosikaienneagonCount/.test(tSrc), 'should return hectoicosikaienneagonCount');
+});
+TestRunner.test("Day 880 - HECTOICOSIKAIENNEAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIENNEAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOICOSIKAIENNEAGON_NOTES_HECTOICOSIKAIENNEAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*129/.test(cSrc), 'T_MAX should be 2*PI/129');
+    t.assertTruthy(/HECTOICOSIKAIENNEAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*129/.test(cSrc), 'TIGHT_T_MIN should be -PI/129');
+});
+TestRunner.test("Day 880 - HECTOICOSIKAIENNEAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIENNEAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOICOSIKAIENNEAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOICOSIKAIENNEAGON_NOTES_SHAPE_HECTOICOSIKAIENNEAGON/.test(cSrc), 'HECTOICOSIKAIENNEAGON shape defined');
+    t.assertTruthy(/HECTOICOSIKAIENNEAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 880 - ui.js has Hectoicosikaienneagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectoicosikaienneagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectoicosikaienneagon Notes menu items');
+});
+TestRunner.test("Day 880 - APP_VERSION bumped to 2.528.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.528\.0'/.test(cSrc), 'APP_VERSION should be 2.528.0');
+});
+TestRunner.test("Day 880 - parametric formula uses 128*t and a/128", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos128T\s*=\s*Math\.cos\(128\s*\*\s*t\)/.test(tSrc), 'should compute cos(128*t)');
+    t.assertTruthy(/sin128T\s*=\s*Math\.sin\(128\s*\*\s*t\)/.test(tSrc), 'should compute sin(128*t)');
+    t.assertTruthy(/aOver128\s*=\s*a\s*\/\s*128/.test(tSrc), 'should compute a/128 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver128\s*\*\s*cos128T/.test(tSrc), 'should compute x = a*cos(t) + (a/128)*cos(128t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver128\s*\*\s*sin128T/.test(tSrc), 'should compute y = a*sin(t) - (a/128)*sin(128t)');
+});
+TestRunner.test("Day 880 - 129 = 3 * 43 NOT constructible per Gauss-Wantzel 1837 (43 is prime but not Fermat, despite 3 being Fermat)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIENNEAGON_NOTES_HECTOICOSIKAIENNEAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*129/.test(cSrc), 'T_MAX should be 2*PI/129');
+    t.assertTruthy(/aOver128\s*=\s*a\s*\/\s*128/.test(tSrc), 'should use a/128 as small-circle radius (so R = 129a/128, R/r = 129)');
+});
+TestRunner.test("Day 880 - hectoicosikaienneagon is the 29th value in the 100+ post-100 hypocycloid series", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIENNEAGON_NOTES_HECTOICOSIKAIENNEAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*129/.test(cSrc), '129 sides');
+});
