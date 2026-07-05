@@ -23495,47 +23495,48 @@ export class Track {
 
         return hectoheneicosagonCount;
     }
-    hectoheneicosagonNotes(length = Constants.HECTOHENEICOSAGON_NOTES_DEFAULT_LENGTH, scale = Constants.HECTOHENEICOSAGON_NOTES_DEFAULT_A, velocityDecay = Constants.HECTOHENEICOSAGON_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.HECTOHENEICOSAGON_NOTES_SHAPE_STANDARD, skipOccupied = true) {
+
+    hectodiikosNotes(length = Constants.HECTODIIKOS_NOTES_DEFAULT_LENGTH, scale = Constants.HECTODIIKOS_NOTES_DEFAULT_A, velocityDecay = Constants.HECTODIIKOS_NOTES_DEFAULT_VELOCITY_DECAY, shape = Constants.HECTODIIKOS_NOTES_SHAPE_STANDARD, skipOccupied = true) {
         if (this.type === 'audio') return 0;
         const activeSeq = typeof this.getActiveSequence === 'function' ? this.getActiveSequence() : null;
         if (!activeSeq || !activeSeq.data) {
-            console.warn(`[Track ${this.id}] hectoheneicosagonNotes: no active sequence`);
+            console.warn(`[Track ${this.id}] hectodiikosNotes: no active sequence`);
             return 0;
         }
-        const clampedLength = Math.max(Constants.HECTOHENEICOSAGON_NOTES_MIN_LENGTH, Math.min(Constants.HECTOHENEICOSAGON_NOTES_MAX_LENGTH, Math.floor(length)));
-        const clampedA = Math.max(Constants.HECTOHENEICOSAGON_NOTES_MIN_A, Math.min(Constants.HECTOHENEICOSAGON_NOTES_MAX_A, Math.floor(scale)));
-        const clampedDecay = Math.max(Constants.HECTOHENEICOSAGON_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.HECTOHENEICOSAGON_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
-        const useShape = Constants.HECTOHENEICOSAGON_NOTES_SHAPES.includes(shape) ? shape : Constants.HECTOHENEICOSAGON_NOTES_SHAPE_STANDARD;
+        const clampedLength = Math.max(Constants.HECTODIIKOS_NOTES_MIN_LENGTH, Math.min(Constants.HECTODIIKOS_NOTES_MAX_LENGTH, Math.floor(length)));
+        const clampedA = Math.max(Constants.HECTODIIKOS_NOTES_MIN_A, Math.min(Constants.HECTODIIKOS_NOTES_MAX_A, Math.floor(scale)));
+        const clampedDecay = Math.max(Constants.HECTODIIKOS_NOTES_MIN_VELOCITY_DECAY, Math.min(Constants.HECTODIIKOS_NOTES_MAX_VELOCITY_DECAY, velocityDecay));
+        const useShape = Constants.HECTODIIKOS_NOTES_SHAPES.includes(shape) ? shape : Constants.HECTODIIKOS_NOTES_SHAPE_STANDARD;
 
         const tRangeMap = {
-            [Constants.HECTOHENEICOSAGON_NOTES_SHAPE_STANDARD]: [Constants.HECTOHENEICOSAGON_NOTES_DEFAULT_T_MIN, Constants.HECTOHENEICOSAGON_NOTES_DEFAULT_T_MAX],
-            [Constants.HECTOHENEICOSAGON_NOTES_SHAPE_INVERTED]: [Constants.HECTOHENEICOSAGON_NOTES_INVERTED_T_MIN, Constants.HECTOHENEICOSAGON_NOTES_INVERTED_T_MAX],
-            [Constants.HECTOHENEICOSAGON_NOTES_SHAPE_HECTOHENEICOSAGON]: [Constants.HECTOHENEICOSAGON_NOTES_HECTOHENEICOSAGON_T_MIN, Constants.HECTOHENEICOSAGON_NOTES_HECTOHENEICOSAGON_T_MAX],
-            [Constants.HECTOHENEICOSAGON_NOTES_SHAPE_TIGHT]: [Constants.HECTOHENEICOSAGON_NOTES_TIGHT_T_MIN, Constants.HECTOHENEICOSAGON_NOTES_TIGHT_T_MAX]
+            [Constants.HECTODIIKOS_NOTES_SHAPE_STANDARD]: [Constants.HECTODIIKOS_NOTES_DEFAULT_T_MIN, Constants.HECTODIIKOS_NOTES_DEFAULT_T_MAX],
+            [Constants.HECTODIIKOS_NOTES_SHAPE_INVERTED]: [Constants.HECTODIIKOS_NOTES_INVERTED_T_MIN, Constants.HECTODIIKOS_NOTES_INVERTED_T_MAX],
+            [Constants.HECTODIIKOS_NOTES_SHAPE_HECTODIIKOS]: [Constants.HECTODIIKOS_NOTES_HECTODIIKOS_T_MIN, Constants.HECTODIIKOS_NOTES_HECTODIIKOS_T_MAX],
+            [Constants.HECTODIIKOS_NOTES_SHAPE_TIGHT]: [Constants.HECTODIIKOS_NOTES_TIGHT_T_MIN, Constants.HECTODIIKOS_NOTES_TIGHT_T_MAX]
         };
-        const tRange = tRangeMap[useShape] || tRangeMap[Constants.HECTOHENEICOSAGON_NOTES_SHAPE_STANDARD];
+        const tRange = tRangeMap[useShape] || tRangeMap[Constants.HECTODIIKOS_NOTES_SHAPE_STANDARD];
         const tMin = tRange[0];
         const tMax = tRange[1];
 
-        this._captureUndoState(`Hectoheneicosagon Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
+        this._captureUndoState(`Hectodiikos Notes (${useShape}, a=${clampedA}, N=${clampedLength}) on ${activeSeq.name}`);
 
         const numRows = activeSeq.data.length;
         const totalSteps = activeSeq.length;
-        let hectoheneicosagonCount = 0;
+        let hectodiikosCount = 0;
         const defaultVel = Constants.defaultVelocity || 0.7;
         const newNotes = [];
 
         const samples = [];
         const a = clampedA;
-        const aOver120 = a / 120;
+        const aOver121 = a / 121;
         for (let i = 0; i < clampedLength; i++) {
             const t = tMin + (tMax - tMin) * i / Math.max(1, clampedLength - 1);
             const cosT = Math.cos(t);
             const sinT = Math.sin(t);
-            const cos120T = Math.cos(120 * t);
-            const sin120T = Math.sin(120 * t);
-            const x = a * cosT + aOver120 * cos120T;
-            const y = a * sinT - aOver120 * sin120T;
+            const cos121T = Math.cos(121 * t);
+            const sin121T = Math.sin(121 * t);
+            const x = a * cosT + aOver121 * cos121T;
+            const y = a * sinT - aOver121 * sin121T;
             if (!isFinite(x) || !isFinite(y)) continue;
             samples.push({ x, y });
         }
@@ -23595,8 +23596,8 @@ export class Track {
                 velocity: note.velocity,
                 probability: note.probability
             };
-            hectoheneicosagonCount++;
+            hectodiikosCount++;
         }
 
-        return hectoheneicosagonCount;
+        return hectodiikosCount;
     }
