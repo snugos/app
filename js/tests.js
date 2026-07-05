@@ -139730,3 +139730,47 @@ TestRunner.test("Day 873 - 122 = 2 * 61 NOT constructible per Gauss-Wantzel 1837
     t.assertTruthy(/HECTODIIKOS_NOTES_HECTODIIKOS_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*122/.test(cSrc), 'T_MAX should be 2*PI/122');
     t.assertTruthy(/aOver121\s*=\s*a\s*\/\s*121/.test(tSrc), 'should use a/121 as small-circle radius (so R = 122a/121, R/r = 122)');
 });
+// Day 874 Hectotriaikos (123-cusped Hypocycloid) tests - 123 = 3 * 41, NOT constructible
+// R/r=123, parametric x = a*cos(t) + (a/122)*cos(122t), y = a*sin(t) - (a/122)*sin(122t)
+
+TestRunner.test("Day 874 - hectotriaikosNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectotriaikosNotes\s*\(/.test(tSrc), 'hectotriaikosNotes method should be defined');
+    t.assertTruthy(/return\s+hectotriaikosCount/.test(tSrc), 'should return hectotriaikosCount');
+});
+TestRunner.test("Day 874 - HECTOTRIAIKOS_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOTRIAIKOS_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOTRIAIKOS_NOTES_HECTOTRIAIKOS_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*123/.test(cSrc), 'T_MAX should be 2*PI/123');
+    t.assertTruthy(/HECTOTRIAIKOS_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*123/.test(cSrc), 'TIGHT_T_MIN should be -PI/123');
+});
+TestRunner.test("Day 874 - HECTOTRIAIKOS_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOTRIAIKOS_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOTRIAIKOS_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOTRIAIKOS_NOTES_SHAPE_HECTOTRIAIKOS/.test(cSrc), 'HECTOTRIAIKOS shape defined');
+    t.assertTruthy(/HECTOTRIAIKOS_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 874 - ui.js has Hectotriaikos Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectotriaikos Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectotriaikos Notes menu items');
+});
+TestRunner.test("Day 874 - APP_VERSION bumped to 2.522.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.522\.0'/.test(cSrc), 'APP_VERSION should be 2.522.0');
+});
+TestRunner.test("Day 874 - parametric formula uses 122*t and a/122", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos122T\s*=\s*Math\.cos\(122\s*\*\s*t\)/.test(tSrc), 'should compute cos(122*t)');
+    t.assertTruthy(/sin122T\s*=\s*Math\.sin\(122\s*\*\s*t\)/.test(tSrc), 'should compute sin(122*t)');
+    t.assertTruthy(/aOver122\s*=\s*a\s*\/\s*122/.test(tSrc), 'should compute a/122 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver122\s*\*\s*cos122T/.test(tSrc), 'should compute x = a*cos(t) + (a/122)*cos(122t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver122\s*\*\s*sin122T/.test(tSrc), 'should compute y = a*sin(t) - (a/122)*sin(122t)');
+});
+TestRunner.test("Day 874 - 123 = 3 * 41 NOT constructible per Gauss-Wantzel 1837 (41 is prime but not Fermat)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOTRIAIKOS_NOTES_HECTOTRIAIKOS_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*123/.test(cSrc), 'T_MAX should be 2*PI/123');
+    t.assertTruthy(/aOver122\s*=\s*a\s*\/\s*122/.test(tSrc), 'should use a/122 as small-circle radius (so R = 123a/122, R/r = 123)');
+});
