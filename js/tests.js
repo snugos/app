@@ -139923,3 +139923,51 @@ TestRunner.test("Day 877 - hectoicosikaihexagon is in the 100-126 post-100 hypoc
     t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_HECTOICOSIKAIHEXAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*126/.test(cSrc), '126 sides');
 });
 
+// Day 878 Hectoicosikaiheptagon (127-cusped Hypocycloid) tests - 127 = 2^7 - 1 is the 7th Mersenne prime, NOT constructible
+// R/r=127, parametric x = a*cos(t) + (a/126)*cos(126t), y = a*sin(t) - (a/126)*sin(126t)
+
+TestRunner.test("Day 878 - hectoicosikaiheptagonNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectoicosikaiheptagonNotes\s*\(/.test(tSrc), 'hectoicosikaiheptagonNotes method should be defined');
+    t.assertTruthy(/return\s+hectoicosikaiheptagonCount/.test(tSrc), 'should return hectoicosikaiheptagonCount');
+});
+TestRunner.test("Day 878 - HECTOICOSIKAIHEPTAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_HECTOICOSIKAIHEPTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*127/.test(cSrc), 'T_MAX should be 2*PI/127');
+    t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*127/.test(cSrc), 'TIGHT_T_MIN should be -PI/127');
+});
+TestRunner.test("Day 878 - HECTOICOSIKAIHEPTAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_SHAPE_HECTOICOSIKAIHEPTAGON/.test(cSrc), 'HECTOICOSIKAIHEPTAGON shape defined');
+    t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 878 - ui.js has Hectoicosikaiheptagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectoicosikaiheptagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectoicosikaiheptagon Notes menu items');
+});
+TestRunner.test("Day 878 - APP_VERSION bumped to 2.526.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.526\.0'/.test(cSrc), 'APP_VERSION should be 2.526.0');
+});
+TestRunner.test("Day 878 - parametric formula uses 126*t and a/126", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos126T\s*=\s*Math\.cos\(126\s*\*\s*t\)/.test(tSrc), 'should compute cos(126*t)');
+    t.assertTruthy(/sin126T\s*=\s*Math\.sin\(126\s*\*\s*t\)/.test(tSrc), 'should compute sin(126*t)');
+    t.assertTruthy(/aOver126\s*=\s*a\s*\/\s*126/.test(tSrc), 'should compute a/126 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver126\s*\*\s*cos126T/.test(tSrc), 'should compute x = a*cos(t) + (a/126)*cos(126t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver126\s*\*\s*sin126T/.test(tSrc), 'should compute y = a*sin(t) - (a/126)*sin(126t)');
+});
+TestRunner.test("Day 878 - 127 is Mersenne prime M_7 = 2^7 - 1 but NOT a Fermat prime, so NOT constructible per Gauss-Wantzel 1837", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_HECTOICOSIKAIHEPTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*127/.test(cSrc), 'T_MAX should be 2*PI/127');
+    t.assertTruthy(/aOver126\s*=\s*a\s*\/\s*126/.test(tSrc), 'should use a/126 as small-circle radius (so R = 127a/126, R/r = 127)');
+});
+TestRunner.test("Day 878 - hectoicosikaiheptagon is in the 100-127 post-100 hypocycloid series", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_HECTOICOSIKAIHEPTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*127/.test(cSrc), '127 sides');
+});
