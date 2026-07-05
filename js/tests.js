@@ -139874,3 +139874,52 @@ TestRunner.test("Day 876 - hectopentikaideca is in the 100-125 post-100 hypocycl
 });
 
 
+// Day 877 Hectoicosikaihexagon (126-cusped Hypocycloid) tests - 126 = 2 * 3^2 * 7, NOT constructible
+// R/r=126, parametric x = a*cos(t) + (a/125)*cos(125t), y = a*sin(t) - (a/125)*sin(125t)
+
+TestRunner.test("Day 877 - hectoicosikaihexagonNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectoicosikaihexagonNotes\s*\(/.test(tSrc), 'hectoicosikaihexagonNotes method should be defined');
+    t.assertTruthy(/return\s+hectoicosikaihexagonCount/.test(tSrc), 'should return hectoicosikaihexagonCount');
+});
+TestRunner.test("Day 877 - HECTOICOSIKAIHEXAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_HECTOICOSIKAIHEXAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*126/.test(cSrc), 'T_MAX should be 2*PI/126');
+    t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*126/.test(cSrc), 'TIGHT_T_MIN should be -PI/126');
+});
+TestRunner.test("Day 877 - HECTOICOSIKAIHEXAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_SHAPE_HECTOICOSIKAIHEXAGON/.test(cSrc), 'HECTOICOSIKAIHEXAGON shape defined');
+    t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 877 - ui.js has Hectoicosikaihexagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectoicosikaihexagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectoicosikaihexagon Notes menu items');
+});
+TestRunner.test("Day 877 - APP_VERSION bumped to 2.525.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.525\.0'/.test(cSrc), 'APP_VERSION should be 2.525.0');
+});
+TestRunner.test("Day 877 - parametric formula uses 125*t and a/125", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos125T\s*=\s*Math\.cos\(125\s*\*\s*t\)/.test(tSrc), 'should compute cos(125*t)');
+    t.assertTruthy(/sin125T\s*=\s*Math\.sin\(125\s*\*\s*t\)/.test(tSrc), 'should compute sin(125*t)');
+    t.assertTruthy(/aOver125\s*=\s*a\s*\/\s*125/.test(tSrc), 'should compute a/125 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver125\s*\*\s*cos125T/.test(tSrc), 'should compute x = a*cos(t) + (a/125)*cos(125t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver125\s*\*\s*sin125T/.test(tSrc), 'should compute y = a*sin(t) - (a/125)*sin(125t)');
+});
+TestRunner.test("Day 877 - 126 = 2 * 3^2 * 7 NOT constructible per Gauss-Wantzel 1837 (3 has multiplicity 2 AND 7 is prime but not Fermat)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_HECTOICOSIKAIHEXAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*126/.test(cSrc), 'T_MAX should be 2*PI/126');
+    t.assertTruthy(/aOver125\s*=\s*a\s*\/\s*125/.test(tSrc), 'should use a/125 as small-circle radius (so R = 126a/125, R/r = 126)');
+});
+TestRunner.test("Day 877 - hectoicosikaihexagon is in the 100-126 post-100 hypocycloid series", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIHEXAGON_NOTES_HECTOICOSIKAIHEXAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*126/.test(cSrc), '126 sides');
+});
+
