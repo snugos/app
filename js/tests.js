@@ -139971,3 +139971,52 @@ TestRunner.test("Day 878 - hectoicosikaiheptagon is in the 100-127 post-100 hypo
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/HECTOICOSIKAIHEPTAGON_NOTES_HECTOICOSIKAIHEPTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*127/.test(cSrc), '127 sides');
 });
+
+// Day 879 Hectoicosikaioctagon (128-cusped Hypocycloid) tests - 128 = 2^7 is a PURE POWER OF 2, CONSTRUCTIBLE per Gauss-Wantzel 1837
+// R/r=128, parametric x = a*cos(t) + (a/127)*cos(127t), y = a*sin(t) - (a/127)*sin(127t)
+
+TestRunner.test("Day 879 - hectoicosikaioctagonNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectoicosikaioctagonNotes\s*\(/.test(tSrc), 'hectoicosikaioctagonNotes method should be defined');
+    t.assertTruthy(/return\s+hectoicosikaioctagonCount/.test(tSrc), 'should return hectoicosikaioctagonCount');
+});
+TestRunner.test("Day 879 - HECTOICOSIKAIOCTAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_HECTOICOSIKAIOCTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*128/.test(cSrc), 'T_MAX should be 2*PI/128');
+    t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*128/.test(cSrc), 'TIGHT_T_MIN should be -PI/128');
+});
+TestRunner.test("Day 879 - HECTOICOSIKAIOCTAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_SHAPE_HECTOICOSIKAIOCTAGON/.test(cSrc), 'HECTOICOSIKAIOCTAGON shape defined');
+    t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 879 - ui.js has Hectoicosikaioctagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectoicosikaioctagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectoicosikaioctagon Notes menu items');
+});
+TestRunner.test("Day 879 - APP_VERSION bumped to 2.527.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.527\.0'/.test(cSrc), 'APP_VERSION should be 2.527.0');
+});
+TestRunner.test("Day 879 - parametric formula uses 127*t and a/127", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos127T\s*=\s*Math\.cos\(127\s*\*\s*t\)/.test(tSrc), 'should compute cos(127*t)');
+    t.assertTruthy(/sin127T\s*=\s*Math\.sin\(127\s*\*\s*t\)/.test(tSrc), 'should compute sin(127*t)');
+    t.assertTruthy(/aOver127\s*=\s*a\s*\/\s*127/.test(tSrc), 'should compute a/127 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver127\s*\*\s*cos127T/.test(tSrc), 'should compute x = a*cos(t) + (a/127)*cos(127t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver127\s*\*\s*sin127T/.test(tSrc), 'should compute y = a*sin(t) - (a/127)*sin(127t)');
+});
+TestRunner.test("Day 879 - 128 = 2^7 is a pure power of 2, CONSTRUCTIBLE per Gauss-Wantzel 1837", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_HECTOICOSIKAIOCTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*128/.test(cSrc), 'T_MAX should be 2*PI/128');
+    t.assertTruthy(/aOver127\s*=\s*a\s*\/\s*127/.test(tSrc), 'should use a/127 as small-circle radius (so R = 128a/127, R/r = 128)');
+});
+TestRunner.test("Day 879 - hectoicosikaioctagon is the 28th value in the 100+ post-100 hypocycloid series", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOICOSIKAIOCTAGON_NOTES_HECTOICOSIKAIOCTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*128/.test(cSrc), '128 sides');
+});
