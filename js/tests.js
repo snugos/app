@@ -139823,3 +139823,102 @@ TestRunner.test("Day 875 - hectotessaraikos is in the 100-124 post-100 hypocyclo
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/HECTOTESSARAIKOS_NOTES_HECTOTESSARAIKOS_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*124/.test(cSrc), '124 sides');
 });
+
+// Day 876 Hectopentikaideca (125-cusped Hypocycloid) tests - 125 = 5^3, NOT constructible
+// R/r=125, parametric x = a*cos(t) + (a/124)*cos(124t), y = a*sin(t) - (a/124)*sin(124t)
+
+TestRunner.test("Day 876 - hectopentikaidecaNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectopentikaidecaNotes\s*\(/.test(tSrc), 'hectopentikaidecaNotes method should be defined');
+    t.assertTruthy(/return\s+hectopentikaidecaCount/.test(tSrc), 'should return hectopentikaidecaCount');
+});
+TestRunner.test("Day 876 - HECTOPENTIKAIDECA_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_HECTOPENTIKAIDECA_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*125/.test(cSrc), 'T_MAX should be 2*PI/125');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*125/.test(cSrc), 'TIGHT_T_MIN should be -PI/125');
+});
+TestRunner.test("Day 876 - HECTOPENTIKAIDECA_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_SHAPE_HECTOPENTIKAIDECA/.test(cSrc), 'HECTOPENTIKAIDECA shape defined');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 876 - ui.js has Hectopentikaideca Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectopentikaideca Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectopentikaideca Notes menu items');
+});
+TestRunner.test("Day 876 - APP_VERSION bumped to 2.524.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.524\.0'/.test(cSrc), 'APP_VERSION should be 2.524.0');
+});
+TestRunner.test("Day 876 - parametric formula uses 124*t and a/124", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos124T\s*=\s*Math\.cos\(124\s*\*\s*t\)/.test(tSrc), 'should compute cos(124*t)');
+    t.assertTruthy(/sin124T\s*=\s*Math\.sin\(124\s*\*\s*t\)/.test(tSrc), 'should compute sin(124*t)');
+    t.assertTruthy(/aOver124\s*=\s*a\s*\/\s*124/.test(tSrc), 'should compute a/124 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver124\s*\*\s*cos124T/.test(tSrc), 'should compute x = a*cos(t) + (a/124)*cos(124t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver124\s*\*\s*sin124T/.test(tSrc), 'should compute y = a*sin(t) - (a/124)*sin(124t)');
+});
+TestRunner.test("Day 876 - 125 = 5^3 NOT constructible per Gauss-Wantzel 1837 (5 has multiplicity 3)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_HECTOPENTIKAIDECA_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*125/.test(cSrc), 'T_MAX should be 2*PI/125');
+    t.assertTruthy(/aOver124\s*=\s*a\s*\/\s*124/.test(tSrc), 'should use a/124 as small-circle radius (so R = 125a/124, R/r = 125)');
+});
+TestRunner.test("Day 876 - hectopentikaideca is in the 100-125 post-100 hypocycloid series", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_HECTOPENTIKAIDECA_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*125/.test(cSrc), '125 sides');
+});
+
+
+// Day 876 Hectopentikaideca (125-cusped Hypocycloid) tests - 125 = 5^3, NOT constructible
+// R/r=125, parametric x = a*cos(t) + (a/124)*cos(124t), y = a*sin(t) - (a/124)*sin(124t)
+
+TestRunner.test("Day 876 - hectopentikaidecaNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectopentikaidecaNotes\s*\(/.test(tSrc), 'hectopentikaidecaNotes method should be defined');
+    t.assertTruthy(/return\s+hectopentikaidecaCount/.test(tSrc), 'should return hectopentikaidecaCount');
+});
+TestRunner.test("Day 876 - HECTOPENTIKAIDECA_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_HECTOPENTIKAIDECA_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*125/.test(cSrc), 'T_MAX should be 2*PI/125');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*125/.test(cSrc), 'TIGHT_T_MIN should be -PI/125');
+});
+TestRunner.test("Day 876 - HECTOPENTIKAIDECA_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_SHAPE_HECTOPENTIKAIDECA/.test(cSrc), 'HECTOPENTIKAIDECA shape defined');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 876 - ui.js has Hectopentikaideca Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectopentikaideca Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectopentikaideca Notes menu items');
+});
+TestRunner.test("Day 876 - APP_VERSION bumped to 2.524.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.524\.0'/.test(cSrc), 'APP_VERSION should be 2.524.0');
+});
+TestRunner.test("Day 876 - parametric formula uses 124*t and a/124", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos124T\s*=\s*Math\.cos\(124\s*\*\s*t\)/.test(tSrc), 'should compute cos(124*t)');
+    t.assertTruthy(/sin124T\s*=\s*Math\.sin\(124\s*\*\s*t\)/.test(tSrc), 'should compute sin(124*t)');
+    t.assertTruthy(/aOver124\s*=\s*a\s*\/\s*124/.test(tSrc), 'should compute a/124 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver124\s*\*\s*cos124T/.test(tSrc), 'should compute x = a*cos(t) + (a/124)*cos(124t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver124\s*\*\s*sin124T/.test(tSrc), 'should compute y = a*sin(t) - (a/124)*sin(124t)');
+});
+TestRunner.test("Day 876 - 125 = 5^3 NOT constructible per Gauss-Wantzel 1837 (5 is Fermat but has multiplicity 3)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_HECTOPENTIKAIDECA_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*125/.test(cSrc), 'T_MAX should be 2*PI/125');
+    t.assertTruthy(/aOver124\s*=\s*a\s*\/\s*124/.test(tSrc), 'should use a/124 as small-circle radius (so R = 125a/124, R/r = 125)');
+});
+TestRunner.test("Day 876 - hectopentikaideca is in the 100-125 post-100 hypocycloid series", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTIKAIDECA_NOTES_HECTOPENTIKAIDECA_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*125/.test(cSrc), '125 sides');
+});
