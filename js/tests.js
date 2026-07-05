@@ -139774,3 +139774,52 @@ TestRunner.test("Day 874 - 123 = 3 * 41 NOT constructible per Gauss-Wantzel 1837
     t.assertTruthy(/HECTOTRIAIKOS_NOTES_HECTOTRIAIKOS_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*123/.test(cSrc), 'T_MAX should be 2*PI/123');
     t.assertTruthy(/aOver122\s*=\s*a\s*\/\s*122/.test(tSrc), 'should use a/122 as small-circle radius (so R = 123a/122, R/r = 123)');
 });
+
+// Day 875 Hectotessaraikos (124-cusped Hypocycloid) tests - 124 = 4 * 31, NOT constructible
+// R/r=124, parametric x = a*cos(t) + (a/123)*cos(123t), y = a*sin(t) - (a/123)*sin(123t)
+
+TestRunner.test("Day 875 - hectotessaraikosNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectotessaraikosNotes\s*\(/.test(tSrc), 'hectotessaraikosNotes method should be defined');
+    t.assertTruthy(/return\s+hectotessaraikosCount/.test(tSrc), 'should return hectotessaraikosCount');
+});
+TestRunner.test("Day 875 - HECTOTESSARAIKOS_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOTESSARAIKOS_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH should be 32');
+    t.assertTruthy(/HECTOTESSARAIKOS_NOTES_HECTOTESSARAIKOS_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*124/.test(cSrc), 'T_MAX should be 2*PI/124');
+    t.assertTruthy(/HECTOTESSARAIKOS_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*124/.test(cSrc), 'TIGHT_T_MIN should be -PI/124');
+});
+TestRunner.test("Day 875 - HECTOTESSARAIKOS_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOTESSARAIKOS_NOTES_SHAPE_STANDARD/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOTESSARAIKOS_NOTES_SHAPE_INVERTED/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOTESSARAIKOS_NOTES_SHAPE_HECTOTESSARAIKOS/.test(cSrc), 'HECTOTESSARAIKOS shape defined');
+    t.assertTruthy(/HECTOTESSARAIKOS_NOTES_SHAPE_TIGHT/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 875 - ui.js has Hectotessaraikos Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectotessaraikos Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectotessaraikos Notes menu items');
+});
+TestRunner.test("Day 875 - APP_VERSION bumped to 2.523.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.523\.0'/.test(cSrc), 'APP_VERSION should be 2.523.0');
+});
+TestRunner.test("Day 875 - parametric formula uses 123*t and a/123", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos123T\s*=\s*Math\.cos\(123\s*\*\s*t\)/.test(tSrc), 'should compute cos(123*t)');
+    t.assertTruthy(/sin123T\s*=\s*Math\.sin\(123\s*\*\s*t\)/.test(tSrc), 'should compute sin(123*t)');
+    t.assertTruthy(/aOver123\s*=\s*a\s*\/\s*123/.test(tSrc), 'should compute a/123 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver123\s*\*\s*cos123T/.test(tSrc), 'should compute x = a*cos(t) + (a/123)*cos(123t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver123\s*\*\s*sin123T/.test(tSrc), 'should compute y = a*sin(t) - (a/123)*sin(123t)');
+});
+TestRunner.test("Day 875 - 124 = 4 * 31 NOT constructible per Gauss-Wantzel 1837 (31 is prime but not Fermat)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOTESSARAIKOS_NOTES_HECTOTESSARAIKOS_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*124/.test(cSrc), 'T_MAX should be 2*PI/124');
+    t.assertTruthy(/aOver123\s*=\s*a\s*\/\s*123/.test(tSrc), 'should use a/123 as small-circle radius (so R = 124a/123, R/r = 124)');
+});
+TestRunner.test("Day 875 - hectotessaraikos is in the 100-124 post-100 hypocycloid series", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOTESSARAIKOS_NOTES_HECTOTESSARAIKOS_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*124/.test(cSrc), '124 sides');
+});
