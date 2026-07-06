@@ -140358,3 +140358,50 @@ TestRunner.test("Day 886 - hectopentatriacontagon is the 35th value in the 100+ 
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/HECTOPENTATRIACONTAGON_NOTES_HECTOPENTATRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*135/.test(cSrc), '135 sides');
 });
+TestRunner.test("Day 887 - hectohexatriacontagonNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectohexatriacontagonNotes\s*\(/.test(tSrc), 'hectohexatriacontagonNotes method defined');
+});
+TestRunner.test("Day 887 - HECTOHEXATRIACONTAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH = 32');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'DEFAULT_A = 4');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_HECTOHEXATRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*136/.test(cSrc), 'T_MAX = 2*PI/136');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*136/.test(cSrc), 'TIGHT_T_MIN = -PI/136');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*136/.test(cSrc), 'TIGHT_T_MAX = PI/136');
+});
+TestRunner.test("Day 887 - HECTOHEXATRIACONTAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_SHAPE_STANDARD\s*=\s*'standard'/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_SHAPE_INVERTED\s*=\s*'inverted'/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_SHAPE_HECTOHEXATRIACONTAGON\s*=\s*'hectohexatriacontagon'/.test(cSrc), 'HECTOHEXATRIACONTAGON shape defined');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_SHAPE_TIGHT\s*=\s*'tight'/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 887 - ui.js has Hectohexatriacontagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectohexatriacontagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectohexatriacontagon Notes menu items');
+});
+TestRunner.test("Day 887 - APP_VERSION bumped to 2.535.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.535\.0'/.test(cSrc), 'APP_VERSION should be 2.535.0');
+});
+TestRunner.test("Day 887 - parametric formula uses 135*t and a/135", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos135T\s*=\s*Math\.cos\(135\s*\*\s*t\)/.test(tSrc), 'should compute cos(135*t)');
+    t.assertTruthy(/sin135T\s*=\s*Math\.sin\(135\s*\*\s*t\)/.test(tSrc), 'should compute sin(135*t)');
+    t.assertTruthy(/aOver135\s*=\s*a\s*\/\s*135/.test(tSrc), 'should compute a/135 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver135\s*\*\s*cos135T/.test(tSrc), 'should compute x = a*cos(t) + (a/135)*cos(135t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver135\s*\*\s*sin135T/.test(tSrc), 'should compute y = a*sin(t) - (a/135)*sin(135t)');
+});
+TestRunner.test("Day 887 - 136 = 2^3 * 17 IS constructible per Gauss-Wantzel 1837 (2^3 is a power of 2 and 17 is a Fermat prime, satisfying the distinctness criterion)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_HECTOHEXATRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*136/.test(cSrc), 'T_MAX should be 2*PI/136');
+    t.assertTruthy(/aOver135\s*=\s*a\s*\/\s*135/.test(tSrc), 'should use a/135 as small-circle radius (so R = 136a/135, R/r = 136)');
+});
+TestRunner.test("Day 887 - hectohexatriacontagon is the 36th value in the 100+ post-100 hypocycloid series", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOHEXATRIACONTAGON_NOTES_HECTOHEXATRIACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*136/.test(cSrc), '136 sides');
+});
