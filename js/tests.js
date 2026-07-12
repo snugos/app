@@ -141068,3 +141068,50 @@ TestRunner.test("Day 901 - hectopentacontagon is the 50th value in the 100+ post
     const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
     t.assertTruthy(/HECTOPENTACONTAGON_NOTES_HECTOPENTACONTAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*150/.test(cSrc), '150 sides');
 });
+TestRunner.test("Day 902 - hectopentacontahenagonNotes method exists on Track", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/hectopentacontahenagonNotes\s*\(/.test(tSrc), 'hectopentacontahenagonNotes method defined');
+});
+TestRunner.test("Day 902 - HECTOPENTACONTAHENAGON_NOTES constants defined", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_DEFAULT_LENGTH\s*=\s*32/.test(cSrc), 'DEFAULT_LENGTH = 32');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_DEFAULT_A\s*=\s*4/.test(cSrc), 'DEFAULT_A = 4');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_DEFAULT_VELOCITY_DECAY\s*=\s*0\.95/.test(cSrc), 'DEFAULT_VELOCITY_DECAY = 0.95');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_HECTOPENTACONTAHENAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*151/.test(cSrc), 'T_MAX = 2*PI/151');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_TIGHT_T_MIN\s*=\s*-Math\.PI\s*\/\s*151/.test(cSrc), 'TIGHT_T_MIN = -PI/151');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_TIGHT_T_MAX\s*=\s*Math\.PI\s*\/\s*151/.test(cSrc), 'TIGHT_T_MAX = PI/151');
+});
+TestRunner.test("Day 902 - HECTOPENTACONTAHENAGON_NOTES_SHAPES includes all 4 variants", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_SHAPE_STANDARD\s*=\s*'standard'/.test(cSrc), 'STANDARD shape defined');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_SHAPE_INVERTED\s*=\s*'inverted'/.test(cSrc), 'INVERTED shape defined');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_SHAPE_HECTOPENTACONTAHENAGON\s*=\s*'hectopentacontahenagon'/.test(cSrc), 'HECTOPENTACONTAHENAGON shape defined');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_SHAPE_TIGHT\s*=\s*'tight'/.test(cSrc), 'TIGHT shape defined');
+});
+TestRunner.test("Day 902 - ui.js has Hectopentacontahenagon Notes menu items", (t) => {
+    const uSrc = require('fs').readFileSync('./js/ui.js', 'utf-8');
+    const matches = (uSrc.match(/Hectopentacontahenagon Notes/g) || []).length;
+    t.assertTruthy(matches >= 4, 'should have at least 4 Hectopentacontahenagon Notes menu items');
+});
+TestRunner.test("Day 902 - APP_VERSION bumped to 2.550.0", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/APP_VERSION\s*=\s*'2\.550\.0'/.test(cSrc), 'APP_VERSION should be 2.550.0');
+});
+TestRunner.test("Day 902 - parametric formula uses 150*t and a/150", (t) => {
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/cos150T\s*=\s*Math\.cos\(150\s*\*\s*t\)/.test(tSrc), 'should compute cos(150*t)');
+    t.assertTruthy(/sin150T\s*=\s*Math\.sin\(150\s*\*\s*t\)/.test(tSrc), 'should compute sin(150*t)');
+    t.assertTruthy(/aOver150\s*=\s*a\s*\/\s*150/.test(tSrc), 'should compute a/150 as the small-circle radius');
+    t.assertTruthy(/x\s*=\s*a\s*\*\s*cosT\s*\+\s*aOver150\s*\*\s*cos150T/.test(tSrc), 'should compute x = a*cos(t) + (a/150)*cos(150t)');
+    t.assertTruthy(/y\s*=\s*a\s*\*\s*sinT\s*-\s*aOver150\s*\*\s*sin150T/.test(tSrc), 'should compute y = a*sin(t) - (a/150)*sin(150t)');
+});
+TestRunner.test("Day 902 - 151 is prime NOT constructible per Gauss-Wantzel 1837 (151 is prime but NOT a Fermat prime AND has no power-of-2 factor, so 151 fails the distinctness criterion since 151 is prime but not Fermat AND has no power-of-2 component)", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    const tSrc = require('fs').readFileSync('./js/Track.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_HECTOPENTACONTAHENAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*151/.test(cSrc), 'T_MAX should be 2*PI/151');
+    t.assertTruthy(/aOver150\s*=\s*a\s*\/\s*150/.test(tSrc), 'should use a/150 as small-circle radius (so R = 151a/150, R/r = 151)');
+});
+TestRunner.test("Day 902 - hectopentacontahenagon is the 51st value in the 100+ post-100 hypocycloid series", (t) => {
+    const cSrc = require('fs').readFileSync('./js/constants.js', 'utf-8');
+    t.assertTruthy(/HECTOPENTACONTAHENAGON_NOTES_HECTOPENTACONTAHENAGON_T_MAX\s*=\s*2\s*\*\s*Math\.PI\s*\/\s*151/.test(cSrc), '151 sides');
+});
